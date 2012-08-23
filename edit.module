@@ -120,6 +120,7 @@ function edit_library() {
   $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
 
   $path = drupal_get_path('module', 'edit');
+
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
     'website' => 'http://drupal.org/project/edit',
@@ -131,9 +132,6 @@ function edit_library() {
         'defer' => TRUE,
       ),
       $path . '/js/util.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/ui.js' => array(
         'defer' => TRUE,
       ),
       $path . '/js/ui-editables.js' => array(
@@ -162,6 +160,59 @@ function edit_library() {
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
+      array('edit', 'edit.createjs'),
+    ),
+  );
+
+  $libraries['edit.createjs'] = array(
+    'title' => 'CreateJS and deps',
+    'website' => 'http://createjs.org',
+    'version' => NULL,
+    'js' => array(
+      drupal_get_path('module', 'jquery_update') . '/replace/ui/ui/jquery.ui.widget.js' => array(),
+      $path . '/js/lib/create.js' => array('defer' => TRUE),
+      $path . '/js/SparkEditService.js' => array('defer' => TRUE),
+      $path . '/js/editable.js' => array('defer' => TRUE),
+      $path . '/js/formwidget.js' => array('defer' => TRUE),
+      $path . '/js/views.js' => array('defer' => TRUE),
+    ),
+    'dependencies' => array(
+      array('edit', 'edit.vie'),
+    ),
+  );
+
+  $libraries['edit.vie'] = array(
+    'title' => 'Vienna IKS Editables',
+    'website' => 'http://wiki.iks-project.eu/index.php/VIE',
+    'version' => '2.0',
+    'js' => array(
+      $path . '/js/lib/vie.js' => array('defer' => TRUE),
+    ),
+    'dependencies' => array(
+      array('edit', 'edit.backbone'),
+    ),
+  );
+
+  // Register underscore as a library.
+  $libraries['edit.underscore'] = array(
+    'title' => 'Underscore.js',
+    'website' => 'http://underscorejs.org',
+    'version' => '1.4.2',
+    'js' => array(
+      $path . '/js/lib/underscore.js' => array(),
+    ),
+  );
+
+  // Register backbone as a library.
+  $libraries['edit.backbone'] = array(
+    'title' => 'Backbone.js',
+    'website' => 'http://backbonejs.org',
+    'version' => '0.9.2',
+    'js' => array(
+      $path . '/js/lib/backbone.js' => array(),
+    ),
+    'dependencies' => array(
+      array('edit', 'edit.underscore'),
     ),
   );
 
@@ -183,13 +234,12 @@ function edit_field_attach_view_alter(&$output, $context) {
 
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
-    $children = element_children($output);
-    $field = reset($children);
+    $field = reset(element_children($output));
     $langcode = $output[$field]['#language'];
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
       $format_id = $output[$field]['#items'][$item]['format'];
-      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE));
+      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
       $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
     }
   }
@@ -560,20 +610,14 @@ function edit_preprocess_field(&$variables) {
       $language  = $variables['element']['#language'];
       $format_id = $field[$language][0]['format'];
 
-      // Let the WYSIWYG editor know the text format.
-      $variables['attributes_array']['data-edit-text-format'] = $format_id;
-
-      // Ensure the WYSIWYG editor has the necessary text format related
-      // metadata.
-      // @todo: research a more elegant solution, at least document this.
-      $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-      $function = $wysiwyg_module . '_add_format_settings';
-      $function();
+      // Let the WYSIWYG editor know the allowed tags.
+      $allowed_tags = filter_get_allowed_tags_by_format($format_id);
+      $variables['attributes_array']['data-allowed-tags'] = ($allowed_tags === TRUE) ? '' : implode(',', $allowed_tags);
 
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
       $filter_types = filter_get_filter_types_by_format($format_id);
-      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE), $filter_types))) {
+      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types))) {
         $variables['classes_array'][] = 'edit-text-with-transformation-filters';
       }
       else {

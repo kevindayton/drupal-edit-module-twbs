@@ -9,6 +9,78 @@
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.util = Drupal.edit.util || {};
 
+Drupal.edit.util.getID = function(element) {
+  var id = jQuery(element).data('edit-id');
+  if (!id) {
+    id = jQuery(element).closest('[data-edit-id]').data('edit-id');
+  }
+  return id;
+};
+
+Drupal.edit.util.getElementSubject = function(element) {
+  return Drupal.edit.util.getID(element).split(':').slice(0, 2).join(':');
+};
+
+Drupal.edit.util.getElementPredicate = function(element) {
+  return Drupal.edit.util.getID(element).split(':').pop();
+};
+
+Drupal.edit.util.getElementValue = function(element) {
+  var valueElement = jQuery('.field-item', element);
+  if (valueElement.length === 0) {
+    // Handle page title
+    valueElement = jQuery('h1', element);
+  }
+  return $.trim(valueElement.html());
+};
+
+Drupal.edit.util.getElementEntity = function(element, vie) {
+  return vie.entities.get(Drupal.edit.util.getElementSubject(element));
+};
+
+/*
+ * findEditableFields() just looks for fields that are editable, i.e. for the
+ * field *wrappers*. Depending on the field, however, either the whole field wrapper
+ * will be marked as editable (in this case, an inline form will be used for editing),
+ * *or* a specific (field-specific even!) DOM element within that field wrapper will be
+ * marked as editable.
+ * This function is for finding the *editables* themselves, given the *editable fields*.
+ */
+Drupal.edit.util.findEditablesForFields = function($fields) {
+  var $editables = $();
+
+  // type = form
+  $editables = $editables.add($fields.filter('.edit-type-form'));
+
+  // type = direct
+  var $direct = $fields.filter('.edit-type-direct');
+  $editables = $editables.add($direct.find('.field-item'));
+  // Edge case: "title" pseudofield on pages with lists of nodes.
+  $editables = $editables.add($direct.filter('h2').find('a'));
+  // Edge case: "title" pseudofield on node pages.
+  $editables = $editables.add($direct.find('h1'));
+
+  return $editables;
+};
+
+Drupal.edit.util.findFieldForID = function(id, context) {
+  return $('[data-edit-id="' + id + '"]', context || $('#content'));
+};
+
+Drupal.edit.util.findFieldForEditable = function($editable) {
+  return $editable.filter('.edit-type-form').length ? $editable : $editable.closest('.edit-type-direct');
+};
+
+// @todo: remove, no usages found.
+Drupal.edit.util.findEntityForField = function($f) {
+  var $e = $f.closest('.edit-entity');
+  if ($e.length === 0) {
+    var entity_edit_id = $f.data('edit-id').split(':').slice(0,2).join(':');
+    $e = $('.edit-entity[data-edit-id="' + entity_edit_id + '"]');
+  }
+  return $e;
+};
+
 Drupal.edit.util.calcFormURLForField = function(id) {
   var parts = id.split(':');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
@@ -19,6 +91,7 @@ Drupal.edit.util.calcFormURLForField = function(id) {
   });
 };
 
+// @todo: remove, no usage found.
 Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
   var parts = id.split(':');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
@@ -27,7 +100,7 @@ Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
     '!id'         : parts[1],
     '!field_name' : parts[2]
   });
-}
+};
 
 /**
  * Get the background color of an element (or the inherited one).
@@ -35,7 +108,7 @@ Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
 Drupal.edit.util.getBgColor = function($e) {
   var c;
 
-  if ($e == null || $e[0].nodeName == 'HTML') {
+  if ($e === null || $e[0].nodeName == 'HTML') {
     // Fallback to white.
     return 'rgb(255, 255, 255)';
   }
@@ -65,7 +138,9 @@ Drupal.edit.util.ignoreHoveringVia = function(e, closest, callback) {
  * If no position properties defined, replace value with zero.
  */
 Drupal.edit.util.replaceBlankPosition = function(pos) {
-  if (pos == 'auto' || pos == NaN) {
+  // @todo: this was pos == NaN (which always returns false, keeping this
+  // notice in case we find a regression.
+  if (pos == 'auto' || !pos) {
     pos = '0px';
   }
   return pos;

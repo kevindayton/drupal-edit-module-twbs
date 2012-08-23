@@ -9,7 +9,7 @@
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editOverlay = function(settings) {
+Drupal.theme.editOverlay = function(settings) {
   var html = '';
   html += '<div id="edit_overlay" />';
   return html;
@@ -24,28 +24,9 @@ Drupal.theme.prototype.editOverlay = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editBackstage = function(settings) {
+Drupal.theme.editBackstage = function(settings) {
   var html = '';
   html += '<div id="edit_backstage" />';
-  return html;
-};
-
-/**
- * Theme function for a modal of the Edit module.
- *
- * @param settings
- *   An object with the following keys:
- *   - None.
- * @return
- *   The corresponding HTML.
- */
-Drupal.theme.prototype.editModal = function(settings) {
-  var classes = 'edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
-  var html = '';
-  html += '<div id="edit_modal" class="' + classes + '">';
-  html += '  <div class="main"><p></p></div>';
-  html += '  <div class="actions"></div>';
-  html += '</div>';
   return html;
 };
 
@@ -58,15 +39,16 @@ Drupal.theme.prototype.editModal = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editToolbarContainer = function(settings) {
+Drupal.theme.editToolbarContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-toolbar-container edit-animate-invisible edit-animate-only-visibility">';
   html += '  <div class="edit-toolbar-heightfaker edit-animate-fast">';
-  html += '    <div class="edit-toolbar" />';
+  html += '    <div class="edit-toolbar primary" />';
   html += '  </div>';
   html += '</div>';
   return html;
 };
+
 
 /**
  * Theme function for a toolbar toolgroup of the Edit module.
@@ -78,7 +60,7 @@ Drupal.theme.prototype.editToolbarContainer = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editToolgroup = function(settings) {
+Drupal.theme.editToolgroup = function(settings) {
   var classes = 'edit-toolgroup edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
   var html = '';
   html += '<div class="' + classes + ' ' + settings.classes + '">';
@@ -103,7 +85,7 @@ Drupal.theme.prototype.editToolgroup = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editButtons = function(settings) {
+Drupal.theme.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
@@ -130,7 +112,8 @@ Drupal.theme.prototype.editButtons = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.prototype.editFormContainer = function(settings) {
+// @todo: remove, no usages found.
+Drupal.theme.editFormContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-form-container">';
   html += '  <div class="edit-form">';
