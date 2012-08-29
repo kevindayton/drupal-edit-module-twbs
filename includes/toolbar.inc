@@ -51,7 +51,7 @@ function edit_navbar_pre_render($navbar) {
         ),
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('Edit'), 'href' => '#', 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          '#link' => array('title' => t('Quick edit'), 'href' => '#', 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
         ),
       ),
 
