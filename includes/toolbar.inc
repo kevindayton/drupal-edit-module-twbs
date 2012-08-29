@@ -136,7 +136,7 @@ function edit_override_shortcut_toolbar_pre_render($toolbar) {
 }
 
 /**
- * API to generate common toggle links for different toolbars.
+ * Builds a render array for common toggle links for different toolbars.
  */
 function edit_toggle_links($wrapper_classes = '', $ul_classes = 'tabs primary') {
   return array(
