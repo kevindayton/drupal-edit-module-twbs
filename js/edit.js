@@ -61,7 +61,9 @@ Drupal.edit.init = function() {
     var wasViewing = Drupal.edit.state.isViewing;
     var isViewing  = Drupal.edit.state.isViewing = $(this).hasClass('edit-view');
     // Swap active class among the two links.
+    $('a.edit_view-edit-toggle').removeClass('active');
     $('a.edit_view-edit-toggle').parent().removeClass('active');
+    $('a.edit_view-edit-toggle.edit-' + (isViewing ? 'view' : 'edit')).addClass('active');
     $('a.edit_view-edit-toggle.edit-' + (isViewing ? 'view' : 'edit')).parent().addClass('active');
 
     if (wasViewing && !isViewing) {
@@ -79,8 +81,8 @@ Drupal.edit.init = function() {
       // RTTs than needed. Instead, the server should support batch requests.
       console.log('Preloading forms that we might need!', Drupal.edit.state.queues.preload);
 
-      // Animations.
-      $('#edit_overlay').css('top', $('#navbar').outerHeight());
+      // Animations. Integrate with both navbar and toolbar.
+      $('#edit_overlay').css('top', $('#navbar, #toolbar').outerHeight());
       $('#edit_overlay').removeClass('edit-animate-invisible');
 
       // Disable contextual links in edit mode.
