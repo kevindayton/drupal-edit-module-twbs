@@ -28,8 +28,8 @@ function edit_page_alter(&$page) {
   // If the navbar is available, add a pre-render function to display the
   // view/edit mode toggle, but only on node pages.
   // @todo: add support for other entity types.
-  if (isset($page['page_top']['navbar']) && arg(0) == 'node') {
-    $page['page_top']['navbar']['#pre_render'][] = 'edit_navbar_pre_render';
+  if (isset($page['page_bottom']['navbar']) && arg(0) == 'node') {
+    $page['page_bottom']['navbar']['#pre_render'][] = 'edit_navbar_pre_render';
   }
 
   // TOOLBAR module integration.
