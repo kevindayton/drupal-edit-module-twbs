@@ -15,22 +15,6 @@
  * Loads the logic for altering the toolbar.
  */
 module_load_include('inc', 'edit', 'includes/toolbar');
-/**
- * Loads the proposed modifications to Drupal core's Filter module.
- */
-module_load_include('inc', 'edit', 'includes/filter');
-/**
- * Loads the "captioned image" filter; the server-side equivalent of the
- * CaptionedImage Aloha Editor plug-in.
- */
-module_load_include('inc', 'edit', 'includes/caption');
-
-/**
- * Loads the logic for integrating Edit's WYSIWYG editor on the back-end.
- */
-// @TODO: make the UI work on the back-end, otherwise this is just plain
-// confusing!
-// module_load_include('inc', 'edit', 'includes/backend');
 
 
 define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
@@ -82,15 +66,6 @@ function edit_theme() {
         'attributes' => array(),
       ),
     ),
-    'edit_captioned_image' => array(
-      'file' => 'includes/caption.inc',
-      'variables' => array(
-        'image'   => NULL,
-        'caption' => NULL,
-        'align'   => NULL,
-        'width'   => NULL,
-      )
-    )
   );
 }
 
@@ -316,69 +291,6 @@ function edit_field_formatter_info_alter(&$info) {
         'wysiwyg'     => (isset($wysiwyg_metadata[$formatter])) ? $wysiwyg_metadata[$formatter] : FALSE,
       );
     }
-  }
-}
-
-/**
- * Implements hook_filter_info_alter().
- */
-function edit_filter_info_alter(&$info) {
-  $wysiwyg_metadata = array(
-    // php.module
-    'php_code' => FALSE,
-    // filter.module
-    'filter_html'          => TRUE,
-    'filter_autop'         => TRUE,
-    'filter_url'           => TRUE,
-    'filter_htmlcorrector' => TRUE,
-    // token_filter.module
-    'filter_tokens' => TRUE,
-    // image_resize_filter.module
-    'image_resize_filter' => TRUE,
-    // edit.module
-    'edit_filter_captioned_image' => TRUE,
-  );
-  $allowed_tags_metadata = array(
-    'filter_html' => 'allowed_html',
-  );
-  $macro_tags_metadata = array(
-    'filter_tokens',
-  );
-  // Classify filters according to http://drupal.org/node/807996#comment-6302188.
-  // Special cases due to this hacky implementation:
-  // 1) filter_htmlcorrector, which wouldn't exist anymore in the above
-  // 2) macro filters shouldn't exist anymore, if they do, they would fall under
-  //    transformation filters, but we have another way to deal with them
-  //    ($wrap_macro_tags = TRUE), so put them in their own class.
-  $classification_metadata = array(
-    // php.module
-    'php_code' => 'html',
-    // filter.module
-    'filter_html'          => 'security',
-    'filter_autop'         => 'html',
-    'filter_url'           => 'html',
-    'filter_htmlcorrector' => 'security', // special case
-    'filter_html_escape'   => 'html',
-    // token_filter.module
-    'filter_tokens' => 'macro', // special case
-    // image_resize_filter.module
-    'image_resize_filter' => 'transformation',
-    // edit.module
-    'edit_filter_captioned_image' => 'transformation',
-    // typogrify.module
-    'typogrify' => 'transformation',
-  );
-
-  foreach ($wysiwyg_metadata as $filter => $wysiwyg) {
-    if (empty($info[$filter])) {
-      continue;
-    }
-    $info[$filter]['edit'] = array(
-      'wysiwyg'      => ($wysiwyg !== FALSE),
-      'allowed_tags' => (isset($allowed_tags_metadata[$filter])) ? $allowed_tags_metadata[$filter] : FALSE,
-      'macro_tags'   => (isset($macro_tags_metadata[$filter])),
-      'classification' => $classification_metadata[$filter],
-    );
   }
 }
 
