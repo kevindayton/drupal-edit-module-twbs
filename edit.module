@@ -19,7 +19,7 @@ module_load_include('inc', 'edit', 'includes/toolbar');
 
 define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
 // @TODO: provide a UI so users can switch to
-define('EDIT_WYSIWYG_DEFAULT', 'edit_aloha');
+define('EDIT_WYSIWYG_DEFAULT', 'aloha');
 
 /**
  * Implements hook_menu()
@@ -77,8 +77,8 @@ function edit_library() {
   $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
 
   $path = drupal_get_path('module', 'edit');
-  $libraries['edit.frontend'] = array(
-    'title' => 'Edit: front-end',
+  $libraries['edit'] = array(
+    'title' => 'Edit: in-place editing',
     'website' => 'http://drupal.org/project/edit',
     'version' => NULL, // @TODO Figure out the correct way to do this.
     'js' => array(
@@ -124,23 +124,7 @@ function edit_library() {
 
   // Only add dependencies on the WYSIWYG editor when it's actually available.
   if (module_exists($wysiwyg_module)) {
-    // WYSIWYG modules for the Edit module must implement hook_library() so that
-    // we can load them by merely adding a dependency on it here.
-    $libraries['edit.frontend']['dependencies'][] = array($wysiwyg_module, "$wysiwyg_module.edit");
-
-    $libraries['edit.backend'] = array(
-      'title' => 'Edit: back-end',
-      'website' => 'http://drupal.org/project/edit',
-      'version' => NULL, // @TODO Figure out the correct way to do this.
-      'js' => array(
-        $path . '/js/edit-backend.js' => array(
-          'defer' => TRUE,
-        ),
-      ),
-      'dependencies' => array(
-        array($wysiwyg_module, "$wysiwyg_module.edit"),
-      ),
-    );
+    $libraries['edit']['dependencies'][] = array($wysiwyg_module, "$wysiwyg_module.edit");
   }
 
   return $libraries;
@@ -157,7 +141,7 @@ function edit_field_attach_view_alter(&$output, $context) {
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
       $format_id = $output[$field]['#items'][$item]['format'];
-      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, TRUE, TRUE);
+      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
       $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
     }
 
@@ -179,7 +163,7 @@ function edit_field_attach_view_alter(&$output, $context) {
       if ($output[$field]['#formatter'] == 'text_default') {
         $text      = $output[$field]['#items'][$item]['value'];
         $format_id = $output[$field]['#items'][$item]['format'];
-        $wrapped = check_markup2($text, $format_id, $langcode, FALSE, TRUE);
+        $wrapped = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
         $output[$field][$item]['#markup'] = $wrapped;
       }
     }
@@ -538,14 +522,13 @@ function edit_preprocess_field(&$variables) {
       $format_id = $field[$language][0]['format'];
 
       // Let the WYSIWYG editor know the allowed tags.
-      // @TODO: make the WYSIWYG editor actually *use* this information.
-      $allowed_tags = edit_wysiwyg_analyze_allowed_tags($format_id);
+      $allowed_tags = filter_get_allowed_tags_by_format($format_id);
       $variables['attributes_array']['data-edit-allowed-tags'] = implode(',', $allowed_tags);
 
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
-      $filter_classifications = edit_wysiwyg_format_get_filter_classifications($format_id);
-      if (in_array('transformation', $filter_classifications)) {
+      $filter_types = filter_get_filter_types_by_format($format_id);
+      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types))) {
         $variables['classes_array'][] = 'edit-text-with-transformation-filters';
       }
       else {

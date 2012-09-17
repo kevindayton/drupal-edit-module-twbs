@@ -156,7 +156,7 @@ function edit_toggle_links($wrapper_classes = '', $ul_classes = 'tabs primary') 
       ),
       '#attached' => array(
         'library' => array(
-          array('edit', 'edit.frontend'),
+          array('edit', 'edit'),
         ),
       ),
     ),
