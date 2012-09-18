@@ -134,9 +134,7 @@ Drupal.edit.toolbar = {
   },
 
   _id: function($editable) {
-    var edit_id = ($editable.hasClass('edit-entity'))
-      ? Drupal.edit.getID($editable)
-      : Drupal.edit.getID(Drupal.edit.findFieldForEditable($editable));
+    var edit_id = Drupal.edit.getID(Drupal.edit.findFieldForEditable($editable));
     return 'edit-toolbar-for-' + edit_id.split(':').join('_');
   }
 };

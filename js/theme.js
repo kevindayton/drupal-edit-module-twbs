@@ -31,20 +31,6 @@ Drupal.theme.prototype.editBackstage = function(settings) {
 };
 
 /**
- * Theme function for a "curtain" for the Edit module.
- *
- * @param settings
- *   An object with the following keys:
- *   - None.
- * @return
- *   The corresponding HTML.
- */
-Drupal.theme.prototype.editCurtain = function(settings) {
-  var html = '';
-  html += '<div class="edit-curtain" />';
-  return html;
-};
-/**
  * Theme function for a modal of the Edit module.
  *
  * @param settings
