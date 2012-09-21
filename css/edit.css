@@ -215,11 +215,14 @@
   height: 100%;
   font-family: 'Droid sans', 'Lucida Grande', sans-serif;
 }
-.edit-form .edit-toolbar-heightfaker {
+.edit-toolbar-heightfaker {
   clip: rect(-1000px, 1000px, auto, -1000px); /* Remove bottom box-shadow. */
 }
+/* Exception: when used for a directly WYSIWYG editable field that is actively
+   being edited. */
 .edit-type-direct-with-wysiwyg .edit-editing .edit-toolbar-heightfaker {
   width: 100%;
+  clip: auto;
 }
 
 
