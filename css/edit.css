@@ -260,68 +260,6 @@
 
 
 
-.edit-toolbar .aloha-toolbar-panels {
-  height: 100%;
-}
-.edit-toolbar .aloha-toolbar-panels:after {
-  visibility: hidden;
-  display: block;
-  clear: both;
-  height: 0;
-  font-size: 0;
-  content: " ";
-}
-.edit-toolbar .aloha-toolbar-panels button {
-  border: 1px solid #AAA;
-  border-top: none;
-  border-left: none;
-}
-
-
-
-/** Toolbar tabs **/
-.edit-toolbar .aloha-toolbar-handles {
-  display: block;
-  height: 35px;
-  font-family: 'Droid sans', 'Lucida Grande', sans-serif;
-}
-.edit-toolbar .aloha-toolbar-handles ul {
-  display: inline-block;
-  float: left; /* LTR */
-  border-left: 1px solid #AAA;
-  margin: 0;
-  padding: 0;
-}
-.edit-toolbar .aloha-toolbar-handles ul li {
-  list-style: none;
-  float: left; /* LTR */
-}
-.edit-toolbar .aloha-toolbar-handles ul li a {
-  display: block;
-  color: #999;
-  min-width: 40px;
-  text-align: center;
-  padding: 7px 12px;
-  border-radius: 0;
-  border: 1px solid #AAA;
-  border-left: 0;
-  border-bottom: 0;
-  text-decoration: none;
-  margin: 0;
-}
-.edit-toolbar .aloha-toolbar-handles ul li.aloha-drupal-ui-state-active a {
-  background-color: #eee;
-  color: black;
-}
-/*
-.edit-toolbar .aloha-toolbar-panels {
-  border-left: none;
-  border-right: none;
-  border-bottom: 1px solid #AAA;
-}*/
-
-
-
 /**
  * Edit mode: buttons (in both modal and toolbar).
  */
