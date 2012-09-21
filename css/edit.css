@@ -59,6 +59,15 @@
   -webkit-transition-delay: 0s;
 }
 
+.edit-animate-only-visibility {
+  -webkit-transition: opacity .2s ease;
+     -moz-transition: opacity .2s ease;
+      -ie-transition: opacity .2s ease;
+       -o-transition: opacity .2s ease;
+          transition: opacity .2s ease;
+  -webkit-transition-delay: 0s;
+}
+
 /**
  * View/edit mode toggle.
  */
@@ -237,10 +246,8 @@
   background: #FFF url('../images/throbber.gif') no-repeat -60px 60px;
 }
 .edit-toolgroup.info.loading {
+  padding-right: 35px;
   background-position: 90% 50%;
-}
-.edit-toolgroup.info.loading a {
-  margin-right: 35px;
 }
 
 /* Operations toolgroup. */
