@@ -384,9 +384,10 @@ Drupal.edit.editables = {
   },
 
   _updateDirectEditable: function($editable) {
-    Drupal.edit.editables._padEditable($editable);
-
     var $field = Drupal.edit.findFieldForEditable($editable);
+
+    Drupal.edit.editables._padEditable($editable, $field);
+
     if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
       Drupal.edit.toolbar.get($editable)
       .find('.edit-toolbar:not(:has(.edit-toolgroup.wysiwyg-tabs))')
@@ -454,9 +455,11 @@ Drupal.edit.editables = {
   },
 
   _restoreDirectEditable: function($editable) {
-    if (Drupal.edit.findFieldForEditable($editable).hasClass('edit-type-direct-with-wysiwyg')
-        && $editable.hasClass('edit-wysiwyg-attached'))
-    {
+    var $field = Drupal.edit.findFieldForEditable($editable);
+
+    Drupal.edit.editables._padEditable($editable, $field);
+
+    if ($field.hasClass('edit-type-direct-with-wysiwyg') && $editable.hasClass('edit-wysiwyg-attached')) {
       $editable.removeClass('edit-wysiwyg-attached');
       Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].detach($editable);
 
@@ -477,7 +480,7 @@ Drupal.edit.editables = {
       .unbind('keypress.edit');
     }
 
-    Drupal.edit.editables._unpadEditable($editable);
+    Drupal.edit.editables._unpadEditable($editable, $field);
 
     $editable
     .removeData(['edit-content-original', 'edit-content-changed', 'edit-content-original-transformed'])
@@ -488,7 +491,7 @@ Drupal.edit.editables = {
     $('#edit_backstage form').remove();
   },
 
-  _padEditable: function($editable) {
+  _padEditable: function($editable, $field) {
     // Add 5px padding for readability. This means we'll freeze the current
     // width and *then* add 5px padding, hence ensuring the padding is added "on
     // the outside".
@@ -506,16 +509,14 @@ Drupal.edit.editables = {
       // Re-enable width animations (padding changes affect width too!).
       $editable.removeClass('edit-animate-disable-width');
 
-      // The whole toolbar must move to the top when it's an inline editable.
-      if ($editable.css('display') == 'inline') {
-        $toolbar.css('top', parseFloat($toolbar.css('top')) - 5 + 'px');
+      // The toolbar must move to the top and the left.
+      var $hf = $toolbar.find('.edit-toolbar-heightfaker');
+      $hf.css({ bottom: '6px', left: '-5px' });
+      // When using a WYSIWYG editor, the width of the toolbar must match the
+      // width of the editable.
+      if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
+        $hf.css({ width: $editable.width() + 10 });
       }
-
-      // The toolgroups must move to the top and the left, and must increase
-      // their width.
-      $toolbar.find('.edit-toolbar .edit-toolgroup')
-      .addClass('edit-animate-exception-grow')
-      .css({'position': 'relative', 'top': '-5px', 'left': '-5px', 'width': $editable.width() + 5});
 
       // Pad the editable.
       $editable
@@ -532,7 +533,7 @@ Drupal.edit.editables = {
     }, 0);
   },
 
-  _unpadEditable: function($editable) {
+  _unpadEditable: function($editable, $field) {
     // 1) Set the empty width again.
     if ($editable.data('edit-width-empty') === true) {
       console.log('restoring width');
@@ -548,13 +549,13 @@ Drupal.edit.editables = {
       // Re-enable width animations (padding changes affect width too!).
       $editable.removeClass('edit-animate-disable-width');
 
-      // Move the toolbar & toolgroups to their original positions.
-      if ($editable.css('display') == 'inline') {
-        $toolbar.css('top', parseFloat($toolbar.css('top')) + 5 + 'px');
+      // Move the toolbar back to its original position.
+      var $hf = $toolbar.find('.edit-toolbar-heightfaker');
+      $hf.css({ bottom: '1px', left: '' });
+      // When using a WYSIWYG editor, restore the width of the toolbar.
+      if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
+        $hf.css({ width: '' });
       }
-      $toolbar.find('.edit-toolgroup')
-      .removeClass('edit-animate-exception-grow')
-      .css({'position': '', 'top': '', 'left': '', 'width': ''});
 
       // Unpad the editable.
       $editable
