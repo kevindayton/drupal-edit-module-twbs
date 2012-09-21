@@ -261,15 +261,20 @@
 
 
 .edit-toolbar .aloha-toolbar-panels {
-  overflow: auto;
   height: 100%;
-  outline: 1px solid #AAA;
-  outline-offset: -1px;
+}
+.edit-toolbar .aloha-toolbar-panels:after {
+  visibility: hidden;
+  display: block;
+  clear: both;
+  height: 0;
+  font-size: 0;
+  content: " ";
 }
 .edit-toolbar .aloha-toolbar-panels button {
   border: 1px solid #AAA;
-  margin-top: -1px;
-  margin-left: -1px;
+  border-top: none;
+  border-left: none;
 }
 
 
