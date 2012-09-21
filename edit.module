@@ -134,6 +134,10 @@ function edit_library() {
  * Implements hook_field_attach_view_alter().
  */
 function edit_field_attach_view_alter(&$output, $context) {
+  if (!module_exists('filter_true_wysiwyg')) {
+    return;
+  }
+
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
     $field = reset(element_children($output));
@@ -471,6 +475,16 @@ function edit_preprocess_field(&$variables) {
   if ($editability == 'direct') {
     $field_info = field_info_field($field_name);
     if ($field_info['cardinality'] != 1) {
+      $editability = 'form';
+    }
+  }
+
+  // Only perform the necessary checks (in the next if-test) to see whether
+  // direct, WYSIWYG-based editing is possible if the filter_true_wysiwyg module
+  // and the indicated WYSIWYG module are installed.
+  if ($editability == 'direct' && $wysiwyg) {
+    $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
+    if (module_exists('filter_true_wysiwyg') && !module_exists($wysiwyg_module)) {
       $editability = 'form';
     }
   }
