@@ -60,10 +60,10 @@ Drupal.theme.prototype.editModal = function(settings) {
  */
 Drupal.theme.prototype.editToolbarContainer = function(settings) {
   var html = '';
-  html += '<div id="' + settings.id + '" class="edit-toolbar-container">';
-  html += '  <div class="edit-toolbar primary" />';
-  html += '  <div class="edit-toolbar secondary" />';
-  html += '  <div class="edit-toolbar tertiary" />';
+  html += '<div id="' + settings.id + '" class="edit-toolbar-container edit-animate-invisible edit-animate-only-visibility">';
+  html += '  <div class="edit-toolbar-heightfaker">';
+  html += '    <div class="edit-toolbar" />';
+  html += '  </div>';
   html += '</div>';
   return html;
 };

@@ -202,38 +202,39 @@
   z-index: 310;
 }
 
+.edit-toolbar-heightfaker {
+  height: auto;
+  position: absolute;
+  bottom: 1px;
+  box-shadow: 0px 0px 1px 1px #0199FF, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  background: #FFF;
+}
+
 /* The toolbar; these are not necessarily visible. */
 .edit-toolbar {
-  position: absolute;
-  top: -35px;
-  height: 35px;
-/*  clip: rect(-1000px, 10000px, 35px, -1000px); /* Remove bottom box-shadow. */
+  position: relative;
+  height: 100%;
   font-family: 'Droid sans', 'Lucida Grande', sans-serif;
 }
-.edit-toolbar.primary {
-  left: 0px; /* LTR */
+.edit-form .edit-toolbar-heightfaker {
+  clip: rect(-1000px, 1000px, auto, -1000px); /* Remove bottom box-shadow. */
 }
-.edit-toolbar.secondary {
-  right: 0px; /* LTR */
-}
-.edit-toolbar.tertiary {
-  top: 0px;
-  height: 0px;
-  /* @todo: figure out how to deal with clipping; clip: auto causes problems on Safari 5 */
+.edit-type-direct-with-wysiwyg .edit-editing .edit-toolbar-heightfaker {
+  width: 100%;
 }
 
 
 /* The toolbar contains toolgroups; these are visible. */
 .edit-toolgroup {
   float: left; /* LTR */
-  padding-left: 5px; /* LTR */
-  box-shadow: 0px 0px 1px 1px #0199FF, 0px 0px 3px 3px rgba(153, 153, 153, .5);
-  background: #fff url('../images/throbber.gif') no-repeat -60px 60px;
 }
 
 /* Info toolgroup. */
 .edit-toolgroup.info {
   float: left; /* LTR */
+  font-weight: bolder;
+  padding: 0 5px;
+  background: #FFF url('../images/throbber.gif') no-repeat -60px 60px;
 }
 .edit-toolgroup.info.loading {
   background-position: 90% 50%;
@@ -245,9 +246,74 @@
 /* Operations toolgroup. */
 .edit-toolgroup.ops {
   float: right; /* LTR */
-  margin-left: 20px;
+  margin-left: 5px;
 }
 
+.edit-toolgroup.wysiwyg-tabs {
+  float: right;
+}
+.edit-toolgroup.wysiwyg {
+  clear: left;
+  width: 100%;
+  padding-left: none;
+}
+
+
+
+.edit-toolbar .aloha-toolbar-panels {
+  overflow: auto;
+  height: 100%;
+  outline: 1px solid #AAA;
+  outline-offset: -1px;
+}
+.edit-toolbar .aloha-toolbar-panels button {
+  border: 1px solid #AAA;
+  margin-top: -1px;
+  margin-left: -1px;
+}
+
+
+
+/** Toolbar tabs **/
+.edit-toolbar .aloha-toolbar-handles {
+  display: block;
+  height: 35px;
+  font-family: 'Droid sans', 'Lucida Grande', sans-serif;
+}
+.edit-toolbar .aloha-toolbar-handles ul {
+  display: inline-block;
+  float: left; /* LTR */
+  border-left: 1px solid #AAA;
+  margin: 0;
+  padding: 0;
+}
+.edit-toolbar .aloha-toolbar-handles ul li {
+  list-style: none;
+  float: left; /* LTR */
+}
+.edit-toolbar .aloha-toolbar-handles ul li a {
+  display: block;
+  color: #999;
+  min-width: 40px;
+  text-align: center;
+  padding: 7px 12px;
+  border-radius: 0;
+  border: 1px solid #AAA;
+  border-left: 0;
+  border-bottom: 0;
+  text-decoration: none;
+  margin: 0;
+}
+.edit-toolbar .aloha-toolbar-handles ul li.aloha-drupal-ui-state-active a {
+  background-color: #eee;
+  color: black;
+}
+/*
+.edit-toolbar .aloha-toolbar-panels {
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #AAA;
+}*/
 
 
 

@@ -32,6 +32,11 @@ Drupal.edit.toolbar = {
         $toolbar.insertBefore($editable);
       }
 
+      // Animate the toolbar into visibility.
+      setTimeout(function() {
+        $toolbar.removeClass('edit-animate-invisible');
+      }, 0);
+
       // Remove any and all existing toolbars, except for any that are for a
       // currently being edited field.
       $('.edit-toolbar-container:not(:has(.edit-editing))')
@@ -62,33 +67,6 @@ Drupal.edit.toolbar = {
         if (!$(e.target).is(':input')) {
           return false;
         }
-      })
-      // Accomodate changed content in tertiary toolbar.
-      .bind('edit-toolbar-tertiary-changed', function(e) {
-        var $tertiary = $toolbar.find('.edit-toolbar.tertiary');
-        var adjustedOffset = $tertiary.data('edit-adjusted-offset');
-        if (typeof adjustedOffset === 'undefined') {
-          $tertiary.data('edit-adjusted-offset', 0);
-          adjustedOffset = 0;
-        }
-
-        var height = 0;
-        $toolbar.find('.edit-toolbar.tertiary').children()
-        .each(function(i, element) {
-          height += $(element).height();
-        });
-
-        // If the height has changed, then change the offsets of the toolgroups
-        // as well.
-        if (height != adjustedOffset) {
-          $toolbar.find('.edit-toolbar').each(function(i, element) {
-            var top = $(element).css('top');
-            $(element).css('top', parseFloat(top) - height + adjustedOffset + 'px');
-          });
-          $tertiary
-            .css('height', height)
-            .data('edit-adjusted-offset', height);
-        }
       });
 
       return true;
@@ -106,6 +84,7 @@ Drupal.edit.toolbar = {
 
     // Remove after animation.
     $toolbar
+    .addClass('edit-animate-invisible')
     // Prevent this toolbar from being detected *while* it is being removed.
     .removeAttr('id')
     .find('.edit-toolbar .edit-toolgroup')
@@ -116,21 +95,21 @@ Drupal.edit.toolbar = {
   },
 
   // Animate into view.
-  show: function($editable, toolbar, toolgroup) {
-    this._find($editable, toolbar, toolgroup).removeClass('edit-animate-invisible');
+  show: function($editable, toolgroup) {
+    this._find($editable, toolgroup).removeClass('edit-animate-invisible');
   },
 
-  addClass: function($editable, toolbar, toolgroup, classes) {
-    this._find($editable, toolbar, toolgroup).addClass(classes);
+  addClass: function($editable, toolgroup, classes) {
+    this._find($editable, toolgroup).addClass(classes);
   },
 
-  removeClass: function($editable, toolbar, toolgroup, classes) {
-    this._find($editable, toolbar, toolgroup).removeClass(classes);
+  removeClass: function($editable, toolgroup, classes) {
+    this._find($editable, toolgroup).removeClass(classes);
   },
 
-  _find: function($editable, toolbar, toolgroup) {
+  _find: function($editable, toolgroup) {
     return Drupal.edit.toolbar.get($editable)
-           .find('.edit-toolbar.' + toolbar + ' .edit-toolgroup.' + toolgroup);
+           .find('.edit-toolbar .edit-toolgroup.' + toolgroup);
   },
 
   _id: function($editable) {
@@ -146,8 +125,10 @@ Drupal.edit.form = {
       return false;
     }
     else {
-      // Indicate in the 'info' toolgroup that the form is loading.
-      Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
+      // Indicate in the 'info' toolgroup that the form is loading. Animated.
+      setTimeout(function() {
+        Drupal.edit.toolbar.addClass($editable, 'info', 'loading');
+      }, 0);
 
       // Render form container.
       var $form = $(Drupal.theme('editFormContainer', {

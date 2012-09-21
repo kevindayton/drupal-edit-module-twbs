@@ -18,8 +18,11 @@ $(function() {
         selector: '.edit-form-container .placeholder'
       });
 
-      // Indicate in the 'info' toolgroup that the form has loaded.
-      Drupal.edit.toolbar.removeClass(ajax.$editable, 'primary', 'info', 'loading');
+      // Indicate in the 'info' toolgroup that the form has loaded, but only do
+      // it after half a second to prevent it from flashing, which is bad UX.
+      setTimeout(function() {
+        Drupal.edit.toolbar.removeClass(ajax.$editable, 'info', 'loading');
+      }, 500);
 
       // Detect changes in this form.
       Drupal.edit.form.get(ajax.$editable)
@@ -72,7 +75,7 @@ $(function() {
     }
 
     // Animations.
-    Drupal.edit.toolbar.show(ajax.$editable, 'secondary', 'ops');
+    Drupal.edit.toolbar.show(ajax.$editable, 'ops');
     ajax.$editable.trigger('edit-form-loaded.edit');
   };
   Drupal.ajax.prototype.commands.edit_field_rendered_without_transformation_filters = function(ajax, response, status) {
@@ -83,8 +86,11 @@ $(function() {
         && ajax.$field.hasClass('edit-text-with-transformation-filters')
         )
     {
-      // Indicate in the 'info' toolgroup that the form has loaded.
-      Drupal.edit.toolbar.removeClass(ajax.$editable, 'primary', 'info', 'loading');
+      // Indicate in the 'info' toolgroup that the form has loaded, but only do
+      // it after half a second to prevent it from flashing, which is bad UX.
+      setTimeout(function() {
+        Drupal.edit.toolbar.removeClass(ajax.$editable, 'info', 'loading');
+      }, 500);
 
       // Update the HTML of the editable and enable WYSIWYG editing on it.
       ajax.$editable.html(response.data);

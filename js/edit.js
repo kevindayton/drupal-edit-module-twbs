@@ -225,7 +225,7 @@ Drupal.edit.editables = {
         || $editable.closest('.edit-type-direct').data('edit-field-label');
 
       Drupal.edit.toolbar.get($editable)
-      .find('.edit-toolbar.primary:not(:has(.edit-toolgroup.info))')
+      .find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'info',
         buttons: [
@@ -242,7 +242,7 @@ Drupal.edit.editables = {
     // Animations.
     setTimeout(function() {
       $editable.addClass('edit-highlighted');
-      Drupal.edit.toolbar.show($editable, 'primary', 'info');
+      Drupal.edit.toolbar.show($editable, 'info');
     }, 0);
 
     Drupal.edit.state.fieldBeingHighlighted = $editable;
@@ -293,7 +293,7 @@ Drupal.edit.editables = {
     // Toolbar (already created in the highlight).
     Drupal.edit.toolbar.get($editable)
     .addClass('edit-editing')
-    .find('.edit-toolbar.secondary:not(:has(.edit-toolgroup.ops))')
+    .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
     .append(Drupal.theme('editToolgroup', {
       classes: 'ops',
       buttons: [
@@ -355,7 +355,7 @@ Drupal.edit.editables = {
 
   _loadRerenderedProcessedText: function($editable, $field) {
     // Indicate in the 'info' toolgroup that the form is loading.
-    Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
+    Drupal.edit.toolbar.addClass($editable, 'info', 'loading');
 
     var edit_id = Drupal.edit.getID($field);
     var element_settings = {
@@ -379,8 +379,8 @@ Drupal.edit.editables = {
     $editable.addClass('edit-wysiwyg-attached');
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].attach($editable);
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].activate($editable);
-    Drupal.edit.toolbar.show($editable, 'secondary', 'wysiwyg-tabs');
-    Drupal.edit.toolbar.show($editable, 'tertiary', 'wysiwyg');
+    Drupal.edit.toolbar.show($editable, 'wysiwyg-tabs');
+    Drupal.edit.toolbar.show($editable, 'wysiwyg');
   },
 
   _updateDirectEditable: function($editable) {
@@ -389,13 +389,13 @@ Drupal.edit.editables = {
     var $field = Drupal.edit.findFieldForEditable($editable);
     if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
       Drupal.edit.toolbar.get($editable)
-      .find('.edit-toolbar.secondary:not(:has(.edit-toolgroup.wysiwyg-tabs))')
+      .find('.edit-toolbar:not(:has(.edit-toolgroup.wysiwyg-tabs))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg-tabs',
         buttons: []
       }))
       .end()
-      .find('.edit-toolbar.tertiary:not(:has(.edit-toolgroup.wysiwyg))')
+      .find('.edit-toolbar:not(:has(.edit-toolgroup.wysiwyg))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg',
         buttons: []
@@ -511,36 +511,11 @@ Drupal.edit.editables = {
         $toolbar.css('top', parseFloat($toolbar.css('top')) - 5 + 'px');
       }
 
-      // The primary toolgroups must move to the top and the left.
-      $toolbar.find('.edit-toolbar.primary .edit-toolgroup')
-      .addClass('edit-animate-exception-grow')
-      .css({'position': 'relative', 'top': '-5px', 'left': '-5px'});
-
-      // The secondary toolgroups must move to the top and the right.
-      $toolbar.find('.edit-toolbar.secondary .edit-toolgroup')
-      .addClass('edit-animate-exception-grow')
-      .css({'position': 'relative', 'top': '-5px', 'left': '5px'});
-
-      // The tertiary toolgroups must move to the top and the left, and must
-      // increase their width.
-      $toolbar.find('.edit-toolbar.tertiary .edit-toolgroup')
+      // The toolgroups must move to the top and the left, and must increase
+      // their width.
+      $toolbar.find('.edit-toolbar .edit-toolgroup')
       .addClass('edit-animate-exception-grow')
       .css({'position': 'relative', 'top': '-5px', 'left': '-5px', 'width': $editable.width() + 5});
-
-      // The clipping (to get rid of the bottom box-shadow) needs to be updated.
-      $toolbar
-      .delegate('.edit-toolbar', Drupal.edit.const.transitionEnd, function(e) {
-        // @todo: this was disabled to make the AE multiSplit override (p/h1/... dropdown) visible.
-        return;
-        var $this = $(this);
-        if (!$this.data('edit-toolbar-updating-clipping')) {
-          $this.data('edit-toolbar-updating-clipping', true);
-
-          var parts = $this.css('clip').split(' ');
-          parts[2] = parseFloat(parts[2]) - 5 + 'px';
-          $this.css('clip', parts.join(' '));
-        }
-      });
 
       // Pad the editable.
       $editable
@@ -580,11 +555,6 @@ Drupal.edit.editables = {
       $toolbar.find('.edit-toolgroup')
       .removeClass('edit-animate-exception-grow')
       .css({'position': '', 'top': '', 'left': '', 'width': ''});
-
-      // Undo our changes to the clipping (to prevent the bottom box-shadow).
-      $toolbar
-      .undelegate('.edit-toolbar', Drupal.edit.const.transitionEnd)
-      .find('.edit-toolbar').css('clip', '');
 
       // Unpad the editable.
       $editable
