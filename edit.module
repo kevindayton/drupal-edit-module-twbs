@@ -525,7 +525,7 @@ function edit_preprocess_field(&$variables) {
 
       // Let the WYSIWYG editor know the allowed tags.
       $allowed_tags = filter_get_allowed_tags_by_format($format_id);
-      $variables['attributes_array']['data-edit-allowed-tags'] = implode(',', $allowed_tags);
+      $variables['attributes_array']['data-edit-allowed-tags'] = ($allowed_tags === TRUE) ? '' : implode(',', $allowed_tags);
 
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
