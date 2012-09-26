@@ -50,6 +50,11 @@ function edit_menu() {
  * Implements hook_page_alter().
  */
 function edit_page_alter(&$page) {
+  // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
+  if (arg(0) == 'admin' || (arg(0) == 'node' && arg(1) == 'add') || (arg(0) == 'node' && arg(2) == 'edit')) {
+    return;
+  }
+
   $page['page_top']['edit'] = array(
     'view_edit_toggle' => array(
       '#prefix' => '<div id="editbar"><h2 class="element-invisible">' . t('In-place edit operations') . '</h2><ul id="edit_view-edit-toggles">',
