@@ -59,12 +59,71 @@
 }
 
 /**
- * View/edit mode toggle.
+ * Edit's bar — inspired by core's toolbar.module & shortcut.module.
  */
-
-#edit_view-edit-toggles {
-  float: left;
+#editbar,
+#editbar * {
+  border: 0;
+  font-size: 100%;
+  line-height: inherit;
+  list-style: none;
+  margin: 0;
+  outline: 0;
+  padding: 0;
+  text-align: left; /* LTR */
+  vertical-align: baseline;
 }
+#editbar {
+  position: relative;
+  background: #666;
+  color: #ccc;
+  font: normal small "Lucida Grande", Verdana, sans-serif;
+  margin: 0 -20px;
+  padding: 0 20px;
+  -moz-box-shadow: 0 3px 20px #000;
+  -webkit-box-shadow: 0 3px 20px #000;
+  box-shadow: 0 3px 20px #000;
+  z-index: 500;
+}
+#editbar ul {
+  padding: 5px 0 2px 0;
+  height: 28px;
+  line-height: 24px;
+  margin-left:5px; /* LTR */
+}
+#editbar ul li,
+#editbar ul li a {
+  float: left; /* LTR */
+  padding: 0 5px 0 5px;
+  margin-right: 5px; /* LTR */
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+#editbar a {
+  padding: 5px 10px 5px 5px;
+  line-height: 24px;
+  color: #fefefe;
+  font-size: .846em;
+  text-decoration: none;
+}
+#editbar a:focus,
+#editbar a:hover,
+#editbar a.active {
+  color: #fff;
+}
+#editbar ul li a:focus,
+#editbar ul li a:hover,
+#editbar ul li a.active:focus {
+  background: #555;
+}
+#editbar ul li a.active:hover,
+#editbar ul li a.active {
+  background: #000;
+}
+
+
+
 
 /**
  * Edit mode: overlay + candidate editables + editables being edited.
@@ -79,7 +138,7 @@
   width: 100%;
   height: 100%;
   background-color: rgba(255,255,255,.5);
-  top: 90px; /* offset for navbar, modified later */
+  top: 0px; /* offset for navbar, modified later */
   left: 0px;
 }
 

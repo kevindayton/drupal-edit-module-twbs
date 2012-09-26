@@ -11,12 +11,6 @@
  * entities, enabling them for in-place editing.
  */
 
-/**
- * Loads the logic for altering the toolbar.
- */
-module_load_include('inc', 'edit', 'includes/toolbar');
-
-
 define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
 // @TODO: provide a UI so users can switch to
 define('EDIT_WYSIWYG_DEFAULT', 'aloha');
@@ -50,6 +44,34 @@ function edit_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function edit_page_alter(&$page) {
+  $page['page_top']['edit'] = array(
+    'view_edit_toggle' => array(
+      '#prefix' => '<div id="editbar"><h2 class="element-invisible">' . t('In-place edit operations') . '</h2><ul id="edit_view-edit-toggles">',
+      '#suffix' => '</ul></div>',
+      'content' => array(
+        array(
+          '#theme' => 'menu_local_task',
+          '#link' => array('title' => t('View'), 'href' => $_GET['q'], 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+          '#active' => TRUE,
+        ),
+        array(
+          '#theme' => 'menu_local_task',
+          '#link' => array('title' => t('Quick edit'), 'href' => '#', 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
+        ),
+      ),
+      '#attached' => array(
+        'library' => array(
+          array('edit', 'edit'),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
