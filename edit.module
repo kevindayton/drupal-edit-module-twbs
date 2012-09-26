@@ -76,7 +76,18 @@ function edit_page_alter(&$page) {
         ),
       ),
     ),
+    '#post_render' => array(
+      'edit_editbar_post_render',
+    ),
   );
+}
+
+/**
+ * Post-render function to remove the editbar if nothing editable is present.
+ */
+function edit_editbar_post_render($html) {
+  global $editbar;
+  return ($editbar !== TRUE) ? '' : $html;
 }
 
 /**
@@ -327,6 +338,10 @@ function edit_preprocess_panels_pane(&$variables) {
 
   // Ensure the user has access to update the node.
   if (entity_access('update', 'node', $node)) {
+    // Make sure the editbar is created.
+    global $editbar;
+    $editbar = TRUE;
+
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
       $variables['title_attributes_array']['class'][] = 'edit-pseudofield';
@@ -359,6 +374,10 @@ function edit_preprocess_page(&$variables) {
     $node_type = node_type_get_type($node->type);
 
     if ($node_type->has_title) {
+      // Make sure the editbar is created.
+      global $editbar;
+      $editbar = TRUE;
+
       $attributes = array(
         'class' => array(
           'edit-pseudofield',
@@ -383,6 +402,10 @@ function edit_preprocess_node(&$variables) {
   $entity      = $variables['elements']['#node'];
 
   if (entity_access('update', $entity_type, $entity)) {
+    // Make sure the editbar is created.
+    global $editbar;
+    $editbar = TRUE;
+
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
     // Pseudo-field: title.
@@ -534,6 +557,10 @@ function edit_preprocess_field(&$variables) {
   $entity_access = entity_access('update', $entity_type, $entity);
   $field_access = field_access('edit', $field_name, $entity_type, $entity);
   if ($entity_access && $field_access) {
+    // Make sure the editbar is created.
+    global $editbar;
+    $editbar = TRUE;
+
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
     $instance_info = field_info_instance($entity_type, $field_name, $bundle);
