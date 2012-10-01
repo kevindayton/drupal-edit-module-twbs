@@ -55,6 +55,11 @@ function edit_page_alter(&$page) {
     return;
   }
 
+  // @todo: fix http://drupal.org/node/1798458, this is a stopgap measure
+  if (!(arg(0) == 'node' && is_numeric(arg(1)))) {
+    return;
+  }
+
   $page['page_top']['edit'] = array(
     'view_edit_toggle' => array(
       '#prefix' => '<div id="editbar"><h2 class="element-invisible">' . t('In-place edit operations') . '</h2><ul id="edit_view-edit-toggles">',
