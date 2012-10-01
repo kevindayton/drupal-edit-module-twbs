@@ -186,29 +186,6 @@ function edit_field_attach_view_alter(&$output, $context) {
       $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
       $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
     }
-
-    return;
-  }
-
-  // @TODO: this is too late in the rendering process!
-  $fields = element_children($output);
-  // @TODO: only do this when the user has access to do so.
-  foreach ($fields as $field) {
-    $output[$field]['#edit_mode'] = TRUE;
-  }
-
-  // @TODO: because the above does not work, we have to override it here.
-  foreach ($fields as $field) {
-    $langcode = $output[$field]['#language'];
-    foreach (array_keys($output[$field]['#items']) as $item) {
-      // @TODO: support more formatters than just "text_default"
-      if ($output[$field]['#formatter'] == 'text_default') {
-        $text      = $output[$field]['#items'][$item]['value'];
-        $format_id = $output[$field]['#items'][$item]['format'];
-        $wrapped = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
-        $output[$field][$item]['#markup'] = $wrapped;
-      }
-    }
   }
 }
 
