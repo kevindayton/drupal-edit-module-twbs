@@ -183,7 +183,8 @@ function edit_field_attach_view_alter(&$output, $context) {
 
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
-    $field = reset(element_children($output));
+    $children = element_children($output);
+    $field = reset($children);
     $langcode = $output[$field]['#language'];
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
