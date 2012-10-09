@@ -376,8 +376,11 @@ Drupal.edit.editables = {
 
   // Attach, activate and show the WYSIWYG editor.
   _wysiwygify: function($editable) {
+    var $field = Drupal.edit.findFieldForEditable($editable);
     $editable.addClass('edit-wysiwyg-attached');
-    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].attach($editable);
+    var formatID = $field.attr('data-edit-text-format');
+    var format = Drupal.settings.aloha.formats[formatID];
+    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].attach($editable, format);
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].activate($editable);
     Drupal.edit.toolbar.show($editable, 'wysiwyg-tabs');
     Drupal.edit.toolbar.show($editable, 'wysiwyg');

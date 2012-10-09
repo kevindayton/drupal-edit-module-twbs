@@ -559,9 +559,15 @@ function edit_preprocess_field(&$variables) {
       $language  = $variables['element']['#language'];
       $format_id = $field[$language][0]['format'];
 
-      // Let the WYSIWYG editor know the allowed tags.
-      $allowed_tags = filter_get_allowed_tags_by_format($format_id);
-      $variables['attributes_array']['data-allowed-tags'] = ($allowed_tags === TRUE) ? '' : implode(',', $allowed_tags);
+      // Let the WYSIWYG editor know the text format.
+      $variables['attributes_array']['data-edit-text-format'] = $format_id;
+
+      // Ensure the WYSIWYG editor has the necessary text format related
+      // metadata.
+      // @todo: research a more elegant solution, at least document this.
+      $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
+      $function = $wysiwyg_module . '_add_format_settings';
+      $function();
 
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
