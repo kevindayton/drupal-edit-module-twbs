@@ -91,11 +91,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $commands = array();
   $form = drupal_build_form('fape_field_edit_form', $form_state);
 
-  // When working with a hidden form, we don't want any CSS or JS to be loaded.
-  if (isset($_POST['nocssjs']) && $_POST['nocssjs'] === 'true') {
-    _edit_remove_attached($form);
-  }
-
   if (!empty($form_state['executed'])) {
     entity_save($entity_type, $form_state['entity']);
     // Reload the entity. This is necessary for some fields; otherwise we'd
@@ -136,19 +131,14 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
       'data'    => drupal_render($form),
     );
   }
-  return array('#type' => 'ajax', '#commands' => $commands);
-}
 
-/**
- * Recursively remove all #attached properties.
- */
-function _edit_remove_attached(&$element) {
-  if (in_array('#attached', element_properties($element))) {
-    unset($element['#attached']);
+  // When working with a hidden form, we don't want any CSS or JS to be loaded.
+  if (isset($_POST['nocssjs']) && $_POST['nocssjs'] === 'true') {
+    drupal_static_reset('drupal_add_css');
+    drupal_static_reset('drupal_add_js');
   }
-  foreach (element_children($element) as $child) {
-    _edit_remove_attached($element[$child]);
-  }
+
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
