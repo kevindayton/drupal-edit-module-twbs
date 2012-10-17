@@ -11,6 +11,8 @@
 
 /**
  * Formats a field in a wrapper with the required metadata.
+ *
+ * @todo: Make sure this hack is no longer necessary!
  */
 function theme_edit_spanned_field($variables) {
   $variables['attributes']['data-edit-id'] = $variables['edit_id'];

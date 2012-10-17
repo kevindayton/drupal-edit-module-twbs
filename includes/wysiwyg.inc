@@ -7,7 +7,19 @@
 /**
  * Given a field (with cardinality 1) that defaults to "direct" editability and
  * WYSIWYG support, check whether the field settings and text format don't
- * force it to "form" editability or even disabled editability.
+ * force it to "form" editability.
+ *
+ * @param string $entity_type
+ *   An entity type.
+ * @param Drupal\Core\Entity\EntityInterface $entity
+ *   A entity object.
+ * @param string $field_name
+  *  The name of the field for which to analyze the editability.
+ * @param string $format_id
+ *   The current text format of the field.
+ *
+ * @return string
+ *   'direct' or 'form'
  */
 function edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_name, $format_id) {
   // The field must be configured to use text processing.

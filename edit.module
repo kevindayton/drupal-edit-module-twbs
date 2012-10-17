@@ -414,12 +414,12 @@ function edit_preprocess_node(&$variables) {
 /**
  * Wraps the name pseudo-field attached to nodes.
  *
- * @param $name
+ * @param string $name
  *   The existing name value.
- * @param $node_id
+ * @param int $node_id
  *   The node ID.
  *
- * @return
+ * @return string
  *   The fully-themed HTML output for the wrapped "name" pseudo-field.
  */
 function edit_node_wrap_name($name, $node_id) {
@@ -441,12 +441,12 @@ function edit_node_wrap_name($name, $node_id) {
 /**
  * Wraps the "date" pseudo-field attached to nodes.
  *
- * @param $date
+ * @param string $date
  *   The existing date value.
- * @param $node_id
+ * @param int $node_id
  *   The node ID.
  *
- * @return
+ * @return string
  *   The fully-themed HTML output for the wrapped "date" pseudo-field.
  */
 function edit_node_wrap_date($date, $node_id) {
@@ -467,6 +467,13 @@ function edit_node_wrap_date($date, $node_id) {
 
 /**
  * Renders the author and created date pseudo-fields.
+ *
+ * @param string $author
+ * @param string $created
+ *
+ * @return string
+ *
+ * @todo: Make sure this hack is no longer necessary!
  */
 function edit_node_render_submitted($author, $created) {
   // @todo Consider using template_preprocess_node() or theme_preprocess_node()
