@@ -67,7 +67,7 @@ function edit_page_alter(&$page) {
       'content' => array(
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('View'), 'href' => $_GET['q'], 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+          '#link' => array('title' => t('View'), 'href' => current_path(), 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
           '#active' => TRUE,
         ),
         array(
