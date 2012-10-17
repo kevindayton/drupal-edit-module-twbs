@@ -6,6 +6,17 @@
 
 /**
  * Page callback: Provides editing of entity fields.
+ *
+ * @param string $entity_type
+ *   The entity type of the entity that is being edited.
+ * @param int $entity_id
+ *   The entity ID of the entity that is being edited.
+ * @param string $field_name
+ *   The name of the field that is being edited.
+ * @param string|NULL $langcode
+ *   The name of the language for which the field is being edited.
+ * @return array
+ *   A render array.
  */
 function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL) {
   // Ensure the entity type is valid.
@@ -143,6 +154,20 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 
 /**
  * Page callback: render a processed text field without transformation filters.
+ *
+ * @param string $entity_type
+ *   The entity type of the entity of which a processed text field is being
+ *   rerendered.
+ * @param int $entity_id
+ *   The entity ID of the entity of which a processed text field is being
+ *   rerendered.
+ * @param string $field_name
+ *   The name of the (processed text) field that that is being rerendered
+ * @param string|NULL $langcode
+ *   The name of the language for which the processed text field is being
+ *   rererendered.
+ * @return array
+ *   A render array.
  */
 function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode = NULL) {
   // Ensure the entity type is valid.
