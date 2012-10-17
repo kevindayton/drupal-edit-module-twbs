@@ -389,10 +389,10 @@ function edit_preprocess_node(&$variables) {
     global $editbar;
     $editbar = TRUE;
 
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+    $id = $entity->id();
 
     // Pseudo-field: title.
-    $node_type = node_type_get_type($bundle);
+    $node_type = node_type_get_type($entity->bundle());
     if ($node_type->has_title) {
       $variables['title_attributes_array']['class'][] = 'edit-pseudofield';
       $variables['title_attributes_array']['class'][] = 'edit-field';
@@ -538,7 +538,7 @@ function edit_preprocess_field(&$variables) {
 
     // Update the editability based on the field's settings and the text format.
     module_load_include('inc', 'edit', 'includes/wysiwyg');
-    $editability = edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_name, $format_id);
+    $editability = edit_wysiwyg_analyze_field_editability($entity, $field_name, $format_id);
     if ($editability == 'disabled') {
       return;
     }
@@ -551,9 +551,7 @@ function edit_preprocess_field(&$variables) {
     global $editbar;
     $editbar = TRUE;
 
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-    $instance_info = field_info_instance($entity_type, $field_name, $bundle);
+    $instance_info = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
 
     if (empty($variables['attributes_array'])) {
       $variables['attributes_array'] = array();
@@ -561,7 +559,7 @@ function edit_preprocess_field(&$variables) {
 
     // Provide metadata through data- attributes.
     $variables['attributes_array']['data-edit-field-label'] = $instance_info['label'];
-    $variables['attributes_array']['data-edit-id'] = "$entity_type:$id:$field_name";
+    $variables['attributes_array']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $field_name;
     if ($editability == 'direct' && $wysiwyg) {
       $field     = $variables['element']['#object']->$field_name;
       $language  = $variables['element']['#language'];

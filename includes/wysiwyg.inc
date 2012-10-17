@@ -4,13 +4,13 @@
  * Logic to analyze compatibility of text formats with WYSIWYG editors.
  */
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Given a field (with cardinality 1) that defaults to "direct" editability and
  * WYSIWYG support, check whether the field settings and text format don't
  * force it to "form" editability.
  *
- * @param string $entity_type
- *   An entity type.
  * @param Drupal\Core\Entity\EntityInterface $entity
  *   A entity object.
  * @param string $field_name
@@ -21,10 +21,9 @@
  * @return string
  *   'direct' or 'form'
  */
-function edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_name, $format_id) {
+function edit_wysiwyg_analyze_field_editability(EntityInterface $entity, $field_name, $format_id) {
   // The field must be configured to use text processing.
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  $instance_info = field_info_instance($entity_type, $field_name, $bundle);
+  $instance_info = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
 
   // This field is configured to not use text processing; hence fall back to
   // form-based editing.
