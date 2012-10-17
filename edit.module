@@ -11,9 +11,9 @@
  * entities, enabling them for in-place editing.
  */
 
-define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
+const EDIT_WYSIWYG_VARIABLE = 'edit_wysiwyg';
 // @TODO: provide a UI so users can switch to
-define('EDIT_WYSIWYG_DEFAULT', 'aloha');
+const EDIT_WYSIWYG_DEFAULT = 'aloha';
 
 /**
  * Implements hook_menu()
