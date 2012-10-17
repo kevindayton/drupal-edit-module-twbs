@@ -115,7 +115,7 @@ function edit_theme() {
 /**
  * Implements hook_library().
  */
-function edit_library() {
+function edit_library_info() {
   // Figure out which library dependency to set for WYSIWYG editor integration.
   $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
 
