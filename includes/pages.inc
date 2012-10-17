@@ -4,6 +4,9 @@
  * AJAX endpoint to retrieve & save subforms for fields and re-render fields.
  */
 
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 /**
  * Page callback: Provides editing of entity fields.
  *
@@ -21,22 +24,22 @@
 function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL) {
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entity_info = entity_get_info($entity_type);
   if (!$entity_info) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entities = entity_load_multiple($entity_type, array($entity_id));
   if (!$entities) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entity = reset($entities);
   if (!$entity) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   if (!isset($langcode) && isset($entity->language)) {
@@ -45,7 +48,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 
   // Ensure access to update this particular field is granted.
   if (!field_access('edit', $field_name, $entity_type, $entity)) {
-    return MENU_ACCESS_DENIED;
+    throw new AccessDeniedHttpException();
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
@@ -66,7 +69,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
         break;
     }
     if (!node_access('update', $entity)) {
-      return MENU_ACCESS_DENIED;
+      throw new AccessDeniedHttpException();
     }
   }
   else {
@@ -75,7 +78,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
 
   if (empty($field_instance)) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $form_state = array(
@@ -172,22 +175,22 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode = NULL) {
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entity_info = entity_get_info($entity_type);
   if (!$entity_info) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entities = entity_load_multiple($entity_type, array($entity_id));
   if (!$entities) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $entity = reset($entities);
   if (!$entity) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   if (!isset($langcode) && isset($entity->language)) {
@@ -196,14 +199,14 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
 
   // Ensure access to update this particular field is granted.
   if (!field_access('edit', $field_name, $entity_type, $entity)) {
-    return MENU_ACCESS_DENIED;
+    throw new AccessDeniedHttpException();
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   $field_instance = field_info_instance($entity_type, $field_name, $bundle);
   if (empty($field_instance)) {
-    return MENU_NOT_FOUND;
+    throw new NotFoundHttpException();
   }
 
   $commands = array();
