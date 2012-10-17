@@ -29,7 +29,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     return MENU_NOT_FOUND;
   }
 
-  $entities = entity_load($entity_type, array($entity_id));
+  $entities = entity_load_multiple($entity_type, array($entity_id));
   if (!$entities) {
     return MENU_NOT_FOUND;
   }
@@ -106,7 +106,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     entity_save($entity_type, $form_state['entity']);
     // Reload the entity. This is necessary for some fields; otherwise we'd
     // render the field without the updated values.
-    $entity = reset(entity_load($entity_type, array($entity_id)));
+    $entity = reset(entity_load_multiple($entity_type, array($entity_id)));
 
     // Pseudo-field: title.
     if ($entity_type == 'node' && $field_name == 'title') {
@@ -180,7 +180,7 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
     return MENU_NOT_FOUND;
   }
 
-  $entities = entity_load($entity_type, array($entity_id));
+  $entities = entity_load_multiple($entity_type, array($entity_id));
   if (!$entities) {
     return MENU_NOT_FOUND;
   }
