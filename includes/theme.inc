@@ -4,6 +4,8 @@
  * Provides theme functions for the Edit module.
  */
 
+use Drupal\Core\Template\Attribute;
+
 /**
  * @ingroup themeable
  * @{
@@ -18,9 +20,7 @@ function theme_edit_spanned_field($variables) {
   $variables['attributes']['data-edit-id'] = $variables['edit_id'];
   $variables['attributes']['data-edit-field-label'] = $variables['label'];
 
-  $attributes = drupal_attributes($variables['attributes']);
-
-  return '<span' . $attributes . '>' .  $variables['value'] . '</span>';
+  return '<span' . new Attribute($variables['attributes']) . '>' .  $variables['value'] . '</span>';
 }
 
 /**
