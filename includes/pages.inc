@@ -42,8 +42,18 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     throw new NotFoundHttpException();
   }
 
-  if (!isset($langcode) && isset($entity->language)) {
-    $langcode = $entity->language;
+  $langcode = $entity->langcode;
+
+  // Ensure access to update this particular entity is granted.
+  if ($entity_type != 'node') {
+    // @todo: we don't have entity_access() in Drupal 8 yet, so we can only
+    // support nodes right now.
+    throw new AccessDeniedHttpException();
+  }
+  else {
+    if (!node_access('update', $entity)) {
+      throw new AccessDeniedHttpException();
+    }
   }
 
   // Ensure access to update this particular field is granted.
@@ -51,30 +61,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     throw new AccessDeniedHttpException();
   }
 
-  // This allows us to have limited support for non-field API fields. Currently,
-  // we only have support for node:title, node:author and node:created.
-  if ($entity_type == 'node' && in_array($field_name, array('title', 'author', 'created'))) {
-    $field_instance = TRUE;
-    switch ($field_name) {
-      case 'title':
-        $subform_id = 'fape_field_edit_node_title_form';
-        break;
-      case 'author':
-        $subform_id = 'editfape_field_edit_node_author_form';
-        break;
-      case 'created':
-        $subform_id = 'editfape_field_edit_node_created_form';
-        break;
-    }
-    if (!node_access('update', $entity)) {
-      throw new AccessDeniedHttpException();
-    }
-  }
-  else {
-    $field_instance = field_info_instance($entity_type, $field_name, $entity->bundle());
-    $subform_id = 'fape_field_edit_field_form';
-  }
-
+  $field_instance = field_info_instance($entity_type, $field_name, $entity->bundle());
   if (empty($field_instance)) {
     throw new NotFoundHttpException();
   }
@@ -87,59 +74,30 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     'no_redirect' => TRUE,
     'field_instance' => $field_instance,
     'bundle' => $entity->bundle(),
-    'subform_id' => $subform_id,
+    'subform_id' => 'edit_field_edit_field_form',
     // We use this in our hook_form_alter() implementation so that we don't
     // alter FAPE's forms when it's used by FAPE itself.
     'editability' => TRUE,
   );
 
-  if (in_array($field_name, array('author', 'created'))) {
-    // @todo For some unknown, weird reason, form_load_include() breaks the
-    // code.
-    //form_load_include($form_state, 'inc', 'edit', 'includes/fape');
-    module_load_include('inc', 'edit', 'includes/fape');
-  }
-
   $commands = array();
-  $form = drupal_build_form('fape_field_edit_form', $form_state);
+  $form = drupal_build_form('edit_field_edit_form', $form_state);
 
   if (!empty($form_state['executed'])) {
-    entity_save($entity_type, $form_state['entity']);
-    // Reload the entity. This is necessary for some fields; otherwise we'd
-    // render the field without the updated values.
-    $entity = reset(entity_load_multiple($entity_type, array($entity_id)));
+    // @todo: returns SAVED_UPDATED, yet does not seem to have updated the
+    // entity; possibly the POST values are being lost?
+    $form_state['entity']->save();
 
-    // Pseudo-field: title.
-    if ($entity_type == 'node' && $field_name == 'title') {
-      $commands[] = array(
-        'command' => 'edit_field_form_saved',
-        'id'      => "$entity_type:$entity_id:$field_name",
-      );
-    }
-    // Pseudo-fields: name and date.
-    elseif ($entity_type == 'node' && in_array($field_name, array('author', 'created'))) {
-      $commands[] = array(
-        'command' => 'edit_field_form_saved',
-        'id'      => "$entity_type:$entity_id:$field_name",
-        'data'    => edit_node_render_submitted(
-          edit_node_wrap_name(theme('username', array('account' => $entity)), $id),
-          edit_node_wrap_date(format_date($entity->created), $id)
-        ),
-      );
-    }
-    // All other fields.
-    else {
-      $commands[] = array(
-        'command' => 'edit_field_form_saved',
-        'id'      => "$entity_type:$id:$field_name",
-        'data'    => drupal_render(field_view_field($entity_type, $entity, $field_name)),
-      );
-    }
+    $commands[] = array(
+      'command' => 'edit_field_form_saved',
+      'id'      => "$entity_type:$entity_id:$field_name",
+      'data'    => drupal_render(field_view_field($entity_type, $entity, $field_name)),
+    );
   }
   else {
     $commands[] = array(
       'command' => 'edit_field_form',
-      'id'      => "$entity_type:$id:$field_name",
+      'id'      => "$entity_type:$entity_id:$field_name",
       'data'    => drupal_render($form),
     );
   }
@@ -191,8 +149,18 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
     throw new NotFoundHttpException();
   }
 
-  if (!isset($langcode) && isset($entity->language)) {
-    $langcode = $entity->language;
+  $langcode = $entity->langcode;
+
+  // Ensure access to update this particular entity is granted.
+  if ($entity_type != 'node') {
+    // @todo: we don't have entity_access() in Drupal 8 yet, so we can only
+    // support nodes right now.
+    throw new AccessDeniedHttpException();
+  }
+  else {
+    if (!node_access('update', $entity)) {
+      throw new AccessDeniedHttpException();
+    }
   }
 
   // Ensure access to update this particular field is granted.
@@ -215,7 +183,7 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
 
   $commands[] = array(
     'command' => 'edit_field_rendered_without_transformation_filters',
-    'id'      => "$entity_type:$id:$field_name",
+    'id'      => "$entity_type:$entity_id:$field_name",
     'data'    => $output,
   );
 

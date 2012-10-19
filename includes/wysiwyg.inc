@@ -39,11 +39,12 @@ function edit_wysiwyg_analyze_field_editability(EntityInterface $entity, $field_
   }
   // When the text format uses >=1 filters that generate HTML, disallow direct
   // editing, and fall back to form-based editing.
-  elseif (in_array(FILTER_TYPE_HTML_GENERATOR, filter_get_filter_types_by_format($format_id))) {
+  elseif (in_array(FILTER_TYPE_MARKUP_LANGUAGE, filter_get_filter_types_by_format($format_id))) {
     return 'form';
   }
   else {
-    $allowed_tags = filter_get_allowed_tags_by_format($format_id);
+    $allowed_html = aloha_get_allowed_html_by_format($format_id);
+    $allowed_tags = array_keys($allowed_html);
 
     if ($allowed_tags === TRUE) {
       // *No* disallowed tags.

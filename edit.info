@@ -1,8 +1,12 @@
 name = Edit
 description = In-place content editing.
-package = Spark
-core = 7.x
-php = 5.3
+package = User interface
+core = 8.x
 
-dependencies[] = entity
-dependencies[] = fape
+dependencies[] = field
+; @todo Get rid of this dependency; it's only there to help Edit figure out the
+; allowed tags.
+; @todo Create a hook_edit_wysiwyg_possible_or_something() that aloha.module in
+; D8 implements, to avoid this dependency. Will also result in cleaner code.
+; HOOK_EDIT_INFO()!
+dependencies[] = aloha
