@@ -24,7 +24,7 @@ function edit_entity_access($op, $entity_type, $entity = NULL, $account = NULL) 
 /**
  * Identical to field_attach_validate(), with the addition of $options.
  */
-function _edit_field_attach_validate($entity_type, $entity) {
+function _edit_field_attach_validate($entity_type, $entity, $options) {
   $errors = array();
   // Check generic, field-type-agnostic errors first.
   _field_invoke_default('validate', $entity_type, $entity, $errors, $options);
