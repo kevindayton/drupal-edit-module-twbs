@@ -647,8 +647,11 @@ Drupal.edit.editables = {
       var value = (wysiwyg)
         ? $.trim($editable.html())
         : $.trim($editable.text());
+      var selector = (wysiwyg)
+        ? 'textarea'
+        : ':input[type!="hidden"][type!="submit"]';
       $('#edit_backstage form')
-      .find(':input[type!="hidden"][type!="submit"]').val(value).end()
+      .find(selector).val(value).end()
       .find('.edit-form-submit').trigger('click.edit');
     }
     return false;
