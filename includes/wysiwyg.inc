@@ -25,6 +25,8 @@ function edit_wysiwyg_analyze_field_editability(EntityInterface $entity, $field_
   // The field must be configured to use text processing.
   $instance_info = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
 
+  $compatibility_callback = edit_get_wysiwyg_info('format compatibility callback');
+
   // This field is configured to not use text processing; hence fall back to
   // form-based editing.
   if (empty($instance_info['settings']['text_processing'])) {
@@ -37,42 +39,9 @@ function edit_wysiwyg_analyze_field_editability(EntityInterface $entity, $field_
   elseif (empty($format_id)) {
     return 'form';
   }
-  // When the text format uses >=1 filters that generate HTML, disallow direct
-  // editing, and fall back to form-based editing.
-  elseif (in_array(FILTER_TYPE_MARKUP_LANGUAGE, filter_get_filter_types_by_format($format_id))) {
+  elseif (!$compatibility_callback($format_id)) {
     return 'form';
   }
-  else {
-    $allowed_html = aloha_get_allowed_html_by_format($format_id);
-    $allowed_tags = array_keys($allowed_html);
 
-    if ($allowed_tags === TRUE) {
-      // *No* disallowed tags.
-      return 'direct';
-    }
-
-    // <br> and <p> tags are necessary!
-    if (in_array('br', $allowed_tags) && in_array('p', $allowed_tags)) {
-      return 'direct';
-    }
-    else {
-      // Warn the user and point him/her in the right direcotion.
-      drupal_set_message(
-        t('For in-place editing of the %field field, some essential HTML
-          tags are missing from the list of allowed tags: <code><br></code> and
-          <code><p></code> <em>both</em> need to be allowed. Please
-          <a href="!url">add them</a> to the %text-format text format\'s
-          allowed tags.',
-          array(
-            '%field' => $instance_info['label'],
-            '!url' => url("admin/config/content/formats/$format_id"),
-            '%text-format' => $formats[$format_id]->name,
-          )
-        ),
-        'error'
-      );
-      return 'form';
-    }
-  }
   return 'direct';
 }

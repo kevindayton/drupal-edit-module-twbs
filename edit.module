@@ -13,10 +13,6 @@
 
 use Drupal\Core\Template\Attribute;
 
-const EDIT_WYSIWYG_VARIABLE = 'edit_wysiwyg';
-// @TODO: provide a UI so users can switch to
-const EDIT_WYSIWYG_DEFAULT = 'aloha';
-
 module_load_include('inc', 'edit', 'includes/missing-api');
 
 /**
@@ -103,9 +99,6 @@ function edit_editbar_post_render($html) {
  * Implements hook_library().
  */
 function edit_library_info() {
-  // Figure out which library dependency to set for WYSIWYG editor integration.
-  $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-
   $path = drupal_get_path('module', 'edit');
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
@@ -153,9 +146,8 @@ function edit_library_info() {
   );
 
   // Only add dependencies on the WYSIWYG editor when it's actually available.
-  if (module_exists($wysiwyg_module)) {
-    // @todo: add Edit support to Aloha in Drupal 8.
-    // $libraries['edit']['dependencies'][] = array($wysiwyg_module, "$wysiwyg_module.edit");
+  if (count(module_implements('edit_wysiwyg_info'))) {
+    $libraries['edit']['dependencies'][] = edit_get_wysiwyg_info('javascript library');
   }
 
   return $libraries;
@@ -165,10 +157,6 @@ function edit_library_info() {
  * Implements hook_field_attach_view_alter().
  */
 function edit_field_attach_view_alter(&$output, $context) {
-  if (!module_exists('filter_true_wysiwyg')) {
-    return;
-  }
-
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
     $children = element_children($output);
@@ -310,6 +298,7 @@ function edit_preprocess_field(&$variables) {
 
   $editability = $formatter_info['settings']['edit']['editability'];
   $wysiwyg     = $formatter_info['settings']['edit']['wysiwyg'];
+  $wysiwig_for_edit = (count(edit_get_wysiwyg_info()) > 0);
 
   // If editing is explicitly disabled for this field, return early to avoid
   // any further processing.
@@ -330,8 +319,7 @@ function edit_preprocess_field(&$variables) {
   // direct, WYSIWYG-based editing is possible if the filter_true_wysiwyg module
   // and the indicated WYSIWYG module are installed.
   if ($editability == 'direct' && $wysiwyg) {
-    $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-    if (module_exists('filter_true_wysiwyg') && !module_exists($wysiwyg_module)) {
+    if (!$wysiwig_for_edit) {
       $editability = 'form';
     }
   }
@@ -373,15 +361,13 @@ function edit_preprocess_field(&$variables) {
 
       // Ensure the WYSIWYG editor has the necessary text format related
       // metadata.
-      // @todo: research a more elegant solution, at least document this.
-      $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-      $function = $wysiwyg_module . '_add_format_settings';
-      $function();
+      $settings_callback = edit_get_wysiwyg_info('javascript settings callback');
+      $settings_callback();
 
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
       $filter_types = filter_get_filter_types_by_format($format_id);
-      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types))) {
+      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE), $filter_types))) {
         $variables['attributes']['class'][] = 'edit-text-with-transformation-filters';
       }
       else {
@@ -395,5 +381,43 @@ function edit_preprocess_field(&$variables) {
     if ($editability == 'direct' && $wysiwyg) {
       $variables['attributes']['class'][] = 'edit-type-direct-with-wysiwyg';
     }
+  }
+}
+
+/**
+ * Retrieves a list of all available WYSIWYG integration for Edit. Only the
+ * first is actually used.
+ *
+ * @todo Convert to the plug-in system!
+ *
+ * @param string $key
+ *   The key to get a value for.
+ *
+ * @see hook_edit_wysiwyg_info()
+ * @see hook_edit_wysiwyg_info_alter()
+ */
+function edit_get_wysiwyg_info($key = NULL) {
+  $edit_wysiwyg_info = &drupal_static(__FUNCTION__, array());
+
+  if (empty($edit_wysiwyg_info)) {
+    $cache = cache()->get('edit_wysiwyg_info');
+    if ($cache === FALSE) {
+      // Rebuild the cache and save it.
+      $edit_wysiwyg_info = module_invoke_all('edit_wysiwyg_info');
+      drupal_alter('edit_wysiwyg_info', $edit_wysiwyg_info);
+    }
+    else {
+      $edit_wysiwyg_info = $cache->data;
+    }
+  }
+
+  if (isset($key)) {
+    $modules = array_keys($edit_wysiwyg_info);
+    $first = $modules[0];
+
+    return $edit_wysiwyg_info[$first][$key];
+  }
+  else {
+    return $edit_wysiwyg_info;
   }
 }
