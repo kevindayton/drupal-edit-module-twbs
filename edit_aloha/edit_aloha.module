@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @file
+ * This module only exists temporarily, until Aloha has been committed to Drupal
+ * core. Once Edit is also committed to core, this "edit_aloha" module can be
+ * merged with the Aloha module.
+ */
+
+/**
+ * Implements hook_edit_wysiwyg_info().
+ */
+function edit_aloha_edit_wysiwyg_info() {
+  $info['edit_aloha'] = array(
+    'javascript library' => array('edit_aloha', 'aloha.edit'),
+    'format compatibility callback' => 'aloha_check_format_compatibility',
+    'javascript settings callback' => 'aloha_add_format_settings',
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function edit_aloha_library_info() {
+  $module_path = drupal_get_path('module', 'edit_aloha');
+  $libraries['aloha.edit'] = array(
+    'title' => 'Integrate Aloha Editor with the Edit module.',
+    'version' => ALOHA_VERSION,
+    'js' => array(
+      $module_path . '/js/drupal.aloha.edit.js' => array(),
+      // Configure Edit's JS to use aloha as the WYSIWYG.
+      array(
+        'data' => array(
+          'edit' => array('wysiwyg' => 'aloha'),
+          'aloha' => array('settings' => array(
+            // Ensure the Edit module can embed the rendered toolbar within
+            // its own DOM infrastructure.
+            'DrupalUI' => array(
+              'renderOwnToolbarContainer' => FALSE,
+            )
+          ))
+        ),
+        'type' => 'setting',
+      ),
+    ),
+    'css' => array(
+      $module_path . '/css/drupal.aloha.edit.css',
+    ),
+    'dependencies' => array(
+      array('aloha', 'aloha'),
+    )
+  );
+  return $libraries;
+}
+
