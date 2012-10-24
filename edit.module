@@ -12,8 +12,10 @@
  */
 
 use Drupal\Core\Template\Attribute;
+use Drupal\Core\field\FieldInstance;
 
 module_load_include('inc', 'edit', 'includes/missing-api');
+module_load_include('inc', 'edit', 'includes/text');
 
 /**
  * Implements hook_menu()
@@ -233,72 +235,93 @@ function edit_form_edit_field_edit_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implements hook_field_formatter_info_alter().
+ * Implements hook_preprocess_field().
  */
-function edit_field_formatter_info_alter(&$info) {
-  // @todo Create a UI that allows users to override these defaults.
+function edit_preprocess_field(&$variables) {
+  $entity = $variables['element']['#object'];
+  $name = $variables['element']['#field_name'];
+  $langcode = $variables['element']['#language'];
+  $formatter_type = $variables['element']['#formatter'];
+  $field = $entity->{$name}[$langcode];
+  $instance_info = field_info_instance($entity->entityType(), $name, $entity->bundle());
 
-  // Add a new "edit" property to each formatter, which contains metadata for
-  // the Edit module depending on the formatter. It contains the following keys:
-  //   * 'editability', with one of the following values:
-  //     - 'editable': these fields will be immediately editable.
-  //     - 'form': these fields will load the field's form through AJAX.
-  //     - 'disabled': these fields will not be editable inline.
-  //   * 'wysiwyg', with boolean values
-  $editability_metadata = array(
-    // @todo Implement file and image editability.
-    'file_default'   => 'form',
-    'file_table'     => 'form',
-    'file_url_plain' => 'disabled',
-    'image'          => 'form',
-    'list_default'   => 'form',
-    'list_key'       => 'form',
-    'number_integer'     => 'form',
-    'number_decimal'     => 'form',
-    'number_unformatted' => 'form',
-    'taxonomy_term_reference_link'         => 'form',
-    'taxonomy_term_reference_plain'        => 'form',
-    'taxonomy_term_reference_rss_category' => 'disabled',
-    'text_default'            => 'direct',
-    'text_plain'              => 'form',
-    'text_trimmed'            => 'disabled',
-    'text_summary_or_trimmed' => 'disabled',
-    'text_textarea'           => 'direct',
-  );
-  $wysiwyg_metadata = array(
-    'text_default' => TRUE,
-    'text_plain' => FALSE,
-  );
-  foreach ($editability_metadata as $formatter => $editability) {
-    if (!empty($info[$formatter])) {
-      $info[$formatter]['settings']['edit'] = array(
-        'editability' => $editability,
-        'wysiwyg'     => (isset($wysiwyg_metadata[$formatter])) ? $wysiwyg_metadata[$formatter] : FALSE,
-      );
+  $entity_access = edit_entity_access('update', $entity->entityType(), $entity);
+  $field_access = field_access('edit', $name, $entity->entityType(), $entity);
+  $editability = edit_analyze_field_editability($field, $instance_info, $formatter_type);
+  if ($entity_access && $field_access && $editability != 'disabled') {
+    global $editbar;
+    $editbar = TRUE;
+
+    // Mark this field as editable and provide metadata through data- attributes.
+    $variables['attributes']['data-edit-field-label'] = $instance_info->definition['label'];
+    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $name;
+    $variables['attributes']['class'][] = 'edit-field';
+    $variables['attributes']['class'][] = 'edit-allowed';
+    $variables['attributes']['class'][] = 'edit-type-' . $editability;
+    if ($editability == 'direct-with-wysiwyg') {
+      $variables['attributes']['class'][] = 'edit-type-direct';
+      $format_id = $entity->{$name}[$langcode][0]['format'];
+      _edit_preprocess_field_wysiwyg($variables, $format_id);
     }
   }
 }
 
 /**
- * Implements hook_preprocess_field().
+ * Helper function for edit_preprocess_field().
+ *
+ * @param  array $variables
+ *   @see edit_preprocess_field()
+ * @param  string $format_id
+ *   A text format id.
  */
-function edit_preprocess_field(&$variables) {
-  $entity_type = $variables['element']['#entity_type'];
-  $entity      = $variables['element']['#object'];
-  $field_name  = $variables['element']['#field_name'];
-  $formatter   = $variables['element']['#formatter'];
+function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
+  // Let the WYSIWYG editor know the text format.
+  $variables['attributes']['data-edit-text-format'] = $format_id;
 
-  $formatter_info = field_info_formatter_types($formatter);
+  // Ensure the WYSIWYG editor has the necessary text format related
+  // metadata.
+  $settings_callback = edit_get_wysiwyg_info('javascript settings callback');
+  $settings_callback();
 
-  // If the formatter doesn't contain the edit property, assume that it is not
-  // yet compatible with the Edit module and return early.
+  // Let the JavaScript logic know whether transformation filters are used
+  // in this format, so it can decide whether to re-render the text or not.
+  $filter_types = filter_get_filter_types_by_format($format_id);
+  $transformation_filter_types = array(
+    FILTER_TYPE_TRANSFORM_REVERSIBLE,
+    FILTER_TYPE_TRANSFORM_IRREVERSIBLE
+  );
+  if (count(array_intersect($transformation_filter_types, $filter_types))) {
+    $variables['attributes']['class'][] = 'edit-text-with-transformation-filters';
+  }
+  else {
+    $variables['attributes']['class'][] = 'edit-text-without-transformation-filters';
+  }
+}
+
+/**
+ * Given a field, its instance info and the formatter being used, determine its
+ * editability.
+ *
+ * @param array $field
+ *   The field's field array.
+ * @param FieldInstance $instance_info
+ *   The field's instance info.
+ * @param string $formatter_type
+ *   The field's formatter type name.
+ * @return string
+ *   The editability: 'disabled', 'form', 'direct' or 'direct-with-wysiwyg'.
+ */
+function edit_analyze_field_editability($field, FieldInstance $instance_info, $formatter_type) {
+  $name = $instance_info->definition['field_name'];
+
+  // If the formatter doesn't contain the edit property, default it to 'form'
+  // editability, which should always work.
+  $formatter_info = field_info_formatter_types($formatter_type);
   if (empty($formatter_info['settings']['edit']['editability'])) {
-    return;
+    $formatter_info['settings']['edit']['editability'] = 'form';
   }
 
   $editability = $formatter_info['settings']['edit']['editability'];
-  $wysiwyg     = $formatter_info['settings']['edit']['wysiwyg'];
-  $wysiwig_for_edit = (count(edit_get_wysiwyg_info()) > 0);
 
   // If editing is explicitly disabled for this field, return early to avoid
   // any further processing.
@@ -309,79 +332,63 @@ function edit_preprocess_field(&$variables) {
   // If directly editable, check the cardinality. If the cardinality is greater
   // than 1, use a form to edit the field.
   if ($editability == 'direct') {
-    $field_info = field_info_field($field_name);
-    if ($field_info['cardinality'] != 1) {
+    $info = field_info_field($name);
+    if ($info['cardinality'] != 1) {
       $editability = 'form';
     }
   }
 
-  // Only perform the necessary checks (in the next if-test) to see whether
-  // direct, WYSIWYG-based editing is possible if the filter_true_wysiwyg module
-  // and the indicated WYSIWYG module are installed.
-  if ($editability == 'direct' && $wysiwyg) {
-    if (!$wysiwig_for_edit) {
-      $editability = 'form';
+  // If still directly editable, check whether "regular" direct editing (almost
+  // bare contentEditable) editing should be used or WYSIWYG-based direct
+  // editing should be used. In the latter case
+  if ($editability == 'direct') {
+    // If this field is configured to not use text processing; it is plain text
+    // "regular" direct editing should be used, which is already set.
+    // On the other hand, if it is configured to use text processing; then we
+    // must check whether 'direct-with-wysiwyg' or 'form' editability should be
+    // used.
+    if (!empty($instance_info->definition['settings']['text_processing'])) {
+      $format_id = $field[0]['format'];
+      $editability = edit_wysiwyg_analyze_field_editability($format_id);
     }
   }
 
-  // If still directly editable and the formatter is marked to support WYSIWYG,
-  // then check whether we can actually use WYSIWYG.
-  if ($editability == 'direct' && $wysiwyg) {
-    $field     = $variables['element']['#object']->$field_name;
-    $language  = $variables['element']['#language'];
-    $format_id = $field[$language][0]['format'];
+  return $editability;
+}
 
-    // Update the editability based on the field's settings and the text format.
-    module_load_include('inc', 'edit', 'includes/wysiwyg');
-    $editability = edit_wysiwyg_analyze_field_editability($entity, $field_name, $format_id);
-    if ($editability == 'disabled') {
-      return;
+/**
+ * Given a text field (with cardinality 1) that defaults to 'direct' editability
+ * and has text processing enabled, check whether the text format allows it to
+ * use WYSIWYG-powered direct editing or whether 'form' based editing needs to
+ * be used.
+ *
+ * @param string|NULL $format_id
+ *   The field's current text format.
+ *
+ * @return string
+ *   The editability: 'direct-with-wysiwyg' or 'form'.
+ */
+function edit_wysiwyg_analyze_field_editability($format_id = NULL) {
+  // If no format is assigned yet, (e.g. when the field is still empty (NULL)),
+  // then provide form-based editing, so that the user is able to select a text
+  // format. (Direct editing doesn't allow the user to change the format.)
+  if (empty($format_id)) {
+    return 'form';
+  }
+  // If no WYSIWYG editor is available, then fall back to form-based editing.
+  elseif (count(edit_get_wysiwyg_info()) == 0) {
+    return 'form';
+  }
+  // If the WYSIWYG editor is not compatible with the current format, then fall
+  // back to form-based editing.
+  else {
+    $compatibility_callback = edit_get_wysiwyg_info('format compatibility callback');
+    if (!$compatibility_callback($format_id)) {
+      return 'form';
     }
   }
 
-  $entity_access = edit_entity_access('update', $entity_type, $entity);
-  $field_access = field_access('edit', $field_name, $entity_type, $entity);
-  if ($entity_access && $field_access) {
-    // Make sure the editbar is created.
-    global $editbar;
-    $editbar = TRUE;
-
-    $instance_info = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
-
-    // Provide metadata through data- attributes.
-    $variables['attributes']['data-edit-field-label'] = $instance_info['label'];
-    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $field_name;
-    if ($editability == 'direct' && $wysiwyg) {
-      $field     = $variables['element']['#object']->$field_name;
-      $language  = $variables['element']['#language'];
-      $format_id = $field[$language][0]['format'];
-
-      // Let the WYSIWYG editor know the text format.
-      $variables['attributes']['data-edit-text-format'] = $format_id;
-
-      // Ensure the WYSIWYG editor has the necessary text format related
-      // metadata.
-      $settings_callback = edit_get_wysiwyg_info('javascript settings callback');
-      $settings_callback();
-
-      // Let the JavaScript logic know whether transformation filters are used
-      // in this format, so it can decide whether to re-render the text or not.
-      $filter_types = filter_get_filter_types_by_format($format_id);
-      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE), $filter_types))) {
-        $variables['attributes']['class'][] = 'edit-text-with-transformation-filters';
-      }
-      else {
-        $variables['attributes']['class'][] = 'edit-text-without-transformation-filters';
-      }
-    }
-    // Mark this field as editable.
-    $variables['attributes']['class'][] = 'edit-field';
-    $variables['attributes']['class'][] = 'edit-allowed';
-    $variables['attributes']['class'][] = 'edit-type-' . $editability;
-    if ($editability == 'direct' && $wysiwyg) {
-      $variables['attributes']['class'][] = 'edit-type-direct-with-wysiwyg';
-    }
-  }
+  return 'direct-with-wysiwyg';
 }
 
 /**
