@@ -67,21 +67,15 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
 
   $form_state = array(
-    'entity_type' => $entity_type,
     'entity' => $entity,
     'field_name' => $field_name,
     'langcode' => $langcode,
     'no_redirect' => TRUE,
-    'field_instance' => $field_instance,
-    'bundle' => $entity->bundle(),
-    'subform_id' => 'edit_field_edit_field_form',
-    // We use this in our hook_form_alter() implementation so that we don't
-    // alter FAPE's forms when it's used by FAPE itself.
-    'editability' => TRUE,
+    'build_info' => array('args' => array()),
   );
-
   $commands = array();
-  $form = drupal_build_form('edit_field_edit_form', $form_state);
+  form_load_include($form_state, 'inc', 'edit', 'includes/form');
+  $form = drupal_build_form('edit_field_form', $form_state);
 
   if (!empty($form_state['executed'])) {
     // @todo: returns SAVED_UPDATED, yet does not seem to have updated the
