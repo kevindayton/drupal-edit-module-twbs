@@ -162,8 +162,8 @@ function edit_field_attach_view_alter(&$output, $context) {
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
       $format_id = $output[$field]['#items'][$item]['format'];
-      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
-      $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
+      $untransformed = check_markup($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE));
+      $output[$field][$item]['#markup'] = $untransformed;
     }
   }
 }
