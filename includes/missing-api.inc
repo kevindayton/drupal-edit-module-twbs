@@ -48,6 +48,7 @@ function edit_entity_allows_revisions($entity_type, $bundle, $entity) {
 
 /**
  * @ingroup Field API refinements.
+ * @todo Improve Field API by allowing $options to be passed into field_attach_form(), field_attach_validate(), field_attach_form_validate() and field_attach_submit().
  * @{
  */
 
@@ -99,7 +100,7 @@ function _edit_field_attach_validate($entity_type, $entity, $options) {
 
 /**
  * Identical to field_attach_form_validate(), with the addition of $options and
- * calling edit_field_attach_validate() instead of field_attach_validate().
+ * calling _edit_field_attach_validate() instead of field_attach_validate().
  */
 function _edit_field_attach_form_validate($entity_type, EntityInterface $entity, $form, &$form_state, $options) {
   // Perform field_level validation.

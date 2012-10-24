@@ -14,7 +14,9 @@
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
 
+// @todo Get rid of missing-api.inc by contributing to Entity API and Field API.
 module_load_include('inc', 'edit', 'includes/missing-api');
+// @todo Get rid of text.inc once Edit is committed by moving this logic into text.module.
 module_load_include('inc', 'edit', 'includes/text');
 
 /**
@@ -54,11 +56,6 @@ function edit_menu() {
 function edit_page_alter(&$page) {
   // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
   if (arg(0) == 'admin' || (arg(0) == 'node' && arg(1) == 'add') || (arg(0) == 'node' && arg(2) == 'edit')) {
-    return;
-  }
-
-  // @todo: fix http://drupal.org/node/1798458, this is a stopgap measure
-  if (!(arg(0) == 'node' && is_numeric(arg(1)))) {
     return;
   }
 
@@ -105,11 +102,9 @@ function edit_library_info() {
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
     'website' => 'http://drupal.org/project/edit',
-    'version' => NULL, // @TODO Figure out the correct way to do this.
+    'version' => VERSION,
     'js' => array(
       $path . '/js/edit.js' => array(
-        // @TODO Make sure that a subset of the JavaScript is loaded ASAP, so
-        // that the view/edit mode toggle works immediately.
         'defer' => TRUE,
       ),
       $path . '/js/util.js' => array(

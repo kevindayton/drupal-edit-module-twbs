@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * AJAX endpoint to retrieve & save subforms for fields and re-render fields.
+ * AJAX endpoints to retrieve & save subforms for fields and re-render fields.
  */
 
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -42,7 +42,9 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     throw new NotFoundHttpException();
   }
 
-  $langcode = $entity->langcode;
+  if (!isset($langcode)) {
+    $langcode = $entity->langcode;
+  }
 
   // Ensure access to update this particular entity is granted.
   if (!edit_entity_access('update', $entity_type, $entity)) {
@@ -71,8 +73,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $form = drupal_build_form('edit_field_form', $form_state);
 
   if (!empty($form_state['executed'])) {
-    // @todo: returns SAVED_UPDATED, yet does not seem to have updated the
-    // entity; possibly the POST values are being lost?
     $form_state['entity']->save();
 
     $commands[] = array(
