@@ -49,6 +49,7 @@ function edit_entity_allows_revisions($entity_type, $bundle, $entity) {
 /**
  * @ingroup Field API refinements.
  * @todo Improve Field API by allowing $options to be passed into field_attach_form(), field_attach_validate(), field_attach_form_validate() and field_attach_submit().
+ * @see http://drupal.org/node/1821906
  * @{
  */
 
@@ -60,7 +61,6 @@ function edit_field_attach_prepare_view($entity_type, $entities, $view_mode, $la
 
   // To ensure hooks are only run once per entity, only process items without
   // the _field_view_prepared flag.
-  // @todo: resolve this more generally for both entity and field level hooks.
   $prepare = array();
   foreach ($entities as $id => $entity) {
     if (empty($entity->_field_view_prepared)) {
@@ -121,7 +121,7 @@ function edit_field_attach_view($entity_type, EntityInterface $entity, $view_mod
 /**
  * Identical to field_attach_form(), with the addition of $options.
  */
-function _edit_field_attach_form($entity_type, EntityInterface $entity, &$form, &$form_state, $langcode = NULL, $options = array()) {
+function _edit_field_attach_form($entity_type, EntityInterface $entity, &$form, &$form_state, $langcode = NULL, array $options = array()) {
   // Set #parents to 'top-level' by default.
   $form += array('#parents' => array());
 
@@ -145,7 +145,7 @@ function _edit_field_attach_form($entity_type, EntityInterface $entity, &$form, 
 /**
  * Identical to field_attach_validate(), with the addition of $options.
  */
-function _edit_field_attach_validate($entity_type, $entity, $options) {
+function _edit_field_attach_validate($entity_type, $entity, array $options = array()) {
   $errors = array();
   // Check generic, field-type-agnostic errors first.
   _field_invoke_default('validate', $entity_type, $entity, $errors, $options);
@@ -168,7 +168,7 @@ function _edit_field_attach_validate($entity_type, $entity, $options) {
  * Identical to field_attach_form_validate(), with the addition of $options and
  * calling _edit_field_attach_validate() instead of field_attach_validate().
  */
-function _edit_field_attach_form_validate($entity_type, EntityInterface $entity, $form, &$form_state, $options) {
+function _edit_field_attach_form_validate($entity_type, EntityInterface $entity, $form, &$form_state, array $options = array()) {
   // Perform field_level validation.
   try {
     _edit_field_attach_validate($entity_type, $entity, $options);
@@ -190,7 +190,7 @@ function _edit_field_attach_form_validate($entity_type, EntityInterface $entity,
 /**
  * Identical to field_attach_submit(), with the addition of $options.
  */
-function _edit_field_attach_submit($entity_type, EntityInterface $entity, $form, &$form_state, $options) {
+function _edit_field_attach_submit($entity_type, EntityInterface $entity, $form, &$form_state, array $options = array()) {
   // Extract field values from submitted values.
   field_invoke_method('submit', _field_invoke_widget_target(), $entity, $form, $form_state, $options);
 

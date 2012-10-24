@@ -19,7 +19,7 @@ function edit_field_form($form, &$form_state) {
   _edit_field_attach_form($entity->entityType(), $entity, $form, $form_state, $langcode, $options);
 
   $form['#validate'][] = 'edit_field_form_validate';
-  // @todo Doesn't seem necessary anymore, see edit_field_form_validate().
+  // @todo Verify that this is indeed not necessary anymore, see edit_field_form_validate().
   // $form['#submit'][] = '';
 
   // Add revisions form items if necessary.
