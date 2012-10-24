@@ -45,15 +45,8 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $langcode = $entity->langcode;
 
   // Ensure access to update this particular entity is granted.
-  if ($entity_type != 'node') {
-    // @todo: we don't have entity_access() in Drupal 8 yet, so we can only
-    // support nodes right now.
+  if (!edit_entity_access('update', $entity_type, $entity)) {
     throw new AccessDeniedHttpException();
-  }
-  else {
-    if (!node_access('update', $entity)) {
-      throw new AccessDeniedHttpException();
-    }
   }
 
   // Ensure access to update this particular field is granted.
