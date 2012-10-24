@@ -149,7 +149,7 @@ function edit_library_info() {
 
   // Only add dependencies on the WYSIWYG editor when it's actually available.
   if (count(module_implements('edit_wysiwyg_info'))) {
-    $libraries['edit']['dependencies'][] = edit_get_wysiwyg_info('javascript library');
+    $libraries['edit']['dependencies'][] = _edit_get_wysiwyg_info('javascript library');
   }
 
   return $libraries;
@@ -186,7 +186,7 @@ function edit_preprocess_field(&$variables) {
 
   $entity_access = edit_entity_access('update', $entity->entityType(), $entity);
   $field_access = field_access('edit', $name, $entity->entityType(), $entity);
-  $editability = edit_analyze_field_editability($field, $instance_info, $formatter_type);
+  $editability = _edit_analyze_field_editability($field, $instance_info, $formatter_type);
   if ($entity_access && $field_access && $editability != 'disabled') {
     global $editbar;
     $editbar = TRUE;
@@ -219,7 +219,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
 
   // Ensure the WYSIWYG editor has the necessary text format related
   // metadata.
-  $settings_callback = edit_get_wysiwyg_info('javascript settings callback');
+  $settings_callback = _edit_get_wysiwyg_info('javascript settings callback');
   $settings_callback();
 
   // Let the JavaScript logic know whether transformation filters are used
@@ -250,7 +250,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
  * @return string
  *   The editability: 'disabled', 'form', 'direct' or 'direct-with-wysiwyg'.
  */
-function edit_analyze_field_editability($field, FieldInstance $instance_info, $formatter_type) {
+function _edit_analyze_field_editability($field, FieldInstance $instance_info, $formatter_type) {
   $name = $instance_info->definition['field_name'];
 
   // If the formatter doesn't contain the edit property, default it to 'form'
@@ -288,7 +288,7 @@ function edit_analyze_field_editability($field, FieldInstance $instance_info, $f
     // used.
     if (!empty($instance_info->definition['settings']['text_processing'])) {
       $format_id = $field[0]['format'];
-      $editability = edit_wysiwyg_analyze_field_editability($format_id);
+      $editability = _edit_wysiwyg_analyze_field_editability($format_id);
     }
   }
 
@@ -307,7 +307,7 @@ function edit_analyze_field_editability($field, FieldInstance $instance_info, $f
  * @return string
  *   The editability: 'direct-with-wysiwyg' or 'form'.
  */
-function edit_wysiwyg_analyze_field_editability($format_id = NULL) {
+function _edit_wysiwyg_analyze_field_editability($format_id = NULL) {
   // If no format is assigned yet, (e.g. when the field is still empty (NULL)),
   // then provide form-based editing, so that the user is able to select a text
   // format. (Direct editing doesn't allow the user to change the format.)
@@ -315,13 +315,13 @@ function edit_wysiwyg_analyze_field_editability($format_id = NULL) {
     return 'form';
   }
   // If no WYSIWYG editor is available, then fall back to form-based editing.
-  elseif (count(edit_get_wysiwyg_info()) == 0) {
+  elseif (count(_edit_get_wysiwyg_info()) == 0) {
     return 'form';
   }
   // If the WYSIWYG editor is not compatible with the current format, then fall
   // back to form-based editing.
   else {
-    $compatibility_callback = edit_get_wysiwyg_info('format compatibility callback');
+    $compatibility_callback = _edit_get_wysiwyg_info('format compatibility callback');
     if (!$compatibility_callback($format_id)) {
       return 'form';
     }
@@ -342,7 +342,7 @@ function edit_wysiwyg_analyze_field_editability($format_id = NULL) {
  * @see hook_edit_wysiwyg_info()
  * @see hook_edit_wysiwyg_info_alter()
  */
-function edit_get_wysiwyg_info($key = NULL) {
+function _edit_get_wysiwyg_info($key = NULL) {
   $edit_wysiwyg_info = &drupal_static(__FUNCTION__, array());
 
   if (empty($edit_wysiwyg_info)) {
