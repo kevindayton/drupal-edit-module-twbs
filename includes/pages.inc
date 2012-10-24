@@ -16,12 +16,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *   The entity ID of the entity that is being edited.
  * @param string $field_name
  *   The name of the field that is being edited.
- * @param string|NULL $langcode
+ * @param string $langcode
  *   The name of the language for which the field is being edited.
+ * @param string $view_mode
+ *   The view mode the field should be rerendered in.
  * @return array
  *   A render array.
  */
-function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL) {
+function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view_mode) {
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
     throw new NotFoundHttpException();
@@ -42,9 +44,8 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     throw new NotFoundHttpException();
   }
 
-  if (!isset($langcode)) {
-    $langcode = $entity->langcode;
-  }
+  // Ensure a valid language code is set.
+  $langcode = field_valid_language($langcode);
 
   // Ensure access to update this particular entity is granted.
   if (!edit_entity_access('update', $entity_type, $entity)) {
@@ -72,19 +73,24 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   form_load_include($form_state, 'inc', 'edit', 'includes/form');
   $form = drupal_build_form('edit_field_form', $form_state);
 
+  $id = "$entity_type:$entity_id:$field_name:$langcode:$view_mode";
   if (!empty($form_state['executed'])) {
     $form_state['entity']->save();
 
+    $options = array('field_name' => $field_name);
+    edit_field_attach_prepare_view($entity->entityType(), array($entity->id() => $entity), $view_mode, $langcode, $options);
+    $output = edit_field_attach_view($entity->entityType(), $entity, $view_mode, $langcode, $options);
+
     $commands[] = array(
       'command' => 'edit_field_form_saved',
-      'id'      => "$entity_type:$entity_id:$field_name",
-      'data'    => drupal_render(field_view_field($entity_type, $entity, $field_name)),
+      'id'      => $id,
+      'data'    => drupal_render($output),
     );
   }
   else {
     $commands[] = array(
       'command' => 'edit_field_form',
-      'id'      => "$entity_type:$entity_id:$field_name",
+      'id'      => $id,
       'data'    => drupal_render($form),
     );
   }
@@ -109,13 +115,15 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
  *   rerendered.
  * @param string $field_name
  *   The name of the (processed text) field that that is being rerendered
- * @param string|NULL $langcode
+ * @param string $langcode
  *   The name of the language for which the processed text field is being
  *   rererendered.
+ * @param string $view_mode
+ *   The view mode the processed text field should be rerendered in.
  * @return array
  *   A render array.
  */
-function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode = NULL) {
+function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode, $view_mode) {
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
     throw new NotFoundHttpException();
@@ -136,18 +144,12 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
     throw new NotFoundHttpException();
   }
 
-  $langcode = $entity->langcode;
+  // Ensure a valid language code is set.
+  $langcode = field_valid_language($langcode);
 
   // Ensure access to update this particular entity is granted.
-  if ($entity_type != 'node') {
-    // @todo: we don't have entity_access() in Drupal 8 yet, so we can only
-    // support nodes right now.
+  if (!edit_entity_access('update', $entity_type, $entity)) {
     throw new AccessDeniedHttpException();
-  }
-  else {
-    if (!node_access('update', $entity)) {
-      throw new AccessDeniedHttpException();
-    }
   }
 
   // Ensure access to update this particular field is granted.
@@ -165,12 +167,11 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
   // Render the field in our custom display mode; retrieve the re-rendered
   // markup, this is what we're after.
   $field_output = field_view_field($entity_type, $entity, $field_name, 'edit-render-without-transformation-filters');
-  // TODO: support multiple value text fields. Change the code below and the JS.
   $output = $field_output[0]['#markup'];
 
   $commands[] = array(
     'command' => 'edit_field_rendered_without_transformation_filters',
-    'id'      => "$entity_type:$entity_id:$field_name",
+    'id'      => "$entity_type:$entity_id:$field_name:$langcode:$view_mode",
     'data'    => $output,
   );
 

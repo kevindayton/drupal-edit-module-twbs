@@ -24,24 +24,24 @@ module_load_include('inc', 'edit', 'includes/text');
  */
 function edit_menu() {
   $items = array();
-  $items['admin/edit/field/%/%/%'] = array(
+  $items['admin/edit/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback'  => TRUE,
     'page callback'    => 'edit_field_edit',
-    'page arguments'   => array(3, 4, 5),
+    'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
     'delivery callback'=> 'ajax_deliver',
     'theme callback'   => 'ajax_base_page_theme',
   );
-  $items['admin/render-without-transformations/field/%/%/%'] = array(
+  $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback'  => TRUE,
     'page callback'    => 'edit_text_field_render_without_transformation_filters',
-    'page arguments'   => array(3, 4, 5),
+    'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
     'delivery callback'=> 'ajax_deliver',
     'theme callback'   => 'ajax_base_page_theme',
@@ -125,8 +125,8 @@ function edit_library_info() {
       // Basic settings.
       array(
         'data' => array('edit' => array(
-          'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name'),
-          'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name'),
+          'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+          'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'context' => 'body',
         )),
         'type' => 'setting',
@@ -175,6 +175,7 @@ function edit_preprocess_field(&$variables) {
   $entity = $variables['element']['#object'];
   $name = $variables['element']['#field_name'];
   $langcode = $variables['element']['#language'];
+  $view_mode = $variables['element']['#view_mode'];
   $formatter_type = $variables['element']['#formatter'];
   $field = $entity->{$name}[$langcode];
   $instance_info = field_info_instance($entity->entityType(), $name, $entity->bundle());
@@ -188,7 +189,7 @@ function edit_preprocess_field(&$variables) {
 
     // Mark this field as editable and provide metadata through data- attributes.
     $variables['attributes']['data-edit-field-label'] = $instance_info->definition['label'];
-    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $name;
+    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $name . ':' . $langcode . ':' . $view_mode;
     $variables['attributes']['class'][] = 'edit-field';
     $variables['attributes']['class'][] = 'edit-allowed';
     $variables['attributes']['class'][] = 'edit-type-' . $editability;

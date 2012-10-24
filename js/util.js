@@ -12,20 +12,24 @@ Drupal.edit.util = Drupal.edit.util || {};
 Drupal.edit.util.calcFormURLForField = function(id) {
   var parts = id.split(':');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
-  return Drupal.t(urlFormat, {
+  return Drupal.formatString(urlFormat, {
     '!entity_type': parts[0],
     '!id'         : parts[1],
-    '!field_name' : parts[2]
+    '!field_name' : parts[2],
+    '!langcode'   : parts[3],
+    '!view_mode'  : parts[4]
   });
 };
 
 Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
   var parts = id.split(':');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
-  return Drupal.t(urlFormat, {
+  return Drupal.formatString(urlFormat, {
     '!entity_type': parts[0],
     '!id'         : parts[1],
-    '!field_name' : parts[2]
+    '!field_name' : parts[2],
+    '!langcode'   : parts[3],
+    '!view_mode'  : parts[4]
   });
 }
 

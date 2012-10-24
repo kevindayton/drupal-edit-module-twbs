@@ -53,6 +53,72 @@ function edit_entity_allows_revisions($entity_type, $bundle, $entity) {
  */
 
 /**
+ * Identical to field_attach_prepare_view(), with the addition of $options.
+ */
+function edit_field_attach_prepare_view($entity_type, $entities, $view_mode, $langcode = NULL, array $options = array()) {
+  $options['langcode'] = array();
+
+  // To ensure hooks are only run once per entity, only process items without
+  // the _field_view_prepared flag.
+  // @todo: resolve this more generally for both entity and field level hooks.
+  $prepare = array();
+  foreach ($entities as $id => $entity) {
+    if (empty($entity->_field_view_prepared)) {
+      // Add this entity to the items to be prepared.
+      $prepare[$id] = $entity;
+
+      // Determine the actual language code to display for each field, given the
+      // language codes available in the field data.
+      $options['langcode'][$id] = field_language($entity_type, $entity, NULL, $langcode);
+
+      // Mark this item as prepared.
+      $entity->_field_view_prepared = TRUE;
+    }
+  }
+
+  $null = NULL;
+  // First let the field types do their preparation.
+  _field_invoke_multiple('prepare_view', $entity_type, $prepare, $null, $null, $options);
+  // Then let the formatters do their own specific massaging.
+  field_invoke_method_multiple('prepareView', _field_invoke_formatter_target($view_mode), $prepare, $view_mode, $null, $options);
+}
+
+/**
+ * Identical to field_attach_view(), with the addition of $options.
+ */
+function edit_field_attach_view($entity_type, EntityInterface $entity, $view_mode, $langcode = NULL, array $options = array()) {
+  // Determine the actual language code to display for each field, given the
+  // language codes available in the field data.
+  $options['langcode'] = field_language($entity_type, $entity, NULL, $langcode);
+
+  // Invoke field_default_view().
+  $null = NULL;
+  $output = field_invoke_method('view', _field_invoke_formatter_target($view_mode), $entity, $view_mode, $null, $options);
+
+  // Add custom weight handling.
+  $output['#pre_render'][] = '_field_extra_fields_pre_render';
+  $output['#entity_type'] = $entity_type;
+  $output['#bundle'] = $entity->bundle();
+
+  // Let other modules alter the renderable array.
+  $context = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+    'view_mode' => $view_mode,
+    'display' => $view_mode,
+    'langcode' => $langcode,
+  );
+  drupal_alter('field_attach_view', $output, $context);
+
+  // Reset the _field_view_prepared flag set in field_attach_prepare_view(),
+  // in case the same entity is displayed with different settings later in
+  // the request.
+  unset($entity->_field_view_prepared);
+
+  return $output;
+}
+
+/**
  * Identical to field_attach_form(), with the addition of $options.
  */
 function _edit_field_attach_form($entity_type, EntityInterface $entity, &$form, &$form_state, $langcode = NULL, $options = array()) {
