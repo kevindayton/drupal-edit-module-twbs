@@ -16,7 +16,7 @@ function edit_field_form($form, &$form_state) {
 
   // Attach the actual field form.
   $options = array('field_name' =>  $form_state['field_name']);
-  _edit_field_attach_form($entity->entityType(), $entity, $form, $form_state, $langcode, $options);
+  field_attach_form($entity->entityType(), $entity, $form, $form_state, $langcode, $options);
 
   $form['#validate'][] = 'edit_field_form_validate';
   // @todo Verify that this is indeed not necessary anymore, see edit_field_form_validate().
@@ -129,10 +129,10 @@ function edit_field_form_validate($form, &$form_state) {
   // 'submit' in D8 is for "building the entity object", not for actual
   // submission. It appears though that if there were no validation errors, it
   // is submitted automatically.
-  _edit_field_attach_submit($entity->entityType(), $entity, $form, $form_state, $options);
+  field_attach_submit($entity->entityType(), $entity, $form, $form_state, $options);
 
   // Validation.
-  _edit_field_attach_form_validate($entity->entityType(), $entity, $form, $form_state, $options);
+  field_attach_form_validate($entity->entityType(), $entity, $form, $form_state, $options);
 }
 
 /**

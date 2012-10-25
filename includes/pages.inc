@@ -78,8 +78,8 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     $form_state['entity']->save();
 
     $options = array('field_name' => $field_name);
-    edit_field_attach_prepare_view($entity->entityType(), array($entity->id() => $entity), $view_mode, $langcode, $options);
-    $output = edit_field_attach_view($entity->entityType(), $entity, $view_mode, $langcode, $options);
+    field_attach_prepare_view($entity->entityType(), array($entity->id() => $entity), $view_mode, $langcode, $options);
+    $output = field_attach_view($entity->entityType(), $entity, $view_mode, $langcode, $options);
 
     $commands[] = array(
       'command' => 'edit_field_form_saved',

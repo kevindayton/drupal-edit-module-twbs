@@ -14,7 +14,7 @@
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
 
-// @todo Get rid of missing-api.inc by contributing to Entity API and Field API.
+// @todo Get rid of missing-api.inc by improving Entity API.
 module_load_include('inc', 'edit', 'includes/missing-api');
 // @todo Get rid of text.inc once Edit is committed by moving this logic into text.module.
 module_load_include('inc', 'edit', 'includes/text');
