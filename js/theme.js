@@ -96,8 +96,9 @@ Drupal.theme.editToolgroup = function(settings) {
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
  *     - url: the URL the button should point to
- *     - classes: the classes of the button
- *     - label: the label of the button
+ *     - classes: the classes of the button (optional)
+ *     - label: the label of the button (optional)
+ *     - title: the title of the button (optional)
  *     - hasButtonRole: whether this button should have its "role" attribute set
  *       to "button"
  * @return
@@ -111,10 +112,18 @@ Drupal.theme.editButtons = function(settings) {
       button.hasButtonRole = true;
     }
 
-    html += '<a href="' + button.url + '" class="' + button.classes + '"';
+    html += '<a href="' + button.url + '"';
+    if (button.classes) {
+      html += ' class="' + button.classes + '"';
+    }
+    if (button.title) {
+      html += ' title="' + button.title + '"';
+    }
     html += (button.hasButtonRole) ? 'role="button"' : '';
     html += '>';
-    html +=    button.label;
+    if (button.label) {
+      html +=    button.label;
+    }
     html += '</a>';
   }
   return html;

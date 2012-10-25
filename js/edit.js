@@ -298,7 +298,7 @@ Drupal.edit.editables = {
       classes: 'ops',
       buttons: [
         { url: '#', label: Drupal.t('Save'), classes: 'field-save save gray-button' },
-        { url: '#', label: '<span class="close"></span>', classes: 'field-close close gray-button' }
+        { url: '#', title: 'Undo changes', label: '<span class="close"></span>', classes: 'field-close close gray-button' }
       ]
     }))
     .delegate('a.field-save', 'click.edit', function(e) {
