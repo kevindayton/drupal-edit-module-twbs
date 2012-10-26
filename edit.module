@@ -252,11 +252,11 @@ function _edit_analyze_field_editability($field, FieldInstance $instance_info, $
   // If the formatter doesn't contain the edit property, default it to 'form'
   // editability, which should always work.
   $formatter_info = field_info_formatter_types($formatter_type);
-  if (empty($formatter_info['settings']['edit']['editability'])) {
-    $formatter_info['settings']['edit']['editability'] = 'form';
+  if (empty($formatter_info['edit']['editability'])) {
+    $formatter_info['edit']['editability'] = 'form';
   }
 
-  $editability = $formatter_info['settings']['edit']['editability'];
+  $editability = $formatter_info['edit']['editability'];
 
   // If editing is explicitly disabled for this field, return early to avoid
   // any further processing.
