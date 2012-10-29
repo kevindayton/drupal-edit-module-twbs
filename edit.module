@@ -54,8 +54,7 @@ function edit_menu() {
  * Implements hook_page_alter().
  */
 function edit_page_alter(&$page) {
-  // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
-  if (arg(0) == 'admin' || (arg(0) == 'node' && arg(1) == 'add') || (arg(0) == 'node' && arg(2) == 'edit')) {
+  if (path_is_admin(current_path())) {
     return;
   }
 
@@ -169,7 +168,7 @@ function edit_field_attach_view_alter(&$output, $context) {
 }
 
 /**
- * Implements hook_preprocess_field().
+ * Implements hook_preprocess_HOOK() for field.tpl.php.
  */
 function edit_preprocess_field(&$variables) {
   $entity = $variables['element']['#object'];
@@ -202,12 +201,15 @@ function edit_preprocess_field(&$variables) {
 }
 
 /**
- * Helper function for edit_preprocess_field().
+ * Sets attributes on a field that have 'direct-with-wysiwyg' editability.
  *
- * @param  array $variables
- *   @see edit_preprocess_field()
- * @param  string $format_id
+ * @param array $variables
+ *   An associative array containing: the key 'attributes'. See the
+ *   theme_field() function for information about these variables.
+ * @param string $format_id
  *   A text format id.
+ *
+ * @see theme_field()
  */
 function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
   // Let the WYSIWYG editor know the text format.
@@ -234,8 +236,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
 }
 
 /**
- * Given a field, its instance info and the formatter being used, determine its
- * editability.
+ * Determines editability given a field, its instance info and its formatter.
  *
  * @param array $field
  *   The field's field array.
@@ -243,6 +244,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
  *   The field's instance info.
  * @param string $formatter_type
  *   The field's formatter type name.
+ *
  * @return string
  *   The editability: 'disabled', 'form', 'direct' or 'direct-with-wysiwyg'.
  */
@@ -292,6 +294,8 @@ function _edit_analyze_field_editability($field, FieldInstance $instance_info, $
 }
 
 /**
+ * Determines editability given a directly editable field with text processing.
+ *
  * Given a text field (with cardinality 1) that defaults to 'direct' editability
  * and has text processing enabled, check whether the text format allows it to
  * use WYSIWYG-powered direct editing or whether 'form' based editing needs to
