@@ -33,7 +33,7 @@ cd $EDIT_DIR
 cp -R edit_aloha $DRUPAL_DIR/core/modules/edit_aloha/
 cd $DRUPAL_DIR
 git add core/modules/edit_aloha
-git diff --staged --binary --patch-with-stat > $EDIT_DIR/$FILENAME-aloha-integration-$COMMENTNR.patch
+git diff --staged --binary --patch-with-stat > $EDIT_DIR/$FILENAME-aloha-integration-$COMMENTNR-do-not-test.patch
 git ci -m "Aloha Editor integration for Edit"
 cd $EDIT_DIR
 
