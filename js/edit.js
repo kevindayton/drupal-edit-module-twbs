@@ -29,6 +29,7 @@ Drupal.edit.init = function() {
   Drupal.edit.state.fieldBeingEdited = [];
   Drupal.edit.state.higlightedEditable = null;
   Drupal.edit.state.editedEditable = null;
+  Drupal.edit.state.formLoadedFor = null;
   Drupal.edit.state.queues = {};
   Drupal.edit.state.wysiwygReady = false;
 
@@ -90,7 +91,7 @@ Drupal.edit.init = function() {
       $('#edit_overlay')
       .addClass('edit-animate-invisible')
       .bind(Drupal.edit.const.transitionEnd, function(e) {
-        $('#edit_overlay, .edit-form-container, .edit-toolbar-container, #edit_modal, #edit_backstage').remove();
+        $('#edit_overlay, .edit-form-container, .edit-toolbar-container, #edit_modal, #edit_backstage, .edit-validation-errors').remove();
       });
 
       var $f = Drupal.edit.findEditableFields();
@@ -349,6 +350,12 @@ Drupal.edit.editables = {
     Drupal.edit.toolbar.remove($editable);
     Drupal.edit.form.remove($editable);
 
+    // @todo clean up; these were added to ensure everything continues to work
+    // when doing validation.
+    Drupal.edit.state.formLoadedFor = null;
+    $('#edit_backstage form').remove();
+    $('.edit-validation-errors').remove();
+
     Drupal.edit.state.fieldBeingEdited = [];
     Drupal.edit.state.editedEditable = null;
   },
@@ -486,6 +493,7 @@ Drupal.edit.editables = {
     Drupal.edit.editables._unpadEditable($editable, $field);
 
     $editable
+    .removeClass('edit-validation-error')
     .removeData(['edit-content-original', 'edit-content-changed', 'edit-content-original-transformed'])
     .unbind('blur.edit keyup.edit paste.edit edit-content-changed.edit');
 

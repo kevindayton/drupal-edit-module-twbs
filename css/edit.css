@@ -167,6 +167,15 @@
 .edit-field.edit-type-direct .edit-editable.edit-highlighted {
   box-shadow: 0px 0px 1px 1px #0199FF, 0px 0px 3px 3px rgba(153, 153, 153, .5);
 }
+.edit-field.edit-editable.edit-highlighted.edit-validation-error,
+.edit-form.edit-editable.edit-highlighted.edit-validation-error,
+.edit-field.edit-type-direct .edit-editable.edit-highlighted.edit-validation-error {
+  box-shadow: 0px 0px 1px 1px red, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+}
+.edit-form.edit-editable .form-item .error {
+  border: 1px solid #eea0a0;
+}
+
 
 /* Editing (focused) editable. */
 .edit-form.edit-editable.edit-editing,
@@ -218,7 +227,28 @@
 
 
 /**
- * Edit mode: form.
+ * Edit mode: type=direct.
+ */
+.edit-validation-errors {
+  z-index: 300;
+  position: relative;
+}
+
+.edit-validation-errors .messages.error {
+  position: absolute;
+  top: 6px;
+  left: -5px;
+  margin: 0;
+  border: none;
+  box-shadow: 0px 0px 1px 1px red, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  background-color: white;
+}
+
+
+
+
+/**
+ * Edit mode: type=form.
  */
 #edit_backstage {
   display: none;
