@@ -16,6 +16,7 @@
       // Create the form asynchronously.
       // @todo: use a different "factory" depending on editable type.
       Drupal.edit.form.create(this.element, function($editable, $field) {
+        var hi = 'hi';
         $editable
           .addClass('edit-belowoverlay')
           .removeClass('edit-highlighted edit-editable');

@@ -31,25 +31,6 @@ Drupal.theme.editBackstage = function(settings) {
 };
 
 /**
- * Theme function for a modal of the Edit module.
- *
- * @param settings
- *   An object with the following keys:
- *   - None.
- * @return
- *   The corresponding HTML.
- */
-Drupal.theme.editModal = function(settings) {
-  var classes = 'edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
-  var html = '';
-  html += '<div id="edit_modal" class="' + classes + '">';
-  html += '  <div class="main"><p></p></div>';
-  html += '  <div class="actions"></div>';
-  html += '</div>';
-  return html;
-};
-
-/**
  * Theme function for a toolbar container of the Edit module.
  *
  * @param settings
@@ -62,7 +43,7 @@ Drupal.theme.editToolbarContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-toolbar-container edit-animate-invisible edit-animate-only-visibility">';
   html += '  <div class="edit-toolbar-heightfaker edit-animate-fast">';
-  html += '    <div class="edit-toolbar" />';
+  html += '    <div class="edit-toolbar primary" />';
   html += '  </div>';
   html += '</div>';
   return html;
@@ -96,9 +77,8 @@ Drupal.theme.editToolgroup = function(settings) {
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
  *     - url: the URL the button should point to
- *     - classes: the classes of the button (optional)
- *     - label: the label of the button (optional)
- *     - title: the title of the button (optional)
+ *     - classes: the classes of the button
+ *     - label: the label of the button
  *     - hasButtonRole: whether this button should have its "role" attribute set
  *       to "button"
  * @return
@@ -112,18 +92,10 @@ Drupal.theme.editButtons = function(settings) {
       button.hasButtonRole = true;
     }
 
-    html += '<a href="' + button.url + '"';
-    if (button.classes) {
-      html += ' class="' + button.classes + '"';
-    }
-    if (button.title) {
-      html += ' title="' + button.title + '"';
-    }
+    html += '<a href="' + button.url + '" class="' + button.classes + '"';
     html += (button.hasButtonRole) ? 'role="button"' : '';
     html += '>';
-    if (button.label) {
-      html +=    button.label;
-    }
+    html +=    button.label;
     html += '</a>';
   }
   return html;
@@ -139,6 +111,7 @@ Drupal.theme.editButtons = function(settings) {
  * @return
  *   The corresponding HTML.
  */
+// @todo: remove, no usages found.
 Drupal.theme.editFormContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-form-container">';
