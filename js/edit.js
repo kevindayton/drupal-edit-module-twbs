@@ -136,6 +136,7 @@ Drupal.edit.prepareStateModel = function () {
       highlightedEditable: null,
       editedEditable: null,
       editedFieldView: null,
+      formLoadedFor: null,
       wysiwygReady: false
     }
   });

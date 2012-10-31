@@ -307,7 +307,7 @@
       $('#edit_overlay')
       .addClass('edit-animate-invisible')
       .bind(Drupal.edit.constants.transitionEnd, function (event) {
-        $('#edit_overlay, .edit-form-container, .edit-toolbar-container, #edit_modal, .edit-curtain').remove();
+        $('#edit_overlay, .edit-form-container, .edit-toolbar-container, #edit_modal, .edit-curtain, .edit-validation-errors').remove();
       });
 
       // Enable contextual links in edit mode.
@@ -792,6 +792,7 @@
       if (this.editing) {
         this.unpadEditable();
       }
+      this.$el.removeClass('edit-validation-error');
       this.$el.removeClass('ui-state-disabled');
       this.$el.removeClass('edit-wysiwyg-attached');
 

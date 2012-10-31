@@ -16,6 +16,7 @@ Drupal.edit.form = {
     var predicate = Drupal.edit.util.getElementPredicate($editable);
     var $field = Drupal.edit.util.findFieldForEditable($editable);
     var fieldView = Drupal.edit.state.get('editedFieldView');
+    var edit_id = Drupal.edit.util.getID($field);
     // We only create a placeholder-div/form for the form-based instances.
     if (Drupal.edit.form.get($editable).length > 0) {
       return false;
@@ -33,8 +34,11 @@ Drupal.edit.form = {
         var formWrapperId = Drupal.edit.form._id($editable);
         Drupal.ajax.prototype.commands.insert(ajax, {
           data: form,
-          selector: '#' + formWrapperId + ' .placeholder'
+          selector: (Drupal.edit.state.get('formLoadedFor') == edit_id)
+            ? '#' + formWrapperId + ' form'
+            : '#' + formWrapperId + ' .placeholder'
         });
+        Drupal.edit.state.set('formLoadedFor', edit_id);
 
         $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
       }

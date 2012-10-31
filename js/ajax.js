@@ -37,6 +37,33 @@ $(function() {
       Drupal.edit.editables._wysiwygify(ajax.$editable);
     }
   };
+  Drupal.ajax.prototype.commands.edit_field_form_validation_errors = function(ajax, response, status) {
+    console.log('edit_field_form_validation_errors', ajax, response, status);
+
+    if (response.data) {
+      var $field = $('.edit-field[data-edit-id="' + response.id  + '"]');
+      if ($field.hasClass('edit-type-form')) {
+        Drupal.edit.form.get($field)
+          .find('.edit-form')
+          .addClass('edit-validation-error')
+          .find('form')
+          .prepend(response.data);
+      }
+      else {
+        var $editable = Drupal.edit.findEditablesForFields($field);
+
+        if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
+          Drupal.edit.editables._wysiwygify($editable);
+        }
+
+        var $errors = $('<div class="edit-validation-errors"></div>')
+          .append(response.data);
+        $editable
+          .addClass('edit-validation-error')
+          .after($errors);
+      }
+    }
+  };
 });
 
 })(jQuery);
