@@ -61,13 +61,15 @@ Drupal.edit.form = {
       $toolbar.detach().prependTo('.edit-form');
     }
 
-    var onLoadCallback = function(status, $form) {
+    var onLoadCallback = function(status, form, ajax) {
       // @todo: re-factor
       var $submit;
       if ($field.hasClass('edit-type-form')) {
         var formWrapperId = Drupal.edit.form._id($editable);
-        // $form.wrap('<div>');
-        $('#' + formWrapperId + ' .placeholder').replaceWith($form);
+        Drupal.ajax.prototype.commands.insert(ajax, {
+          data: form,
+          selector: '#' + formWrapperId + ' .placeholder'
+        });
 
         // Indicate in the 'info' toolgroup that the form has loaded.
         // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
@@ -171,7 +173,9 @@ Drupal.edit.form = {
     Drupal.ajax[edit_id] = new Drupal.ajax(edit_id, $editable, element_settings);
     // Some form of closure.
     Drupal.ajax[edit_id].commands.edit_field_form = function(ajax, response, status) {
-      callback(status, $(response.data));
+      // @todo only call the callback if response.id matches edit_id. If that's
+      // not the case, we're preloading forms.
+      callback(status, response.data, ajax);
     };
     $editable.trigger('edit-internal.edit');
   },
