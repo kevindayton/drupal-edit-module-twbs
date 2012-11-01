@@ -18,11 +18,11 @@ Drupal.edit.util.getID = function(element) {
 };
 
 Drupal.edit.util.getElementSubject = function(element) {
-  return Drupal.edit.util.getID(element).split(':').slice(0, 2).join(':');
+  return Drupal.edit.util.getID(element).split(':').slice(0, 2).join('/');
 };
 
 Drupal.edit.util.getElementPredicate = function(element) {
-  return Drupal.edit.util.getID(element).split(':').pop();
+  return Drupal.edit.util.getID(element).split(':').slice(2, 5).join('/');
 };
 
 Drupal.edit.util.getElementValue = function(element) {
@@ -64,7 +64,8 @@ Drupal.edit.util.findEditablesForFields = function($fields) {
 };
 
 Drupal.edit.util.findFieldForID = function(id, context) {
-  return $('[data-edit-id="' + id + '"]', context || $('#content'));
+  var domID = id.replace(/\//g, ':')
+  return $('[data-edit-id="' + domID + '"]', context || $('#content'));
 };
 
 Drupal.edit.util.findFieldForEditable = function($editable) {
@@ -75,30 +76,35 @@ Drupal.edit.util.findFieldForEditable = function($editable) {
 Drupal.edit.util.findEntityForField = function($f) {
   var $e = $f.closest('.edit-entity');
   if ($e.length === 0) {
-    var entity_edit_id = $f.data('edit-id').split(':').slice(0,2).join(':');
+    var entity_edit_id = $f.data('edit-id').split(':').slice(0,2).join('/');
     $e = $('.edit-entity[data-edit-id="' + entity_edit_id + '"]');
   }
   return $e;
 };
 
 Drupal.edit.util.calcFormURLForField = function(id) {
-  var parts = id.split(':');
+  var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
-  return Drupal.t(urlFormat, {
+  return Drupal.formatString(urlFormat, {
     '!entity_type': parts[0],
     '!id'         : parts[1],
-    '!field_name' : parts[2]
+    '!field_name' : parts[2],
+    '!langcode'   : parts[3],
+    '!view_mode'  : parts[4]
   });
+
 };
 
 // @todo: remove, no usage found.
 Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
-  var parts = id.split(':');
+  var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
-  return Drupal.t(urlFormat, {
+  return Drupal.formatString(urlFormat, {
     '!entity_type': parts[0],
     '!id'         : parts[1],
-    '!field_name' : parts[2]
+    '!field_name' : parts[2],
+    '!langcode'   : parts[3],
+    '!view_mode'  : parts[4]
   });
 };
 

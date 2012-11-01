@@ -338,7 +338,7 @@
       }, 0);
 
       this.state.set('fieldBeingHighlighted', this.$el);
-      this.state.set('highlightedEditable', this.model.id + ':' + this.predicate);
+      this.state.set('highlightedEditable', this.model.id + '/' + this.predicate);
     },
 
     stopHighlight: function () {

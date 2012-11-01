@@ -36,7 +36,8 @@
     },
 
     // The edit-id data attribute contains the full identifier of
-    // each entity element in format `<nodetype>:<id>:<fieldname>`.
+    // each entity element in the format
+    // `<entity type>:<id>:<field name>:<language code>:<view mode>`.
     _getID: function (element) {
       var id = jQuery(element).data('edit-id');
       if (!id) {
@@ -46,25 +47,28 @@
     },
 
     // Returns the "URI" of an entity of an element in format
-    // `<NodeType>:<id>`.
+    // `<entity type>/<id>`.
     getElementSubject: function (element) {
-      return this._getID(element).split(':').slice(0, 2).join(':');
+      return this._getID(element).split(':').slice(0, 2).join('/');
     },
 
-    // Returns the field name for an element.
+    // Returns the field name for an element in format
+    // `<field name>/<language code>/<view mode>`.
+    // (Slashes instead of colons because the field name is no namespace.)
     getElementPredicate: function (element) {
       if (!this._getID(element)) {
         throw new Error('Could not find predicate for element');
       }
-      return this._getID(element).split(':').pop();
+      return this._getID(element).split(':').slice(2, 5).join('/');
     },
 
     getElementType: function (element) {
-      return this._getID(element).split(':').slice(0, 1);
+      return this._getID(element).split(':').slice(0, 1)[0];
     },
 
-    // Reads all editable entities (_Fields_ in Spark Edit lingo) from DOM
-    // and returns the VIE enties it found.
+    // Reads all editable entities (currently each Drupal field is considered an
+    // entity, in the future Drupal entities should be mapped to VIE entities)
+    // from DOM and returns the VIE enties it found.
     readEntities: function (element) {
       var service = this;
       var entities = [];

@@ -12,7 +12,7 @@ Drupal.edit.form = {
   create: function($editable, cb) {
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject($editable));
     var predicate = Drupal.edit.util.getElementPredicate($editable);
-    var edit_id = entity.getSubjectUri() + ':' + predicate;
+    var edit_id = entity.getSubjectUri() + '/' + predicate;
     var $field = Drupal.edit.util.findFieldForEditable($editable);
     // @todo: this needs to be refactored, we should have access to the view
     // rather than the $editable/$el of the view.
@@ -152,7 +152,7 @@ Drupal.edit.form = {
    * @param callback callback callback once form is loaded callback(status, $form)
    */
   loadForm: function (vieEntity, predicate, callback) {
-    var edit_id = vieEntity.getSubjectUri() + ':' + predicate;
+    var edit_id = vieEntity.getSubjectUri() + '/' + predicate;
     var $field = Drupal.edit.util.findFieldForID(edit_id);
     var $editable = Drupal.edit.util.findEditablesForFields($field);
     var element_settings = {
@@ -189,7 +189,7 @@ Drupal.edit.form = {
    * @param callback  callback after form has been submitted cb(error, $el);
    */
   saveForm: function (vieEntity, predicate, $editable, value, callback) {
-    var edit_id = vieEntity.getSubjectUri() + ':' + predicate;
+    var edit_id = vieEntity.getSubjectUri() + '/' + predicate;
     var $field = Drupal.edit.util.findFieldForID(edit_id);
     // Handle form FormEditableFieldView
     if ($field.hasClass('edit-type-form')) {
@@ -199,7 +199,7 @@ Drupal.edit.form = {
 
       // handle the saveForm callback (edit_field_form_saved).
       var formEditableFormSubmittedCallback = function(ajax, response, status) {
-        var edit_id = vieEntity.getSubjectUri() + ':' + predicate;
+        var edit_id = vieEntity.getSubjectUri() + '/' + predicate;
         // response.data contains the updated rendering of the field, if any.
         if (response.data) {
           // Stop the editing.
