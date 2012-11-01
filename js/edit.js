@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, VIE) {
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.wysiwyg = Drupal.edit.wysiwyg || {};
@@ -41,7 +41,8 @@ Drupal.edit.init = function() {
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].init();
   }
 
-  // Create a backstage area.
+  // Create a backstage area. This is where we store the form when editing a
+  // type=direct field, so that it's hidden from view (hence "backstage").
   $(Drupal.theme('editBackstage', {})).appendTo('body');
 
   // Instantiate FieldViews
@@ -89,7 +90,7 @@ Drupal.edit.prepareStateModel = function () {
 Drupal.edit.prepareFieldView = function () {
   var element = jQuery(this);
   var fieldViewType = Drupal.edit.views.EditableFieldView;
-  if (!element.hasClass('edit-type-direct')) {
+  if (element.hasClass('edit-type-form')) {
     fieldViewType = Drupal.edit.views.FormEditableFieldView;
   }
 
@@ -113,5 +114,5 @@ Drupal.edit.prepareFieldView = function () {
   });
 };
 
-})(jQuery);
+})(jQuery, VIE);
 
