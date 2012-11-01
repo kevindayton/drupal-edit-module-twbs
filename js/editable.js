@@ -15,6 +15,8 @@
         widget: 'editWidget',
         options: {}
       };
+      // @todo: it *is* possible to make 'alohaWidget' a setting that is passed
+      // in from Drupal.settings (e.g. Drupal.settings.edit.wysiwyg), right?
       this.options.editors.directWysiwyg = {
         widget: 'alohaWidget',
         options: {}

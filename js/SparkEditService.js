@@ -69,6 +69,7 @@
     // Reads all editable entities (currently each Drupal field is considered an
     // entity, in the future Drupal entities should be mapped to VIE entities)
     // from DOM and returns the VIE enties it found.
+    // @todo: check the above.
     readEntities: function (element) {
       var service = this;
       var entities = [];
@@ -176,6 +177,8 @@
     //
     // They are contained within Entity elements, which in Spark Edit are called
     // _Fields_.
+    // @todo: clarify and document what the Best Way to do this is? Should VIE's
+    // entities map to Drupal's entities etc? Also see higher comments.
     findPredicateElements: function (subject, element, allowNestedPredicates, stop) {
       var predicates = jQuery();
 

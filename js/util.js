@@ -17,6 +17,8 @@ Drupal.edit.util.getID = function(element) {
   return id;
 };
 
+// @todo: this looks almost identical to code in SparkEditService. Can we get
+// rid of this?
 Drupal.edit.util.getElementSubject = function(element) {
   return Drupal.edit.util.getID(element).split(':').slice(0, 2).join('/');
 };

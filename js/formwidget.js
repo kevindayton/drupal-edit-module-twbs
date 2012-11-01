@@ -44,6 +44,12 @@
 
     _initialize: function () {
       var self = this;
+      // @todo: this is *extremely* vague. self.options is declared at the top
+      // of this file, but all of a sudden there apear to exist functions that
+      // we haven't declared. It traces back to
+      // jquery.Midgard.midgardEditable.js' _enableProperty(), and there
+      // activated() sets even more things (e.g. options.model). It seems
+      // "options" is doing too many things?
       $(this.element).bind('focus', function (event) {
         self.options.activated();
       });

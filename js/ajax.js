@@ -15,6 +15,9 @@ $(function() {
   Drupal.ajax.prototype.commands.edit_field_form_saved = function(ajax, response, status) {};
   // @todo: refactor this in a similar fashion & figure out where this is
   // needed - probably direct editables.
+  // NOTE FROM WIM: this is needed when doing type=direct-with-wysiwyg editing,
+  // but only when the processed text already present in the DOM was processed
+  // *with* transformation filters. I.e.: it depends on the text format.
   Drupal.ajax.prototype.commands.edit_field_rendered_without_transformation_filters = function(ajax, response, status) {
     console.log('edit_field_rendered_without_transformation_filters', ajax, response, status);
     if (Drupal.edit.state.get('editedEditable') == response.id

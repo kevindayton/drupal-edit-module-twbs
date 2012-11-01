@@ -25,6 +25,11 @@ Drupal.edit.init = function() {
   Drupal.edit.state = Drupal.edit.prepareStateModel();
 
   // Load the storage widget to get localStorage support
+  // @todo: doc this.
+  //  - Why is it called 'midgardStorage'?
+  //  - Why do we need to set editableNs?
+  //  - Shouldn't we also set localStorage, autoSave, editSelector, saveSelector?
+  //  - How do we integrate Create.js' i18n support with Drupal.t()?
   $('body').midgardStorage({
     vie: Drupal.edit.vie,
     editableNs: 'createeditable'
@@ -33,6 +38,8 @@ Drupal.edit.init = function() {
   // $('body').midgardStorage('checkRestore');
 
   // Initialize WYSIWYG, if any.
+  // @todo: Edit should not be aware of any WYSIWYG stuff; Create.js should
+  // handle all of that. Otherwise it's a leaky abstraction.
   if (Drupal.settings.edit.wysiwyg) {
     $(document).bind('edit-wysiwyg-ready.edit', function() {
       Drupal.edit.state.set('wysiwygReady', true);
@@ -43,9 +50,14 @@ Drupal.edit.init = function() {
 
   // Create a backstage area. This is where we store the form when editing a
   // type=direct field, so that it's hidden from view (hence "backstage").
+  // @todo: this belongs in formwidget.js; don't Create.js' editWidgets have
+  // an initialization phase, e.g. to prefetch CSS/JS?
   $(Drupal.theme('editBackstage', {})).appendTo('body');
 
   // Instantiate FieldViews
+  // @todo: isn't this terribly inefficient? This results in one call to
+  // readEntities() per field, whereas Drupal fields are currently mapped to VIE
+  // entities, suggesting there should be *one* call to readEntities()?
   Drupal.edit.domService.findSubjectElements().each(Drupal.edit.prepareFieldView);
 
   // Instantiate overlayview
