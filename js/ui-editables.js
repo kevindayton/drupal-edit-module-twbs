@@ -61,6 +61,8 @@ Drupal.edit.form = {
       $toolbar.detach().prependTo('.edit-form');
     }
 
+    // TRICKY: for type=direct fields, this gets called when SAVING (load form,
+    //fill it, submit it), instead of LOADING.
     var onLoadCallback = function(status, form, ajax) {
       // @todo: re-factor
       var $submit;
@@ -88,10 +90,11 @@ Drupal.edit.form = {
             }
           });
         $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
-      } else if ($field.hasClass('edit-type-direct')) {
+      }
+      else {
         // Direct forms are stuffed into #edit_backstage, apparently.
-        $('#edit_backstage').append($form);
-        $submit = $form.find('.edit-form-submit');
+        $('#edit_backstage').append(form);
+        $submit = $('#edit_backstage form .edit-form-submit');
       }
       Drupal.edit.form._setupAjaxForm($editable, $field, $submit);
 
