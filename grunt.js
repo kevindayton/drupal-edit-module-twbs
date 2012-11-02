@@ -2,12 +2,29 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     lint: {
-      all: ['js/*.js']
+      all: [
+        'js/*.js',
+        'js/models/*.js',
+        'js/views/*.js',
+        'js/routers/*.js'
+      ]
     },
     concat: {
       dist: {
         // @todo: do we want to concat VIE and createjs, too?
-        src: ['js/*.js'],
+        src: [
+          'js/models/*.js',
+          'js/views/*.js',
+          'js/routers/*.js',
+          'js/editable.js',
+          'js/ui-editables.js',
+          'js/formwidget.js',
+          'js/SparkEditService.js',
+          'js/theme.js',
+          'js/ajax.js',
+          'js/util.js',
+          'js/edit.js'
+        ],
         // @todo: shouldn't we keep source and build/ more separate?
         dest: 'js/build/edit.js'
       }
