@@ -1,18 +1,11 @@
 (function ($, undefined) {
   // # Drupal form-based editing widget for Create.js
   $.widget('Drupal.drupalFormWidget', $.Create.editWidget, {
-    options: {
-      editorOptions: {},
-      disabled: true
-    },
-    // @todo: add a callback to do this in an proper async fashion.
+    /**
+     * Enables the widget
+     */
     enable: function () {
-      console.log('Drupal.drupalFormWidget.enable');
-      this.options.disabled = false;
-      this.loadForm();
-    },
-
-    loadForm: function () {
+      Drupal.edit.log('Drupal.drupalFormWidget.enable');
       // Create the form asynchronously.
       // @todo: use a different "factory" depending on editable type.
       Drupal.edit.form.create(this.element, function($editable, $field) {
@@ -27,13 +20,15 @@
       });
     },
 
+    /**
+     * Disables the widget.
+     */
     disable: function () {
-      console.log('Drupal.drupalFormWidget.disable');
-      this.options.disabled = true;
+      Drupal.edit.log('Drupal.drupalFormWidget.disable');
+
       // @todo: handle this better on the basis of the editable type.
       // Currently we stuff forms into two places ...
       Drupal.edit.form.get(this.element).remove();
-      $('#edit_backstage form').remove();
 
       // Revert the changes to classes applied in the the enable/loadForm
       // methods above.
@@ -42,20 +37,36 @@
         .addClass('edit-highlighted edit-editable');
     },
 
+   /**
+     * Initializes the widget functions.
+     *
+     * Override of Create.editWidget._initialize().
+     */
     _initialize: function () {
       var self = this;
-      // @todo: this is *extremely* vague. self.options is declared at the top
-      // of this file, but all of a sudden there apear to exist functions that
-      // we haven't declared. It traces back to
-      // jquery.Midgard.midgardEditable.js' _enableProperty(), and there
-      // activated() sets even more things (e.g. options.model). It seems
-      // "options" is doing too many things?
-      $(this.element).bind('focus', function (event) {
-        self.options.activated();
+
+      // NOTE: It's extremely vague that we're calling functions on self.options
+      // (which is owned by jQuery.widget, FWIW). It's merely an unfortunate
+      // location for that code and will be fixed upstream in Create.js.
+
+      $(this.element).bind('drupalFormLoaded', function (event) {
+         self.options.activated();
       });
 
-      $(this.element).bind('blur', function (event) {
+      $(this.element).bind('drupalFormUnloaded', function (event) {
         self.options.deactivated();
+      });
+
+      $(this.element).bind('drupalFormModified', function (event) {
+        // @todo: Since the changes live in a form, and we cannot derive a
+        // meaningful string representation of the Field (predicate), pass in
+        // null.
+        // Note that modified() will actually propagate this change to the model
+        // and it will trigger a 'changed' event on the widget. We don't care
+        // about the model because it's impossible to map from the model to this
+        // form or vice versa; all we care about is that the 'changed' event
+        // gets triggered.
+        self.options.modified(null);
       });
     }
   });
