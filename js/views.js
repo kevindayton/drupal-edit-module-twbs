@@ -1,3 +1,10 @@
+/**
+ * @file
+ * All Backbone.Views used for in-place editing.
+ *
+ * @todo  Split this into one file per view?
+ */
+
 (function ($) {
   Drupal.edit = Drupal.edit || {};
   Drupal.edit.views = Drupal.edit.views || {};
@@ -15,7 +22,13 @@
     getToolbarElement:function () {
       return $('#' + this._id() );
     },
+    // This function contains the former:
+    //   - Drupal.edit.toolbar.create()
+    //   - Drupal.edit.toolbar.startHighlight()
+    //   - Drupal.edit.toolbar.startEdit()
+    //   - _updateDirectEditable()
     createToolbar:function () {
+      // @START Drupal.edit.toolbar.create()
       if (this.getToolbarElement().length) {
         return true;
       }
@@ -70,6 +83,10 @@
             return false;
           }
         });
+      // @END Drupal.edit.toolbar.create()
+
+
+
 
       // We get the label to show from VIE's type system
       var label = this.fieldView.predicate;
@@ -79,6 +96,11 @@
       }
       var self = this;
 
+
+
+      // @START Drupal.edit.editables.startHighlight(), minus label handling,
+      // which is now handled by VIE in the above code block AND minus
+      // the adding of the edit-highlighted class (which is animated).
       $toolbar.find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
         .append(Drupal.theme('editToolgroup', {
         classes:'info',
@@ -96,6 +118,17 @@
           event.stopPropagation();
           event.preventDefault();
         });
+      // @END Drupal.edit.editables.startHighlight()
+
+
+
+
+      // @START Drupal.edit.editables.startEdit(), minus the event handling for
+      // content-changed.edit, AND minus the background-color handling, AND
+      // minus the "prevent multiple simultaneous editables" handling (though
+      // Create.js might be doing this for us) AND minus the _updateFormEditable
+      // vs. _updateDirectEditable calling, it just includes a subset of the
+      // latter directly.
       $toolbar
         .addClass('edit-editing')
         .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
@@ -120,7 +153,14 @@
         .delegate('a.field-close', 'click.edit', function (event) {
           self.fieldView.closeClicked(event);
         });
+      // @END Drupal.edit.editables.startEdit()
 
+
+
+
+      // @START Drupal.edit.editables._updateDirectEditable(), minus padding AND
+      // minus transformation filter handling AND minus _wysiwify() call AND
+      // minus changed content handling
       if ($editable.hasClass('edit-type-direct-with-wysiwyg')) {
         $toolbar
         .find('.edit-toolbar:not(:has(.edit-toolbar-wysiwyg-tabs))')
@@ -134,11 +174,18 @@
           classes: 'wysiwyg',
           buttons: []
         }));
+        // @END Drupal.edit.editables._updateDirectEditable()
+
+
+
+
+        // @todo: No WYSIWYG is attached yet, then this class should not be added!
         this.fieldView.$el.addClass('edit-wysiwyg-attached');
       }
       return true;
     },
     // @todo: proper Backbone.remove() and unbind all events above!
+    // @todo: near-identical to Drupal.edit.toolbar.remove()
     removeToolbar:function () {
       var $toolbar  = this.getToolbarElement();
       // Remove after animation.
@@ -195,6 +242,9 @@
       this.showOverlay();
     },
 
+    // @todo .bind('click.edit', Drupal.edit.clickOverlay); is missing, thus it
+    // is effectively impossible to click out of a editing a field by clicking
+    // the overlay.
     showOverlay: function () {
       $(Drupal.theme('editOverlay', {}))
       .appendTo('body')
@@ -204,6 +254,8 @@
       $('#edit_overlay').css('top', $('#navbar').outerHeight());
       $('#edit_overlay').removeClass('edit-animate-invisible');
 
+      // @todo: it is not necessary to disable contextual links in edit mode;
+      // the overlay already prevents that!?
       // Disable contextual links in edit mode.
       $('.contextual-links-region')
       .addClass('edit-contextual-links-region')
@@ -223,6 +275,7 @@
       .removeClass('edit-contextual-links-region');
     },
 
+    // @todo: this doesn't actually check whether there is no modal active!
     escapeEditor: function () {
       var editor = this.state.get('fieldBeingEdited');
       if (editor.length === 0) {
@@ -287,6 +340,7 @@
 
     undecorate: function () {
       // @todo: clarify: undecorating shouldn't remove edit-editable?
+      // WIM: why? In view mode, you don't need that information?
       this.$el
         .removeClass('edit-candidate edit-editable edit-highlighted edit-editing edit-belowoverlay');
     },
@@ -295,6 +349,7 @@
       if (!this.editable) {
         return;
       }
+      // @todo: this should not be necessary; the overlay should prevent this.
       if (this.state.get('editedFieldView')) {
         // Some field is being edited, ignore
         return;
@@ -360,6 +415,8 @@
       }
       this.stopHighlight();*/
     },
+    // @todo: this should be called by startHighlight(); as soon as a field is
+    // highlighted the field's label should appear, which is part of the toolbar.
     enableToolbar: function () {
       if (!this.toolbarView) {
         this.toolbarView = new Drupal.edit.views.ToolbarView({
@@ -392,6 +449,10 @@
   // This element is a subtype of the FieldView that adds the controlling
   // needed for direct editables (as provided by Create.js editable widget)
   // to the FieldView
+  //
+  // @todo if this is is really only fir type=direct fields, then that should be
+  // reflected in the name? Plus, enableEditor() suggestes this is only for
+  // type=direct-with-wysiwyg
   Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
     events: {
@@ -466,6 +527,9 @@
       this.startHighlight();
 
       this.$el
+      // @todo: 'edit-candidate' class should be removed at this point in time;
+      // it is now no longer a candidate for being edited; it's *actually* being
+      // edited!
       .addClass('edit-editing')
       .css('background-color', this.$el.data('edit-background-color'));
 
