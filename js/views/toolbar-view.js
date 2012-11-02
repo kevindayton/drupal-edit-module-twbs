@@ -1,3 +1,4 @@
+Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
   fieldView:null,
