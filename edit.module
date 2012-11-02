@@ -65,12 +65,12 @@ function edit_page_alter(&$page) {
       'content' => array(
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('View'), 'href' => '', 'localized_options' => array('fragment' => 'view', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+          '#link' => array('title' => t('View'), 'href' => current_path(), 'localized_options' => array('fragment' => 'view', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
           '#active' => TRUE,
         ),
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('Quick edit'), 'href' => '', 'localized_options' => array('fragment' => 'quick-edit', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          '#link' => array('title' => t('Quick edit'), 'href' => current_path(), 'localized_options' => array('fragment' => 'quick-edit', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
         ),
       ),
       '#attached' => array(
