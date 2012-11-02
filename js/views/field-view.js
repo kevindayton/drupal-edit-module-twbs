@@ -77,7 +77,7 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     var self = this;
     Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
       if (!self.editing) {
-        Drupal.edit.log('field:mouseenter', self.model.id, self.predicate);
+        Drupal.edit.log('field:mouseenter', self.model.getVieEntity().id, self.predicate);
         self.startHighlight();
       }
       event.stopPropagation();
@@ -95,7 +95,7 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     var self = this;
     Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
       if (!self.editing) {
-        Drupal.edit.log('field:mouseleave', self.model.id, self.predicate);
+        Drupal.edit.log('field:mouseleave', self.model.getVieEntity().id, self.predicate);
         self.stopHighlight();
       }
       event.stopPropagation();
@@ -103,7 +103,7 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
   },
 
   startHighlight: function () {
-    Drupal.edit.log('startHighlight', this.model.id, this.predicate);
+    Drupal.edit.log('startHighlight', this.model.getVieEntity().id, this.predicate);
 
     // Animations.
     var self = this;
@@ -113,11 +113,11 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     }, 0);
 
     this.state.set('fieldBeingHighlighted', this.$el);
-    this.state.set('highlightedEditable', this.model.id + '/' + this.predicate);
+    this.state.set('highlightedEditable', this.model.getVieEntity().id + '/' + this.predicate);
   },
 
   stopHighlight: function () {
-    Drupal.edit.log('stopHighlight', this.model.id, this.predicate);
+    Drupal.edit.log('stopHighlight', this.model.getVieEntity().id, this.predicate);
     // Animations
     this.$el.removeClass('edit-highlighted');
     this.state.set('fieldBeingHighlighted', []);

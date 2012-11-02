@@ -112,16 +112,18 @@ Drupal.edit.prepareFieldView = function () {
       return;
     }
 
-    var fvm = new Drupal.edit.models.FieldViewModel({
+    // Instantiate FieldViewModel
+    var fieldViewModel = new Drupal.edit.models.FieldViewModel({
       'subject': subject,
-      'predicate': predicate
+      'predicate': predicate,
+      'entity': entity
     });
 
+    // Instantiate appropriate subtype of FieldView
     var fieldView = new fieldViewType({
-      model: fvm,
+      model: fieldViewModel,
       state: Drupal.edit.state,
       el: element,
-      model: entity,
       predicate: predicate,
       vie: Drupal.edit.vie
     });

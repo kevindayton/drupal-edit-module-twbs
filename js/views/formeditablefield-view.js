@@ -40,7 +40,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
       event.preventDefault();
     }
 
-    var value = this.model.get(this.predicate);
+    var value = this.model.getVieEntity().get(this.predicate);
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject(this.$el));
     var that = this;
 

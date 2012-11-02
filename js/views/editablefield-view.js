@@ -43,7 +43,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     this.editable = true;
 
      this.$el.createEditable({
-        model: this.model,
+        model: this.model.getVieEntity(),
         vie: this.vie,
         disabled: true
       });
@@ -131,7 +131,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
   },
 
   disableEditor: function () {
-    Drupal.edit.log('disableEditor', this.model.id, this.predicate);
+    Drupal.edit.log('disableEditor', this.model.getVieEntity().id, this.predicate);
 
     this.$el
     .removeClass('edit-editing')
@@ -158,7 +158,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
   },
 
   editorEnabled: function () {
-    Drupal.edit.log("editorenabled", this.model.id, this.predicate);
+    Drupal.edit.log("editorenabled", this.model.getVieEntity().id, this.predicate);
     // Avoid re-"padding" of editable.
     if (!this.editing) {
       this.padEditable();
@@ -184,7 +184,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject(this.$el));
     var predicate = this.predicate;
     // Drupal.edit.form.saveForm loads and saves form if necessary.
-    Drupal.edit.form.saveForm(entity, predicate, this.$el, this.model.get(this.predicate), function() {
+    Drupal.edit.form.saveForm(entity, predicate, this.$el, this.model.getVieEntity().get(this.predicate), function() {
       // Editable has been saved.
     });
   },

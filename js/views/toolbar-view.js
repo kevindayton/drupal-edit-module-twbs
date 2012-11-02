@@ -108,7 +108,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
     // We get the label to show from VIE's type system
     var label = this.fieldView.predicate;
-    var attributeDef = this.fieldView.model.get('@type').attributes.get(this.fieldView.predicate);
+    var attributeDef = this.fieldView.model.getVieEntity().get('@type').attributes.get(this.fieldView.predicate);
     if (attributeDef && attributeDef.metadata) {
       label = attributeDef.metadata.label;
     }
