@@ -4,6 +4,8 @@ module.exports = function(grunt) {
     lint: {
       all: [
         'js/*.js',
+        'js/widgets/*.js',
+        'js/services/*.js',
         'js/models/*.js',
         'js/views/*.js',
         'js/routers/*.js'
@@ -13,13 +15,12 @@ module.exports = function(grunt) {
       dist: {
         // @todo: do we want to concat VIE and createjs, too?
         src: [
+          'js/widgets/*.js',
+          'js/services/*.js',
           'js/models/*.js',
           'js/views/*.js',
           'js/routers/*.js',
-          'js/editable.js',
           'js/ui-editables.js',
-          'js/formwidget.js',
-          'js/SparkEditService.js',
           'js/theme.js',
           'js/ajax.js',
           'js/util.js',
@@ -27,6 +28,22 @@ module.exports = function(grunt) {
         ],
         // @todo: shouldn't we keep source and build/ more separate?
         dest: 'js/build/edit.js'
+      },
+      'dist-all': {
+        src: [
+          'js/lib/*',
+          'js/widgets/*.js',
+          'js/services/*.js',
+          'js/models/*.js',
+          'js/views/*.js',
+          'js/routers/*.js',
+          'js/ui-editables.js',
+          'js/theme.js',
+          'js/ajax.js',
+          'js/util.js',
+          'js/edit.js'
+        ],
+        dest: 'js/build/edit-all.js'
       }
     },
     watch: {
@@ -37,7 +54,11 @@ module.exports = function(grunt) {
       dist: {
         src: ['js/build/edit.js'],
         dest: 'js/build/edit.min.js'
-      }
+      },
+      'dist-all':{
+        src: ['js/build/edit-all.js'],
+        dest: 'js/build/edit-all.min.js'
+      },
     },
     jshint: {
       options: {
