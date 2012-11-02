@@ -3,5 +3,3719 @@
 //     Create may be freely distributed under the MIT license.
 //     For all details and documentation:
 //     http://createjs.org/
-(function(e,t){"use strict";e.widget("Midgard.midgardCreate",{options:{toolbar:"full",saveButton:null,state:"browse",highlight:!0,highlightColor:"#67cc08",editorWidgets:{"default":"hallo"},editorOptions:{hallo:{widget:"halloWidget"}},collectionWidgets:{"default":"midgardCollectionAdd"},url:function(){},storagePrefix:"node",workflows:{url:null},notifications:{},vie:null,domService:"rdfa",stanbolUrl:null,dbPediaUrl:null,tags:!1,buttonContainer:".create-ui-toolbar-statustoolarea .create-ui-statustools",templates:{buttonContent:'<%= label %> <i class="icon-<%= icon %>"></i>',button:'<li id="<%= id %>"><a class="create-ui-btn"><%= buttonContent %></a></li>'},localize:function(e,t){return window.midgardCreate.localize(e,t)},language:null},_create:function(){this.vie=this._setupVIE(this.options),this.domService=this.vie.service(this.options.domService);var t=this;window.setTimeout(function(){t._checkSession()},10),this.options.language||(this.options.language=e("html").attr("lang")),this._enableToolbar(),this._saveButton(),this._editButton(),this._prepareStorage(),this.element.midgardWorkflows&&this.element.midgardWorkflows(this.options.workflows),this.element.midgardNotifications&&this.element.midgardNotifications(this.options.notifications)},destroy:function(){this.element.midgardStorage("destroy"),this.element.midgardToolbar("destroy"),this.domService.findSubjectElements(this.element).each(function(){e(this).midgardEditable("destroy")}),this.element.midgardWorkflows&&this.element.midgardWorkflows("destroy"),this.element.midgardNotifications&&this.element.midgardNotifications("destroy"),this.options.tags&&this.element.midgardTags("destroy"),e.Widget.prototype.destroy.call(this)},_setupVIE:function(e){var t;return e.vie?t=e.vie:t=new VIE,!t.hasService(this.options.domService)&&this.options.domService==="rdfa"&&t.use(new t.RdfaService),!t.hasService("stanbol")&&e.stanbolUrl&&t.use(new t.StanbolService({proxyDisabled:!0,url:e.stanbolUrl})),!t.hasService("dbpedia")&&e.dbPediaUrl&&t.use(new t.DBPediaService({proxyDisabled:!0,url:e.dbPediaUrl})),t},_prepareStorage:function(){this.element.midgardStorage({vie:this.vie,url:this.options.url,localize:this.options.localize,language:this.options.language});var t=this;this.element.bind("midgardstoragesave",function(){e("#midgardcreate-save a").html(_.template(t.options.templates.buttonContent,{label:t.options.localize("Saving",t.options.language),icon:"upload"}))}),this.element.bind("midgardstoragesaved midgardstorageerror",function(){e("#midgardcreate-save a").html(_.template(t.options.templates.buttonContent,{label:t.options.localize("Save",t.options.language),icon:"ok"}))})},_init:function(){this.setState(this.options.state)},setState:function(e){this._setOption("state",e),e==="edit"?this._enableEdit():this._disableEdit(),this._setEditButtonState(e)},setToolbar:function(e){this.options.toolbar=e,this.element.midgardToolbar("setDisplay",e)},showNotification:function(e){if(this.element.midgardNotifications)return this.element.midgardNotifications("create",e)},configureEditor:function(e,t,n){this.options.editorOptions[e]={widget:t,options:n}},setEditorForContentType:function(e,n){if(this.options.editorOptions[n]===t&&n!==null)throw new Error("No editor "+n+" configured");this.options.editorWidgets[e]=n},setEditorForProperty:function(e,n){if(this.options.editorOptions[n]===t&&n!==null)throw new Error("No editor "+n+" configured");this.options.editorWidgets[e]=n},_checkSession:function(){if(!window.sessionStorage)return;var e=this.options.storagePrefix+"Midgard.create.toolbar";window.sessionStorage.getItem(e)&&this.setToolbar(window.sessionStorage.getItem(e));var t=this.options.storagePrefix+"Midgard.create.state";window.sessionStorage.getItem(t)&&this.setState(window.sessionStorage.getItem(t)),this.element.bind("midgardcreatestatechange",function(e,n){window.sessionStorage.setItem(t,n.state)})},_saveButton:function(){if(this.options.saveButton)return this.options.saveButton;var t=this;return e(this.options.buttonContainer,this.element).append(e(_.template(this.options.templates.button,{id:"midgardcreate-save",buttonContent:_.template(this.options.templates.buttonContent,{label:t.options.localize("Save",t.options.language),icon:"ok"})}))),this.options.saveButton=e("#midgardcreate-save",this.element),this.options.saveButton.hide(),this.options.saveButton},_editButton:function(){var t=this;e(this.options.buttonContainer,this.element).append(e(_.template(this.options.templates.button,{id:"midgardcreate-edit",buttonContent:""}))),e("#midgardcreate-edit",this.element).bind("click",function(){if(t.options.state==="edit"){t.setState("browse");return}t.setState("edit")})},_setEditButtonState:function(t){var n=this,r={edit:_.template(this.options.templates.buttonContent,{label:n.options.localize("Cancel",n.options.language),icon:"remove"}),browse:_.template(this.options.templates.buttonContent,{label:n.options.localize("Edit",n.options.language),icon:"edit"})},i=e("#midgardcreate-edit a",this.element);if(!i)return;t==="edit"&&i.addClass("selected"),i.html(r[t])},_enableToolbar:function(){var e=this;this.element.bind("midgardtoolbarstatechange",function(t,n){e.setToolbar(n.display),window.sessionStorage&&window.sessionStorage.setItem(e.options.storagePrefix+"Midgard.create.toolbar",n.display)}),this.element.midgardToolbar({display:this.options.toolbar,vie:this.vie})},_enableEdit:function(){this._setOption("state","edit");var t=this,n={toolbarState:t.options.toolbar,disabled:!1,vie:t.vie,domService:t.options.domService,widgets:t.options.editorWidgets,editors:t.options.editorOptions,collectionWidgets:t.options.collectionWidgets,localize:t.options.localize,language:t.options.language};t.options.enableEditor&&(n.enableEditor=t.options.enableEditor),t.options.disableEditor&&(n.disableEditor=t.options.disableEditor),this.domService.findSubjectElements(this.element).each(function(){var r=this;if(t.options.highlight){var i=function(n,i){if(!e(i.element).is(":visible"))return;if(i.entityElement.get(0)!==r)return;i.element.stop(!0,!0),i.element.effect("highlight",{color:t.options.highlightColor},3e3)};e(this).bind("midgardeditableenableproperty",i)}e(this).bind("midgardeditabledisable",function(){e(this).unbind("midgardeditableenableproperty",i)}),t.options.tags&&e(this).bind("midgardeditableenable",function(n,i){if(n.target!==r)return;e(this).midgardTags({vie:t.vie,entityElement:i.entityElement,entity:i.instance,localize:t.options.localize,language:t.options.language})}),e(this).midgardEditable(n)}),this._trigger("statechange",null,{state:"edit"})},_disableEdit:function(){var t=this,n={disabled:!0,vie:t.vie,domService:t.options.domService,editorOptions:t.options.editorOptions,localize:t.options.localize,language:t.options.language};this.domService.findSubjectElements(this.element).each(function(){e(this).midgardEditable(n),e(this).removeClass("ui-state-disabled")}),this._setOption("state","browse"),this._trigger("statechange",null,{state:"browse"})}})})(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardCollectionAdd",{options:{editingWidgets:null,collection:null,model:null,definition:null,view:null,disabled:!1,vie:null,editableOptions:null,templates:{button:'<button class="btn"><i class="icon-<%= icon %>"></i> <%= label %></button>'}},_create:function(){this.addButtons=[];var e=this;if(!e.options.collection.localStorage)try{e.options.collection.url=e.options.model.url()}catch(t){window.console&&console.log(t)}e.options.collection.bind("add",function(t){t.primaryCollection=e.options.collection,e.options.vie.entities.add(t),t.collection=e.options.collection}),e.options.collection.bind("add remove reset",e.checkCollectionConstraints,e),e._bindCollectionView(e.options.view)},_bindCollectionView:function(e){var t=this;e.bind("add",function(e){e.$el.effect("slide",function(){t._makeEditable(e)})})},_makeEditable:function(e){this.options.editableOptions.disabled=this.options.disabled,this.options.editableOptions.model=e.model,e.$el.midgardEditable(this.options.editableOptions)},_init:function(){if(this.options.disabled){this.disable();return}this.enable()},hideButtons:function(){_.each(this.addButtons,function(e){e.hide()})},showButtons:function(){_.each(this.addButtons,function(e){e.show()})},checkCollectionConstraints:function(){if(this.options.disabled)return;if(!this.options.view.canAdd()){this.hideButtons();return}if(!this.options.definition){this.showButtons();return}if(!this.options.definition.max||this.options.definition.max===-1){this.showButtons();return}if(this.options.collection.length<this.options.definition.max){this.showButtons();return}this.hideButtons()},enable:function(){var t=this,n=e(_.template(this.options.templates.button,{icon:"plus",label:this.options.editableOptions.localize("Add",this.options.editableOptions.language)})).button();n.addClass("midgard-create-add"),n.click(function(){t.addItem(n)}),e(t.options.view.el).after(n),t.addButtons.push(n),t.checkCollectionConstraints()},disable:function(){_.each(this.addButtons,function(e){e.remove()}),this.addButtons=[]},_getTypeActions:function(e){var t=this,n=[];return _.each(this.options.definition.range,function(r){var i=t.options.collection.vie.namespaces.uri(r);if(!t.options.view.canAdd(i))return;n.push({name:r,label:r,cb:function(){t.options.collection.add({"@type":r},e)},className:"create-ui-btn"})}),n},addItem:function(n,r){r===t&&(r={});var i=_.extend({},r,{validate:!1}),s={};if(this.options.definition&&this.options.definition.range){if(this.options.definition.range.length!==1){e("body").midgardNotifications("create",{bindTo:n,gravity:"L",body:this.options.editableOptions.localize("Choose type to add",this.options.editableOptions.language),timeout:0,actions:this._getTypeActions(i)});return}s["@type"]=this.options.definition.range[0]}this.options.collection.add(s,i)}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardCollectionAddBetween",e.Midgard.midgardCollectionAdd,{_bindCollectionView:function(e){var t=this;e.bind("add",function(e){t._makeEditable(e),t._refreshButtons()}),e.bind("remove",function(){t._refreshButtons()})},_refreshButtons:function(){var e=this;window.setTimeout(function(){e.disable(),e.enable()},1)},prepareButton:function(t){var n=this,r=e(_.template(this.options.templates.button,{icon:"plus",label:""})).button();return r.addClass("midgard-create-add"),r.click(function(){n.addItem(r,{at:t})}),r},enable:function(){var t=this,n=t.prepareButton(0);e(t.options.view.el).prepend(n),t.addButtons.push(n),e.each(t.options.view.entityViews,function(n,r){var i=t.options.collection.indexOf(r.model),s=t.prepareButton(i+1);e(r.el).append(s),t.addButtons.push(s)}),this.checkCollectionConstraints()},disable:function(){var t=this;e.each(t.addButtons,function(e,t){t.remove()}),t.addButtons=[]}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardEditable",{options:{editables:[],collections:[],model:null,editors:{hallo:{widget:"halloWidget",options:{}}},widgets:{"default":"hallo"},collectionWidgets:{"default":"midgardCollectionAdd"},toolbarState:"full",vie:null,domService:"rdfa",predicateSelector:"[property]",disabled:!1,localize:function(e,t){return window.midgardCreate.localize(e,t)},language:null},_create:function(){this.vie=this.options.vie,this.domService=this.vie.service(this.options.domService);if(!this.options.model){var e=this;this.vie.load({element:this.element}).from(this.options.domService).execute().done(function(t){e.options.model=t[0]})}},_init:function(){if(this.options.disabled){this.disable();return}this.enable()},findEditableElements:function(t){this.domService.findPredicateElements(this.options.model.id,e(this.options.predicateSelector,this.element),!1).each(t)},enable:function(){var t=this;if(!this.options.model)return;this.findEditableElements(function(){return t._enableProperty(e(this))}),this._trigger("enable",null,{instance:this.options.model,entityElement:this.element}),_.each(this.domService.views,function(e){if(e instanceof t.vie.view.Collection&&t.options.model===e.owner){var n=e.collection.predicate,r=t.enableCollection({model:t.options.model,collection:e.collection,property:n,definition:t.getAttributeDefinition(n),view:e,element:e.el,vie:t.vie,editableOptions:t.options});t.options.collections.push(r)}})},disable:function(){var t=this;e.each(this.options.editables,function(n,r){t.disableEditor({widget:t,editable:r,entity:t.options.model,element:e(this)})}),this.options.editables=[],e.each(this.options.collections,function(e,n){t.disableCollection({widget:t,model:t.options.model,element:n,vie:t.vie,editableOptions:t.options})}),this.options.collections=[],this._trigger("disable",null,{instance:this.options.model,entityElement:this.element})},getElementPredicate:function(e){return this.domService.getElementPredicate(e)},_enableProperty:function(e){var t=this,n=this.getElementPredicate(e);if(!n)return!0;if(this.options.model.get(n)instanceof Array)return!0;var r=this.enableEditor({widget:this,element:e,entity:this.options.model,property:n,vie:this.vie,modified:function(r){var i={};i[n]=r,t.options.model.set(i,{silent:!0}),t._trigger("changed",null,{property:n,instance:t.options.model,element:e,entityElement:t.element})},activated:function(){t._trigger("activated",null,{property:n,instance:t.options.model,element:e,entityElement:t.element})},deactivated:function(){t._trigger("deactivated",null,{property:n,instance:t.options.model,element:e,entityElement:t.element})}});r&&this._trigger("enableproperty",null,{editable:r,property:n,instance:this.options.model,element:e,entityElement:this.element}),this.options.editables.push(r)},_editorName:function(e){if(this.options.widgets[e.property]!==t)return this.options.widgets[e.property];var n="default",r=this.getAttributeDefinition(e.property);return r&&(n=r.range[0]),this.options.widgets[n]!==t?this.options.widgets[n]:this.options.widgets["default"]},_editorWidget:function(e){return this.options.editors[e].widget},_editorOptions:function(e){return this.options.editors[e].options},getAttributeDefinition:function(e){var t=this.options.model.get("@type");if(!t)return;if(!t.attributes)return;return t.attributes.get(e)},enableEditor:function(t){var n=this._editorName(t);if(n===null)return;var r=this._editorWidget(n);t.editorOptions=this._editorOptions(n),t.toolbarState=this.options.toolbarState,t.disabled=!1;if(typeof e(t.element)[r]!="function")throw new Error(r+" widget is not available");return e(t.element)[r](t),e(t.element).data("createWidgetName",r),e(t.element)},disableEditor:function(t){var n=e(t.element).data("createWidgetName");t.disabled=!0,n&&(e(t.element)[n](t),e(t.element).removeClass("ui-state-disabled"))},collectionWidgetName:function(e){if(this.options.collectionWidgets[e.property]!==t)return this.options.collectionWidgets[e.property];var n="default",r=this.getAttributeDefinition(e.property);return r&&(n=r.range[0]),this.options.collectionWidgets[n]!==t?this.options.collectionWidgets[n]:this.options.collectionWidgets["default"]},enableCollection:function(t){var n=this.collectionWidgetName(t);if(n===null)return;t.disabled=!1;if(typeof e(t.element)[n]!="function")throw new Error(n+" widget is not available");return e(t.element)[n](t),e(t.element).data("createCollectionWidgetName",n),e(t.element)},disableCollection:function(t){var n=e(t.element).data("createCollectionWidgetName");if(n===null)return;t.disabled=!0,n&&(e(t.element)[n](t),e(t.element).removeClass("ui-state-disabled"))}})}(jQuery),function(e,t){"use strict";e.widget("Create.editWidget",{options:{disabled:!1,vie:null},enable:function(){this.element.attr("contenteditable","true")},disable:function(e){this.element.attr("contenteditable","false")},_create:function(){this._registerWidget(),this._initialize()},_init:function(){if(this.options.disabled){this.disable();return}this.enable()},_initialize:function(){var t=this,n=this.element.html();this.element.bind("blur keyup paste",function(r){if(t.options.disabled)return;var i=e(this).html();n!==i&&(n=i,t.options.modified(i))})},_registerWidget:function(){this.element.data("createWidgetName",this.widgetName)}})}(jQuery),function(e,t){"use strict";e.widget("Create.alohaWidget",e.Create.editWidget,{enable:function(){this._initialize(),this.options.disabled=!1},disable:function(){Aloha.jQuery(this.options.element.get(0)).mahalo(),this.options.disabled=!0},_initialize:function(){var e=this.options,t,n=Aloha.jQuery(e.element.get(0)).aloha();_.each(Aloha.editables,function(e){e.obj.get(0)===n.get(0)&&(t=e)});if(!t)return;t.vieEntity=e.entity,Aloha.bind("aloha-editable-activated",function(n,r){if(r.editable!==t)return;e.activated()}),Aloha.bind("aloha-editable-deactivated",function(n,r){if(r.editable!==t)return;e.deactivated()}),Aloha.bind("aloha-smart-content-changed",function(n,r){if(r.editable!==t)return;if(!r.editable.isModified())return!0;e.modified(r.editable.getContents()),r.editable.setUnmodified()})}})}(jQuery),function(e,t){"use strict";e.widget("Create.halloWidget",e.Create.editWidget,{options:{editorOptions:{},disabled:!0,toolbarState:"full",vie:null,entity:null},enable:function(){e(this.element).hallo({editable:!0}),this.options.disabled=!1},disable:function(){e(this.element).hallo({editable:!1}),this.options.disabled=!0},_initialize:function(){e(this.element).hallo(this.getHalloOptions());var t=this;e(this.element).bind("halloactivated",function(e,n){t.options.activated()}),e(this.element).bind("hallodeactivated",function(e,n){t.options.deactivated()}),e(this.element).bind("hallomodified",function(e,n){t.options.modified(n.content),n.editable.setUnmodified()}),e(document).bind("midgardtoolbarstatechange",function(e,n){if(n.display===t.options.toolbarState)return;t.options.toolbarState=n.display;var r=t.getHalloOptions();t.element.hallo("changeToolbar",r.parentElement,r.toolbar,!0)})},getHalloOptions:function(){var t={plugins:{halloformat:{},halloblock:{},hallolists:{},hallolink:{},halloimage:{entity:this.options.entity}},buttonCssClass:"create-ui-btn-small",placeholder:"["+this.options.property+"]"};return typeof this.element.annotate=="function"&&this.options.vie.services.stanbol&&(t.plugins.halloannotate={vie:this.options.vie}),this.options.toolbarState==="full"?(t.parentElement=e(".create-ui-toolbar-dynamictoolarea .create-ui-tool-freearea"),t.toolbar="halloToolbarFixed"):(t.parentElement="body",t.toolbar="halloToolbarContextual"),_.extend(t,this.options.editorOptions)}})}(jQuery),function(e,t){"use strict";e.widget("Create.redactorWidget",e.Create.editWidget,{editor:null,options:{editorOptions:{},disabled:!0},enable:function(){e(this.element).redactor(this.getRedactorOptions()),this.options.disabled=!1},disable:function(){e(this.element).destroyEditor(),this.options.disabled=!0},_initialize:function(){var t=this;e(this.element).bind("focus",function(e){t.options.activated()})},getRedactorOptions:function(){var t=this,n={keyupCallback:function(n,r){t.options.modified(e(t.element).getCode())},execCommandCallback:function(n,r){t.options.modified(e(t.element).getCode())}};return _.extend(t.options.editorOptions,n)}})}(jQuery),function(e,t){"use strict";var n=[],r=function(t,r){var i={class_prefix:"midgardNotifications",timeout:3e3,auto_show:!0,body:"",bindTo:null,gravity:"T",effects:{onShow:function(e,t){e.animate({opacity:"show"},600,t)},onHide:function(e,t){e.animate({opacity:"hide"},600,t)}},actions:[],callbacks:{}},s={},o={},u=null,a=null,f=null,l=t,c=null,h={constructor:function(e){s=_.extend(i,e||{}),o={container:s.class_prefix+"-container",item:{wrapper:s.class_prefix+"-item",arrow:s.class_prefix+"-arrow",disregard:s.class_prefix+"-disregard",content:s.class_prefix+"-content",actions:s.class_prefix+"-actions",action:s.class_prefix+"-action"}},this._generate()},getId:function(){return a},getElement:function(){return u},_generate:function(){var t=this,r,i,f=null;u=r=e('<div class="'+o.item.wrapper+'-outer"/>'),r.css({display:"none"}),i=e('<div class="'+o.item.wrapper+'-inner"/>'),i.appendTo(r);if(s.bindTo){r.addClass(o.item.wrapper+"-binded");var h=e('<div class="'+o.item.arrow+'"/>');h.appendTo(r)}else r.addClass(o.item.wrapper+"-normal");f=e('<div class="'+o.item.content+'"/>'),f.html(s.body),f.appendTo(i);if(s.actions.length){var p=e('<div class="'+o.item.actions+'"/>');p.appendTo(i),e.each(s.actions,function(n,r){var i=e('<button name="'+r.name+'" class="button-'+r.name+'">'+r.label+"</button>").button();i.bind("click",function(e){c?r.cb(e,c,t):r.cb(e,t)}),r.className&&i.addClass(r.className),p.append(i)})}u.bind("click",function(e){s.callbacks.onClick?s.callbacks.onClick(e,t):c||t.close()}),s.auto_show&&this.show(),this._setPosition(),a=n.push(this),l.append(u)},_calculatePositionForGravity:function(e,t,n,r){e.find("."+o.item.arrow).addClass(o.item.arrow+"_"+t);switch(t){case"TL":return{left:n.left,top:n.top+n.height+"px"};case"TR":return{left:n.left+n.width-r.width+"px",top:n.top+n.height+"px"};case"BL":return{left:n.left+"px",top:n.top-r.height+"px"};case"BR":return{left:n.left+n.width-r.width+"px",top:n.top-r.height+"px"};case"LT":return{left:n.left+n.width+"px",top:n.top+"px"};case"LB":return{left:n.left+n.width+"px",top:n.top+n.height-r.height+"px"};case"RT":return{left:n.left-r.width+"px",top:n.top+"px"};case"RB":return{left:n.left-r.width+"px",top:n.top+n.height-r.height+"px"};case"T":return{left:n.left+n.width/2-r.width/2+"px",top:n.top+n.height+"px"};case"R":return{left:n.left-r.width+"px",top:n.top+n.height/2-r.height/2+"px"};case"B":return{left:n.left+n.width/2-r.width/2+"px",top:n.top-r.height+"px"};case"L":return{left:n.left+n.width+"px",top:n.top+n.height/2-r.height/2+"px"}}},_isFixed:function(e){if(e===document)return!1;if(e.css("position")==="fixed")return!0;var t=e.offsetParent();return t.get(0)===e.get(0)?!1:this._isFixed(t)},_setPosition:function(){var t;if(s.bindTo){var r={width:u.width()?u.width():280,height:u.height()?u.height():109};f=e(s.bindTo);var i={},o={width:f.outerWidth(),height:f.outerHeight()};this._isFixed(f)?(i.position="fixed",o.left=f.offset().left,o.top=f.position().top):(i.position="absolute",o.left=f.offset().left,o.top=f.offset().top),t=this._calculatePositionForGravity(u,s.gravity,o,r),i.top=t.top,i.left=t.left,u.css(i);return}s.position||(s.position="top right");var a=e(".create-ui-toolbar-wrapper").outerHeight(!0)+6;t={position:"fixed"};var l,c=function(t){var n=0;return e.each(t,function(e,t){if(!t)return;n+=t.getElement().height()}),n};s.position.match(/top/)&&(t.top=a+c(n)+"px"),s.position.match(/bottom/)&&(t.bottom=n.length-1*l.height()+l.height()+10+"px"),s.position.match(/right/)&&(t.right="20px"),s.position.match(/left/)&&(t.left="20px"),u.css(t)},show:function(){var t=this,n,r,i,o,a,f;s.callbacks.beforeShow&&s.callbacks.beforeShow(t);if(s.bindTo){var l=e(s.bindTo);n=e(window).scrollTop(),r=e(window).scrollTop()+e(window).height(),o=parseFloat(u.offset().top,10),a=l.offset().top,f=l.outerHeight(),a<o&&(o=a),i=parseFloat(u.offset().top,10)+u.height(),a+f>i&&(i=a+f)}s.timeout>0&&!s.actions.length&&window.setTimeout(function(){t.close()},s.timeout),s.bindTo&&(o<n||o>r)||i<n||i>r?e("html, body").stop().animate({scrollTop:o},500,"easeInOutExpo",function(){s.effects.onShow(u,function(){s.callbacks.afterShow&&s.callbacks.afterShow(t)})}):s.effects.onShow(u,function(){s.callbacks.afterShow&&s.callbacks.afterShow(t)})},close:function(){var e=this;s.callbacks.beforeClose&&s.callbacks.beforeClose(e),s.effects.onHide(u,function(){s.callbacks.afterClose&&s.callbacks.afterClose(e),e.destroy()})},destroy:function(){var t=this;e.each(n,function(e,r){r&&r.getId()==t.getId()&&delete n[e]}),e(u).remove()},setStory:function(e){c=e},setName:function(e){u.addClass(o.item.wrapper+"-custom-"+e),this.name=e}};return h.constructor(r),delete h.constructor,h},i=function(t,n){var i={},s={},o={},u={},a=null,f=null,l=null,c=null,h={constructor:function(e){s=_.extend(i,e||{})},setStoryline:function(t){var n={content:"",actions:[],show_actions:!0,notification:{},back:null,back_label:null,forward:null,forward_label:null,beforeShow:null,afterShow:null,beforeClose:null,afterClose:null};o={},c=null,a=null,f=null,l=null;var r=this;return e.each(t,function(t,i){var s=e.extend({},n,i);s.name=t;var u=e.extend({},n.notification,i.notification||{});u.body=s.content,u.auto_show=!1,s.actions.length&&(u.delay=0),u.callbacks={beforeShow:function(e){s.beforeShow&&s.beforeShow(e,r)},afterShow:function(e){s.afterShow&&s.afterShow(e,r)},beforeClose:function(e){s.beforeClose&&s.beforeClose(e,r)},afterClose:function(e){s.afterClose&&s.afterClose(e,r),a=e.name}},u.actions=[];if(s.show_actions){if(s.back){var c=s.back_label;c||(c="Back"),u.actions.push({name:"back",label:c,cb:function(e,t,n){t.previous()}})}if(s.forward){var h=s.forward_label;h||(h="Back"),u.actions.push({name:"forward",label:h,cb:function(e,t,n){t.next()}})}s.actions.length&&e.each(s.actions,function(e,t){u.actions.push(s.actions[e])})}f||(f=t),l=t,s.notification=u,o[t]=s}),o},start:function(){this._showNotification(o[f])},stop:function(){c.close(),c=null,a=null},next:function(){c.close();if(o[c.name].forward){var e=o[c.name].forward;this._showNotification(o[e])}else this._showNotification(o[l])},previous:function(){if(a){c.close();if(o[c.name].back){var e=o[c.name].back;this._showNotification(o[e])}else this._showNotification(o[a])}else this.stop()},_showNotification:function(t){return c=new r(e("body"),t.notification),c.setStory(this),c.setName(t.name),c.show(),c}};return h.constructor(t),delete h.constructor,n&&h.setStoryline(n),h},s={start:{content:"Welcome to CreateJS tutorial!",forward:"toolbar_toggle",forward_label:"Start tutorial",actions:[{name:"quit",label:"Quit",cb:function(e,t,n){t.stop()}}]},toolbar_toggle:{content:"This is the CreateJS toolbars toggle button.<br />You can hide and show the full toolbar by clicking here.<br />Try it now.",forward:"edit_button",show_actions:!1,afterShow:function(t,n){e("body").bind("midgardtoolbarstatechange",function(t,r){r.display=="full"&&(n.next(),e("body").unbind("midgardtoolbarstatechange"))})},notification:{bindTo:"#midgard-bar-hidebutton",timeout:0,gravity:"TL"}},edit_button:{content:"This is the edit button.<br />Try it now.",show_actions:!1,afterShow:function(t,n){e("body").bind("midgardcreatestatechange",function(t,r){r.state=="edit"&&(n.next(),e("body").unbind("midgardcreatestatechange"))})},notification:{bindTo:".ui-button[for=midgardcreate-edit]",timeout:0,gravity:"TL"}},end:{content:"Thank you for watching!<br />Happy content editing times await you!"}};e.widget("Midgard.midgardNotifications",{options:{notification_defaults:{class_prefix:"midgardNotifications",position:"top right"}},_create:function(){this.classes={container:this.options.notification_defaults.class_prefix+"-container"},e("."+this.classes.container,this.element).length?(this.container=e("."+this.classes.container,this.element),this._parseFromDOM()):(this.container=e('<div class="'+this.classes.container+'" />'),this.element.append(this.container))},destroy:function(){this.container.remove(),e.Widget.prototype.destroy.call(this)},_init:function(){},_parseFromDOM:function(e){},showStory:function(e,t){var n=new i(e,t);return n.start(),n},create:function(t){t=e.extend({},this.options.notification_defaults,t||{});var n=new r(this.container,t);return n.show(),n},showTutorial:function(){this.showStory({},s)}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardStorage",{saveEnabled:!0,options:{localStorage:!1,removeLocalstorageOnIgnore:!0,vie:null,url:"",autoSave:!1,autoSaveInterval:5e3,saveReferencedNew:!1,saveReferencedChanged:!1,editableNs:"midgardeditable",editSelector:"#midgardcreate-edit a",saveSelector:"#midgardcreate-save",localize:function(e,t){return window.midgardCreate.localize(e,t)},language:null},_create:function(){var t=this;this.changedModels=[],window.localStorage&&(this.options.localStorage=!0),this.vie=this.options.vie,this.vie.entities.bind("add",function(e){e.url=t.options.url,e.toJSON=e.toJSONLD}),e(t.options.saveSelector).click(function(){t.saveRemote({success:function(){e(t.options.saveSelector).button({disabled:!0})},error:function(){}})}),t._bindEditables(),t.options.autoSave&&t._autoSave()},_autoSave:function(){var t=this;t.saveEnabled=!0;var n=function(){if(!t.saveEnabled)return;if(t.changedModels.length===0)return;t.saveRemote({success:function(){e(t.options.saveSelector).button({disabled:!0})},error:function(){},silent:!0})},r=window.setInterval(n,t.options.autoSaveInterval);this.element.bind("startPreventSave",function(){r&&(window.clearInterval(r),r=null),t.disableSave()}),this.element.bind("stopPreventSave",function(){r||(r=window.setInterval(n,t.options.autoSaveInterval)),t.enableSave()})},enableSave:function(){this.saveEnabled=!0},disableSave:function(){this.saveEnabled=!1},_bindEditables:function(){var t=this;this.restorables=[];var n;t.element.bind(t.options.editableNs+"changed",function(n,r){_.indexOf(t.changedModels,r.instance)===-1&&t.changedModels.push(r.instance),t._saveLocal(r.instance),e(t.options.saveSelector).button({disabled:!1})}),t.element.bind(t.options.editableNs+"disable",function(n,r){t._restoreLocal(r.instance),e(t.options.saveSelector).hide()}),t.element.bind(t.options.editableNs+"enable",function(n,r){e(t.options.saveSelector).button({disabled:!0}),e(t.options.saveSelector).show(),r.instance._originalAttributes||(r.instance._originalAttributes=_.clone(r.instance.attributes)),!r.instance.isNew()&&t._checkLocal(r.instance)&&t.restorables.push(r.instance)}),t.element.bind("midgardcreatestatechange",function(e,r){if(r.state==="browse"||t.restorables.length===0){t.restorables=[],n&&n.close();return}n=t.checkRestore()}),t.element.bind("midgardstorageloaded",function(n,r){_.indexOf(t.changedModels,r.instance)===-1&&t.changedModels.push(r.instance),e(t.options.saveSelector).button({disabled:!1})})},checkRestore:function(){var t=this;if(t.restorables.length===0)return;var n;t.restorables.length===1?n=_.template(t.options.localize("localModification",t.options.language),{label:t.restorables[0].getSubjectUri()}):n=_.template(t.options.localize("localModifications",t.options.language),{number:t.restorables.length});var r=e("body").midgardNotifications("create",{bindTo:t.options.editSelector,gravity:"TR",body:n,timeout:0,actions:[{name:"restore",label:t.options.localize("Restore",t.options.language),cb:function(){_.each(t.restorables,function(e){t._readLocal(e)}),t.restorables=[]},className:"create-ui-btn"},{name:"ignore",label:t.options.localize("Ignore",t.options.language),cb:function(e,n){t.options.removeLocalstorageOnIgnore&&_.each(t.restorables,function(e){t._removeLocal(e)}),n.close(),t.restorables=[]},className:"create-ui-btn"}]});return r},saveRemote:function(t){var n=this;if(n.changedModels.length===0)return;n._trigger("save",null,{models:n.changedModels});var r,i=n.changedModels.length;i>1?r=_.template(n.options.localize("saveSuccessMultiple",n.options.language),{number:i}):r=_.template(n.options.localize("saveSuccess",n.options.language),{label:n.changedModels[0].getSubjectUri()}),n.disableSave(),_.each(n.changedModels,function(s){_.each(s.attributes,function(e,t){if(!e||!e.isCollection)return;e.each(function(e){if(n.changedModels.indexOf(e)!==-1)return;if(e.isNew()&&n.options.saveReferencedNew)return e.save();if(e.hasChanged()&&n.options.saveReferencedChanged)return e.save()})}),s.save(null,_.extend({},t,{success:function(){s._originalAttributes=_.clone(s.attributes),n._removeLocal(s),window.setTimeout(function(){n.changedModels.splice(n.changedModels.indexOf(s),1)},0),i--,i<=0&&(n._trigger("saved",null,{}),t.success(),e("body").midgardNotifications("create",{body:r}),n.enableSave())},error:function(r,i){t.error(),e("body").midgardNotifications("create",{body:_.template(n.options.localize("saveError",n.options.language),{error:i.responseText||""}),timeout:0}),n._trigger("error",null,{instance:s})}}))})},_saveLocal:function(e){if(!this.options.localStorage)return;if(e.isNew()){if(!e.primaryCollection)return;return this._saveLocalReferences(e.primaryCollection.subject,e.primaryCollection.predicate,e)}window.localStorage.setItem(e.getSubjectUri(),JSON.stringify(e.toJSONLD()))},_getReferenceId:function(e,t){return e.id+":"+t},_saveLocalReferences:function(e,t,n){if(!this.options.localStorage)return;if(!e||!t)return;var r=this,i=e+":"+t,s=n.toJSONLD();if(window.localStorage.getItem(i)){var o=JSON.parse(window.localStorage.getItem(i)),u=_.pluck(o,"@").indexOf(s["@"]);u!==-1?o[u]=s:o.push(s),window.localStorage.setItem(i,JSON.stringify(o));return}
-window.localStorage.setItem(i,JSON.stringify([s]))},_checkLocal:function(e){if(!this.options.localStorage)return!1;var t=window.localStorage.getItem(e.getSubjectUri());return t?!0:!1},_readLocal:function(e){if(!this.options.localStorage)return;var t=window.localStorage.getItem(e.getSubjectUri());if(!t)return;e._originalAttributes||(e._originalAttributes=_.clone(e.attributes));var n=JSON.parse(t),r=this.vie.entities.addOrUpdate(n,{overrideAttributes:!0});this._trigger("loaded",null,{instance:r})},_readLocalReferences:function(e,t,n){if(!this.options.localStorage)return;var r=this._getReferenceId(e,t),i=window.localStorage.getItem(r);if(!i)return;n.add(JSON.parse(i))},_restoreLocal:function(e){var t=this;if(!e)return;_.each(e.attributes,function(e,n){if(e instanceof t.vie.Collection){var r=[];e.forEach(function(e){e.isNew()&&r.push(e)}),e.remove(r)}});if(!e.changedAttributes()){e._originalAttributes&&e.set(e._originalAttributes);return}e.set(e.previousAttributes())},_removeLocal:function(e){if(!this.options.localStorage)return;window.localStorage.removeItem(e.getSubjectUri())}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardTags",{enhanced:!1,options:{vie:null,entity:null,element:null,entityElement:null,parentElement:".create-ui-tool-metadataarea",predicate:"skos:related",templates:{button:'<button class="create-ui-btn"><i class="icon-<%= icon %>"></i> <%= label %></button>',contentArea:'<div class="dropdown-menu"></div>',tags:'<div class="create-ui-tags <%= type %>Tags"><h3><%= label %></h3><input type="text" class="tags" value="" /></div>'},localize:function(e,t){return window.midgardCreate.localize(e,t)},language:null},_init:function(){var t=this;this.vie=this.options.vie,this.entity=this.options.entity,this.element=this.options.element,e(this.options.entityElement).bind("midgardeditableactivated",function(e,n){if(n.instance!==t.options.entity)return;t._renderWidget(),t.loadTags()}),e(this.options.entityElement).bind("midgardeditablechanged",function(e,n){if(n.instance!==t.options.entity)return;t.enhanced=!1}),this._listenAnnotate(this.options.entityElement)},_normalizeSubject:function(e){return this.entity.isReference(e)?e:(e.substr(0,7)!=="http://"&&(e="urn:tag:"+e),e=this.entity.toReference(e),e)},_tagLabel:function(e){return e=this.entity.fromReference(e),e.substr(0,8)==="urn:tag:"&&(e=e.substr(8,e.length-1)),e.substring(0,7)=="http://"&&(e=e.substr(e.lastIndexOf("/")+1,e.length-1),e=e.replace(/_/g," ")),e},addTag:function(e,n,r){n===t&&(n=this._tagLabel(e)),e=this._normalizeSubject(e),r&&!this.entity.isReference(r)&&(r=this.entity.toReference(r));var i=this.vie.entities.addOrUpdate({"@subject":e,"rdfs:label":n,"@type":r}),s=this.options.entity.get(this.options.predicate);s?s.isCollection||(s=new this.vie.Collection(_.map(s,function(e){return e.isEntity?e:{"@subject":e}})),s.vie=this.options.vie,this.options.entity.set(this.options.predicate,s)):(s=new this.vie.Collection,s.vie=this.options.vie,this.options.entity.set(this.options.predicate,s)),s.addOrUpdate(i),this.options.entityElement.trigger("midgardeditablechanged",{instance:this.options.entity})},removeTag:function(e){var t=this.options.entity.get(this.options.predicate);if(!t)return;e=this._normalizeSubject(e);var n=t.get(e);if(!n)return;t.remove(e),this.options.entityElement.trigger("midgardeditablechanged",{instance:this.options.entity})},_listenAnnotate:function(e){var t=this;e.bind("annotateselect",function(e,n){t.addTag(n.linkedEntity.uri,n.linkedEntity.label,n.linkedEntity.type[0])}),e.bind("annotateremove",function(e,n){t.removeTag(n.linkedEntity.uri)})},_prepareEditor:function(t){var n=e(_.template(this.options.templates.contentArea,{})),r=e(_.template(this.options.templates.tags,{type:"article",label:this.options.localize("Item tags",this.options.language)})),i=e(_.template(this.options.templates.tags,{type:"suggested",label:this.options.localize("Suggested tags",this.options.language)}));e("input",r).attr("id","articleTags-"+this.entity.cid),e("input",i).attr("id","suggestedTags-"+this.entity.cid),n.append(r),n.append(i),n.hide();var s=t.position();return n.css("position","absolute"),n.css("left",s.left),n},_renderWidget:function(){var t=this,n=this.entity.getSubject(),r=e(_.template(this.options.templates.button,{icon:"tags",label:this.options.localize("Tags",this.options.language)})),i=e(this.options.parentElement);i.empty(),i.append(r),i.show();var s=this._prepareEditor(r);r.after(s),this.articleTags=e(".articleTags input",s).tagsInput({width:"auto",height:"auto",onAddTag:function(e){t.addTag(e)},onRemoveTag:function(e){t.removeTag(e)},defaultText:this.options.localize("add a tag",this.options.language)});var o=function(){var n=e.trim(e(this).text());t.articleTags.addTag(n),t.suggestedTags.removeTag(n)};this.suggestedTags=e(".suggestedTags input",s).tagsInput({width:"auto",height:"auto",interactive:!1,onAddTag:function(t){e(".suggestedTags .tag span",s).unbind("click",o),e(".suggestedTags .tag span",s).bind("click",o)},onRemoveTag:function(t){e(".suggestedTags .tag span",s).unbind("click",o),e(".suggestedTags .tag span",s).bind("click",o)},remove:!1}),r.bind("click",function(){s.toggle()})},loadTags:function(){var t=this,n=this.entity.get(this.options.predicate);n&&(_.isString(n)?t.articleTags.addTag(t._tagLabel(n)):n.isCollection?n.each(function(e){t.articleTags.addTag(e.get("rdfs:label"))}):_.each(n,function(e){t.articleTags.addTag(t._tagLabel(e))})),this.vie.services.stanbol?t.enhance():e(".suggestedTags",t.element).hide()},_getLabelLang:function(e){if(!_.isArray(e))return null;var t;return _.each(e,function(e){e["@language"]==="en"&&(t=e["@value"])}),t},_addEnhancement:function(e){if(!e.isEntity)return;var t=this._getLabelLang(e.get("rdfs:label"));if(!t)return;var n=this.options.entity.get(this.options.predicate);if(n&&n.isCollection&&n.indexOf(e)!==-1)return;this.suggestedTags.addTag(t)},enhance:function(){if(this.enhanced)return;this.enhanced=!0;var t=this;this.vie.analyze({element:e("[property]",this.options.entityElement)}).using(["stanbol"]).execute().success(function(e){_.each(e,function(e){t._addEnhancement(e)})}).fail(function(e){})}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardToolbar",{options:{display:"full",templates:{minimized:'<div class="create-ui-logo"><a class="create-ui-toggle" id="create-ui-toggle-toolbar"></a></div>',full:'<div class="create-ui-toolbar-wrapper"><div class="create-ui-toolbar-toolarea"><%= dynamic %><%= status %></div></div>',toolcontainer:'<div class="create-ui-toolbar-<%= name %>toolarea"><ul class="create-ui-<%= name %>tools"><%= content %></ul></div>',toolarea:'<li class="create-ui-tool-<%= name %>area"></li>'}},_create:function(){this.element.append(this._getMinimized()),this.element.append(this._getFull());var t=this;e(".create-ui-toggle",this.element).click(function(){t.options.display==="full"?t.setDisplay("minimized"):t.setDisplay("full")}),e(this.element).bind("midgardcreatestatechange",function(e,n){n.state=="browse"&&(t._clearWorkflows(),t._clearMetadata())}),e(this.element).bind("midgardworkflowschanged",function(n,r){t._clearWorkflows(),r.workflows.length&&r.workflows.each(function(n){var i=e("body").data().midgardWorkflows.prepareItem(r.instance,n,function(e,n){t._clearWorkflows();if(e)return});e(".create-ui-tool-workflowarea",t.element).append(i)})})},_init:function(){this.setDisplay(this.options.display)},setDisplay:function(e){if(e===this.options.display)return;e==="minimized"?(this.hide(),this.options.display="minimized"):(this.show(),this.options.display="full"),this._trigger("statechange",null,this.options)},hide:function(){e("div.create-ui-toolbar-wrapper").fadeToggle("fast","linear")},show:function(){e("div.create-ui-toolbar-wrapper").fadeToggle("fast","linear")},_getMinimized:function(){return e(_.template(this.options.templates.minimized,{}))},_getFull:function(){return e(_.template(this.options.templates.full,{dynamic:_.template(this.options.templates.toolcontainer,{name:"dynamic",content:_.template(this.options.templates.toolarea,{name:"metadata"})+_.template(this.options.templates.toolarea,{name:"workflow"})+_.template(this.options.templates.toolarea,{name:"free"})}),status:_.template(this.options.templates.toolcontainer,{name:"status",content:""})}))},_clearWorkflows:function(){e(".create-ui-tool-workflowarea",this.element).empty()},_clearMetadata:function(){e(".create-ui-tool-metadataarea",this.element).empty()}})}(jQuery),function(e,t){"use strict";e.widget("Midgard.midgardWorkflows",{options:{url:function(e){},templates:{button:'<button class="create-ui-btn" id="<%= id %>"><%= label %></button>'},renderers:{button:function(t,n,r,i){var s="midgardcreate-workflow_"+n.get("name"),o=e(_.template(this.options.templates.button,{id:s,label:n.get("label")})).button();return o.bind("click",function(e){r(t,n,i)}),o}},action_types:{backbone_save:function(e,t,n){var r=e.url,i=e.clone();i.url=r;var s=t.get("action");s.url&&(e.url=s.url),i.save(null,{success:function(t){e.url=r,e.change(),n(null,e)},error:function(t,i){e.url=r,e.change(),n(i,e)}})},backbone_destroy:function(e,t,n){var r=e.url,i=e.clone();i.url=r;var s=t.get("action");s.url&&(e.url=s.url),e.destroy({success:function(t){e.url=r,e.change(),n(null,t)},error:function(t,i){e.url=r,e.change(),n(i,e)}})},http:function(t,n,r){var i=n.get("action");if(!i.url)return r("No action url defined!");var s={};i.http&&(s=i.http);var o=e.extend({url:i.url,type:"POST",data:t.toJSON(),success:function(){t.fetch({success:function(e){r(null,e)},error:function(e,t){r(t,e)}})}},s);e.ajax(o)}}},_init:function(){this._renderers={},this._action_types={},this._parseRenderersAndTypes(),this._last_instance=null,this.ModelWorkflowModel=Backbone.Model.extend({defaults:{name:"",label:"",type:"button",action:{type:"backbone_save"}}}),this.workflows={};var t=this;e(this.element).bind("midgardeditableactivated",function(e,n){t._fetchWorkflows(n.instance)})},_fetchWorkflows:function(e){var t=this;if(e.isNew()){t._trigger("changed",null,{instance:e,workflows:[]});return}if(t._last_instance==e){t.workflows[e.cid]&&t._trigger("changed",null,{instance:e,workflows:t.workflows[e.cid]});return}t._last_instance=e;if(t.workflows[e.cid]){t._trigger("changed",null,{instance:e,workflows:t.workflows[e.cid]});return}if(t.options.url)t._fetchModelWorkflows(e);else{var n=new(t._generateCollectionFor(e))([],{});t._trigger("changed",null,{instance:e,workflows:n})}},_parseRenderersAndTypes:function(){var t=this;e.each(this.options.renderers,function(e,n){t.setRenderer(e,n)}),e.each(this.options.action_types,function(e,n){t.setActionType(e,n)})},setRenderer:function(e,t){this._renderers[e]=t},getRenderer:function(e){return this._renderers[e]?this._renderers[e]:!1},setActionType:function(e,t){this._action_types[e]=t},getActionType:function(e){return this._action_types[e]},prepareItem:function(e,t,n){var r=this,i=this.getRenderer(t.get("type")),s=this.getActionType(t.get("action").type);return i.call(this,e,t,s,function(i,s){delete r.workflows[e.cid],r._last_instance=null,t.get("action").type!=="backbone_destroy"&&r._fetchModelWorkflows(e),n(i,s)})},_generateCollectionFor:function(e){var t={model:this.ModelWorkflowModel};return this.options.url&&(t.url=this.options.url(e)),Backbone.Collection.extend(t)},_fetchModelWorkflows:function(e){if(e.isNew())return;var t=this;t.workflows[e.cid]=new(this._generateCollectionFor(e))([],{}),t.workflows[e.cid].fetch({success:function(n){t.workflows[e.cid].reset(n.models),t._trigger("changed",null,{instance:e,workflows:t.workflows[e.cid]})},error:function(e,t){}})}})}(jQuery),window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.bg={Save:"Запази",Saving:"Запазване",Cancel:"Откажи",Edit:"Редактирай",localModification:'Елементът "<%= label %>" има локални модификации',localModifications:"<%= number %> елемента на тази страница имат локални модификации",Restore:"Възстанови",Ignore:"Игнорирай",saveSuccess:'Елементът "<%= label %>" беше успешно запазен',saveSuccessMultiple:"<%= number %> елемента бяха успешно запазени",saveError:"Възника грешка при запазване<br /><%= error %>","Item tags":"Етикети на елемента","Suggested tags":"Препоръчани етикети",Tags:"Етикети","add a tag":"добави етикет",Add:"Добави","Choose type to add":"Избери тип за добавяне"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.cs={Save:"Uložit",Saving:"Probíhá ukládání",Cancel:"Zrušit",Edit:"Upravit",localModification:'Blok "<%= label %>" obsahuje lokální změny',localModifications:"<%= number %> bloků na této stránce má lokální změny",Restore:"Aplikovat lokální změny",Ignore:"Zahodit lokální změny",saveSuccess:'Blok "<%= label %>" byl úspěšně uložen',saveSuccessMultiple:"<%= number %> bloků bylo úspěšně uloženo",saveError:"Při ukládání došlo k chybě<br /><%= error %>","Item tags":"Štítky bloku","Suggested tags":"Navrhované štítky",Tags:"Štítky","add a tag":"Přidat štítek",Add:"Přidat","Choose type to add":"Vyberte typ k přidání"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.da={Save:"Gem",Saving:"Gemmer",Cancel:"Annullér",Edit:"Rediger",localModification:'Element "<%= label %>" har lokale ændringer',localModifications:"<%= number %> elementer på denne side har lokale ændringer",Restore:"Gendan",Ignore:"Ignorer",saveSuccess:'Element "<%= label %>" er gemt',saveSuccessMultiple:"<%= number %> elementer er gemt",saveError:"Der opstod en fejl under lagring<br /><%= error %>","Item tags":"Element tags","Suggested tags":"Foreslåede tags",Tags:"Tags","add a tag":"tilføj et tag",Add:"Tilføj","Choose type to add":"Vælg type der skal tilføjes"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.de={Save:"Speichern",Saving:"Speichert",Cancel:"Abbrechen",Edit:"Bearbeiten",localModification:'Das Dokument "<%= label %>" auf dieser Seite hat lokale Änderungen',localModifications:"<%= number %> Dokumente auf dieser Seite haben lokale Änderungen",Restore:"Wiederherstellen",Ignore:"Ignorieren",saveSuccess:'Dokument "<%= label %>" erfolgreich gespeichert',saveSuccessMultiple:"<%= number %> Dokumente erfolgreich gespeichert",saveError:"Fehler beim Speichern<br /><%= error %>","Item tags":"Schlagwörter des Dokuments","Suggested tags":"Schlagwortvorschläge",Tags:"Schlagwörter","add a tag":"Neues Schlagwort",Add:"Hinzufügen","Choose type to add":"Typ zum Hinzufügen wählen"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.en={Save:"Save",Saving:"Saving",Cancel:"Cancel",Edit:"Edit",localModification:'Item "<%= label %>" has local modifications',localModifications:"<%= number %> items on this page have local modifications",Restore:"Restore",Ignore:"Ignore",saveSuccess:'Item "<%= label %>" saved successfully',saveSuccessMultiple:"<%= number %> items saved successfully",saveError:"Error occurred while saving<br /><%= error %>","Item tags":"Item tags","Suggested tags":"Suggested tags",Tags:"Tags","add a tag":"add a tag",Add:"Add","Choose type to add":"Choose type to add"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.es={Save:"Guardar",Saving:"Guardando",Cancel:"Cancelar",Edit:"Editar",localModification:'El elemento "<%= label %>" tiene modificaciones locales',localModifications:"<%= number %> elementos en la página tienen modificaciones locales",Restore:"Restaurar",Ignore:"Ignorar",saveSuccess:'El elemento "<%= label %>" se guardó exitosamente',saveSuccessMultiple:"<%= number %> elementos se guardaron exitosamente",saveError:"Ha ocurrido un error cuando se guardaban los datos<br /><%= error %>","Item tags":"Etiquetas de los elementos","Suggested tags":"Etiquetas sugeridas",Tags:"Etiquetas","add a tag":"añadir una etiqueta",Add:"Añadir","Choose type to add":"Escoge el tipo a añadir"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.fi={Save:"Tallenna",Saving:"Tallennetaan",Cancel:"Peruuta",Edit:"Muokkaa",localModification:'Dokumentilla "<%= label %>" on paikallisia muutoksia',localModifications:"<%= number %> dokumenttia sivulla omaa paikallisia muutoksia",Restore:"Palauta",Ignore:"Poista",saveSuccess:'Dokumentti "<%= label %>" tallennettu',saveSuccessMultiple:"<%= number %> dokumenttia tallennettu",saveError:"Virhe tallennettaessa<br /><%= error %>","Item tags":"Avainsanat","Suggested tags":"Ehdotukset",Tags:"Avainsanat","add a tag":"lisää avainsana",Add:"Lisää","Choose type to add":"Mitä haluat lisätä?"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.fr={Save:"Sauver",Saving:"En cours",Cancel:"Annuler",Edit:"Editer",localModification:'Objet "<%= label %>" sur cette page ont des modifications locales',localModifications:"<%= number %> élements sur cette page ont des modifications locales",Restore:"Récupérer",Ignore:"Ignorer",saveSuccess:'"<%= label %>" est sauvegardé avec succès',saveSuccessMultiple:"<%= number %> éléments ont été sauvegardé avec succès",saveError:"Une erreur est survenue durant la sauvegarde:<br /><%= error %>","Item tags":"Tags des objets","Suggested tags":"Tags suggérés",Tags:"Tags","add a tag":"ajouter un tag",Add:"Ajouter","Choose type to add":"Choisir le type à ajouter"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.it={Save:"Salva",Saving:"Salvataggio",Cancel:"Cancella",Edit:"Modifica",localModification:'Articolo "<%= label %>" in questa pagina hanno modifiche locali',localModifications:"<%= number %> articoli in questa pagina hanno modifiche locali",Restore:"Ripristina",Ignore:"Ignora",saveSuccess:'Articolo "<%= label %>" salvato con successo',saveSuccessMultiple:"<%= number %> articoli salvati con successo",saveError:"Errore durante il salvataggio<br /><%= error %>","Item tags":"Tags articolo","Suggested tags":"Tags suggerite",Tags:"Tags","add a tag":"Aggiungi una parola chiave",Add:"Aggiungi","Choose type to add":"Scegli il tipo da aggiungere"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.nl={Save:"Opslaan",Saving:"Bezig met opslaan",Cancel:"Annuleren",Edit:"Bewerken",localModification:'Items "<%= label %>" op de pagina heeft lokale wijzigingen',localModifications:"<%= number %> items op de pagina hebben lokale wijzigingen",Restore:"Herstellen",Ignore:"Negeren",saveSuccess:'Item "<%= label %>" succesvol opgeslagen',saveSuccessMultiple:"<%= number %> items succesvol opgeslagen",saveError:"Fout opgetreden bij het opslaan<br /><%= error %>","Item tags":"Item tags","Suggested tags":"Tag suggesties",Tags:"Tags","add a tag":"tag toevoegen",Add:"Toevoegen","Choose type to add":"Kies type om toe te voegen"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.no={Save:"Lagre",Saving:"Lagrer",Cancel:"Avbryt",Edit:"Rediger",localModification:'Element "<%= label %>" på denne siden er modifisert lokalt',localModifications:"<%= number %> elementer på denne siden er modifisert lokalt",Restore:"Gjenopprett",Ignore:"Ignorer",saveSuccess:'Element "<%= label %>" ble lagret',saveSuccessMultiple:"<%= number %> elementer ble lagret",saveError:"En feil oppstod under lagring<br /><%= error %>","Item tags":"Element-tagger","Suggested tags":"Anbefalte tagger",Tags:"Tagger","add a tag":"legg til tagg",Add:"Legg til","Choose type to add":"Velg type å legge til"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.pl={Save:"Zapisz",Saving:"Zapisuję",Cancel:"Anuluj",Edit:"Edytuj",localModification:'Artykuł "<%= label %>" posiada lokalne modyfikacje',localModifications:"<%= number %> artykułów na tej stronie posiada lokalne modyfikacje",Restore:"Przywróć",Ignore:"Ignoruj",saveSuccess:'Artykuł "<%= label %>" został poprawnie zapisany',saveSuccessMultiple:"<%= number %> artykułów zostało poprawnie zapisanych",saveError:"Wystąpił błąd podczas zapisywania<br /><%= error %>","Item tags":"Tagi artykułów","Suggested tags":"Sugerowane tagi",Tags:"Tagi","add a tag":"dodaj tag",Add:"Dodaj","Choose type to add":"Wybierz typ do dodania"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.pt_BR={Save:"Salvar",Saving:"Salvando",Cancel:"Cancelar",Edit:"Editar",localModification:'Item "<%= label %>" nesta página possuem modificações locais',localModifications:"<%= number %> itens nesta página possuem modificações locais",Restore:"Restaurar",Ignore:"Ignorar",saveSuccess:'Item "<%= label %>" salvo com sucesso',saveSuccessMultiple:"<%= number %> itens salvos com sucesso",saveError:"Erro ocorrido ao salvar<br /><%= error %>","Item tags":"Tags de item","Suggested tags":"Tags sugeridas",Tags:"Tags","add a tag":"adicionar uma tag",Add:"Adicionar","Choose type to add":"Selecione o tipo para adicionar"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.locale===undefined&&(window.midgardCreate.locale={}),window.midgardCreate.locale.ru={Save:"Сохранить",Saving:"Сохраняю",Cancel:"Отмена",Edit:"Редактировать",localModification:'В запись "<%= label %>" внесены несохранённые изменения',localModifications:"В записи на этой странице (<%= number %> шт.) внесены несохранённые изменения",Restore:"Восстановить",Ignore:"Игнорировать",saveSuccess:'Запись "<%= label %>" была успешно сохранена',saveSuccessMultiple:" Записи (<%= number %> шт.) были успешно сохранены",saveError:"Во время сохранения произошла ошибка<br /><%= error %>","Item tags":"Теги записей","Suggested tags":"Предлагаемые теги",Tags:"Теги","add a tag":"добавить тег",Add:"Добавить","Choose type to add":"Выбрать тип для добавления"},window.midgardCreate===undefined&&(window.midgardCreate={}),window.midgardCreate.localize=function(e,t){return window.midgardCreate.locale?window.midgardCreate.locale[t]&&window.midgardCreate.locale[t][e]?window.midgardCreate.locale[t][e]:window.midgardCreate.locale.en[e]?window.midgardCreate.locale.en[e]:e:e};
+
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false VIE:false */
+  'use strict';
+
+  // # Create main widget
+  //
+  // The `midgardCreate` widget is the main entry point into using
+  // Create for editing content.
+  //
+  // While most individual Create widgets can also be used separately,
+  // the most common use case is to instantiate `midgardCreate` for
+  // your pages and let it handle editables, toolbars, and storate.
+  //
+  //     jQuery('body').midgardCreate();
+  jQuery.widget('Midgard.midgardCreate', {
+    // ## Configuration
+    //
+    // Like most jQuery UI widgets, Create accepts various options 
+    // when being instantiated.
+    options: {
+      // Initial toolbar rendering style: `full` or `minimized`.
+      toolbar: 'full',
+      // The *Save* jQuery UI button instance.
+      saveButton: null,
+      // Initial usage state: `browse` or `edit`
+      state: 'browse',
+      // Whether to highlight editable elements when entering `edit`
+      // state.
+      highlight: true,
+      // Color for the highlights.
+      highlightColor: '#67cc08',
+      // Widgets to use for editing various content types.
+      editorWidgets: {
+        'default': 'hallo' 
+      },
+      // Additional editor options.
+      editorOptions: {
+        hallo: {
+          widget: 'halloWidget'
+        }
+      },
+      // Widgets to use for managing collections.
+      collectionWidgets: {
+        'default': 'midgardCollectionAdd'
+      },
+      // URL callback used with Backbone.sync. Will be passed to the
+      // Storage widget.
+      url: function () {},
+      // Prefix used for localStorage.
+      storagePrefix: 'node',
+      // Workflow configuration. URL callback is used for retrieving
+      // list of workflow actions that can be initiated for an item.
+      workflows: {
+        url: null
+      },
+      // Notifications configuration.
+      notifications: {},
+      // VIE instance used with Create.js. If no VIE instance is passed,
+      // Create.js will create its own instance.
+      vie: null,
+      // The VIE service used for DOM handling. By default 'rdfa'
+      domService: 'rdfa',
+      // URL for the Apache Stanbol service used for annotations, and tag
+      // and image suggestions.
+      stanbolUrl: null,
+      // URL for the DBpedia instance used for finding more information
+      // about annotations and tags.
+      dbPediaUrl: null,
+      // Whether to enable the Tags widget.
+      tags: false,
+      // Selector for element where Create.js will place its buttons, like
+      // Save and Edit/Cancel.
+      buttonContainer: '.create-ui-toolbar-statustoolarea .create-ui-statustools',
+      // Templates used for UI elements of the Create widget
+      templates: {
+        buttonContent: '<%= label %> <i class="icon-<%= icon %>"></i>',
+        button: '<li id="<%= id %>"><a class="create-ui-btn"><%= buttonContent %></a></li>'
+      },
+      // Localization callback function. Will be run in the widget context.
+      // Override to connect Create.js with your own localization system
+      localize: function (id, language) {
+        return window.midgardCreate.localize(id, language);
+      },
+      // Language used for Create.js. Will be retrieved from page lang attrib
+      // if left blank
+      language: null
+    },
+
+    _create: function () {
+      this.vie = this._setupVIE(this.options);
+      this.domService = this.vie.service(this.options.domService);
+
+      var widget = this;
+      window.setTimeout(function () {
+        widget._checkSession();
+      }, 10);
+
+      if (!this.options.language) {
+        this.options.language = jQuery('html').attr('lang');
+      }
+
+      this._enableToolbar();
+      this._saveButton();
+      this._editButton();
+      this._prepareStorage();
+
+      if (this.element.midgardWorkflows) {
+        this.element.midgardWorkflows(this.options.workflows);
+      }
+
+      if (this.element.midgardNotifications) {
+        this.element.midgardNotifications(this.options.notifications);
+      }
+
+      this._bindShortcuts();
+    },
+
+    destroy: function () {
+      // Clean up on widget destruction
+      this.element.midgardStorage('destroy');
+      this.element.midgardToolbar('destroy');
+
+      this.domService.findSubjectElements(this.element).each(function () {
+        jQuery(this).midgardEditable('destroy');
+      });
+
+      // Conditional widgets
+      if (this.element.midgardWorkflows) {
+        this.element.midgardWorkflows('destroy');
+      }
+      if (this.element.midgardNotifications) {
+        this.element.midgardNotifications('destroy');
+      }
+      if (this.options.tags) {
+        this.element.midgardTags('destroy');
+      }
+      // TODO: use _destroy in jQuery UI 1.9 and above
+      jQuery.Widget.prototype.destroy.call(this);
+    },
+
+    _setupVIE: function (options) {
+      var vie;
+      if (options.vie) {
+        vie = options.vie;
+      } else {
+        // Set up our own VIE instance
+        vie = new VIE();
+      }
+
+      if (!vie.hasService(this.options.domService) && this.options.domService === 'rdfa') {
+        vie.use(new vie.RdfaService());
+      }
+
+      if (!vie.hasService('stanbol') && options.stanbolUrl) {
+        vie.use(new vie.StanbolService({
+          proxyDisabled: true,
+          url: options.stanbolUrl
+        }));
+      }
+
+      if (!vie.hasService('dbpedia') && options.dbPediaUrl) {
+        vie.use(new vie.DBPediaService({
+          proxyDisabled: true,
+          url: options.dbPediaUrl
+        }));
+      }
+
+      return vie;
+    },
+
+    _prepareStorage: function () {
+      this.element.midgardStorage({
+        vie: this.vie,
+        url: this.options.url,
+        localize: this.options.localize,
+        language: this.options.language
+      });
+
+      var widget = this;
+      this.element.bind('midgardstoragesave', function () {
+        jQuery('#midgardcreate-save a').html(_.template(widget.options.templates.buttonContent, {
+          label: widget.options.localize('Saving', widget.options.language),
+          icon: 'upload'
+        }));
+      });
+
+      this.element.bind('midgardstoragesaved midgardstorageerror', function () {
+        jQuery('#midgardcreate-save a').html(_.template(widget.options.templates.buttonContent, {
+          label: widget.options.localize('Save', widget.options.language),
+          icon: 'ok'
+        }));
+      });
+    },
+
+    _init: function () {
+      this.setState(this.options.state);
+
+      // jQuery(this.element).data('midgardNotifications').showTutorial();
+    },
+
+    setState: function (state) {
+      this._setOption('state', state);
+      if (state === 'edit') {
+        this._enableEdit();
+      } else {
+        this._disableEdit();
+      }
+      this._setEditButtonState(state);
+    },
+
+    setToolbar: function (state) {
+      this.options.toolbar = state;
+      this.element.midgardToolbar('setDisplay', state);
+    },
+
+    showNotification: function (options) {
+      if (this.element.midgardNotifications) {
+        return this.element.midgardNotifications('create', options);
+      }
+    },
+
+    configureEditor: function (name, widget, options) {
+      this.options.editorOptions[name] = {
+        widget: widget,
+        options: options
+      };
+    },
+
+    setEditorForContentType: function (type, editor) {
+      if (this.options.editorOptions[editor] === undefined && editor !== null) {
+        throw new Error("No editor " + editor + " configured");
+      }
+      this.options.editorWidgets[type] = editor;
+    },
+
+    setEditorForProperty: function (property, editor) {
+      if (this.options.editorOptions[editor] === undefined && editor !== null) {
+        throw new Error("No editor " + editor + " configured");
+      }
+      this.options.editorWidgets[property] = editor;
+    },
+
+    _checkSession: function () {
+      if (!window.sessionStorage) {
+        return;
+      }
+
+      var toolbarID = this.options.storagePrefix + 'Midgard.create.toolbar';
+      if (window.sessionStorage.getItem(toolbarID)) {
+        this.setToolbar(window.sessionStorage.getItem(toolbarID));
+      }
+
+      var stateID = this.options.storagePrefix + 'Midgard.create.state';
+      if (window.sessionStorage.getItem(stateID)) {
+        this.setState(window.sessionStorage.getItem(stateID));
+      }
+
+      this.element.bind('midgardcreatestatechange', function (event, options) {
+        window.sessionStorage.setItem(stateID, options.state);
+      });
+    },
+
+    _bindShortcuts: function () {
+      if (!window.Mousetrap) {
+        // Keyboard shortcuts are optional and only activated if Mousetrap
+        // library is available
+        return;
+      }
+
+      var widget = this;
+      // Ctrl-e enters edit state
+      window.Mousetrap.bind(['command+e', 'ctrl+e'], function () {
+        if (widget.options.state === 'edit') {
+          return;
+        }
+        widget.setState('edit');
+      });
+
+      // Esc leaves edit state
+      window.Mousetrap.bind('esc', function (event) {
+        if (widget.options.state === 'browse') {
+          return;
+        }
+        // Stop event from propagating so that possible active editable
+        // doesn't get falsely triggered
+        event.stopPropagation();
+        widget.setState('browse');
+      });
+
+      // Ctrl-s saves
+      window.Mousetrap.bind(['command+s', 'ctrl+s'], function (event) {
+        event.preventDefault();
+        if (!widget.options.saveButton) {
+          return;
+        }
+        if (widget.options.saveButton.hasClass('ui-state-disabled')) {
+          return;
+        }
+        widget.options.saveButton.click();
+      });
+    },
+
+    _saveButton: function () {
+      if (this.options.saveButton) {
+        return this.options.saveButton;
+      }
+      var widget = this;
+      jQuery(this.options.buttonContainer, this.element).append(jQuery(_.template(this.options.templates.button, {
+        id: 'midgardcreate-save',
+        buttonContent: _.template(this.options.templates.buttonContent, {
+          label: widget.options.localize('Save', widget.options.language),
+          icon: 'ok'
+        })
+      })));
+      this.options.saveButton = jQuery('#midgardcreate-save', this.element);
+      this.options.saveButton.hide();
+      return this.options.saveButton;
+    },
+
+    _editButton: function () {
+      var widget = this;
+      jQuery(this.options.buttonContainer, this.element).append(jQuery(_.template(this.options.templates.button, {
+        id: 'midgardcreate-edit',
+        buttonContent: ''
+      })));
+      jQuery('#midgardcreate-edit', this.element).bind('click', function () {
+        if (widget.options.state === 'edit') {
+          widget.setState('browse');
+          return;
+        }
+        widget.setState('edit');
+      });
+    },
+
+    _setEditButtonState: function (state) {
+      var widget = this;
+      var buttonContents = {
+        edit: _.template(this.options.templates.buttonContent, {
+          label: widget.options.localize('Cancel', widget.options.language),
+          icon: 'remove'
+        }),
+        browse: _.template(this.options.templates.buttonContent, {
+          label: widget.options.localize('Edit', widget.options.language),
+          icon: 'edit'
+        })
+      };
+      var editButton = jQuery('#midgardcreate-edit a', this.element);
+      if (!editButton) {
+        return;
+      }
+      if (state === 'edit') {
+        editButton.addClass('selected');
+      }
+      editButton.html(buttonContents[state]);
+    },
+
+    _enableToolbar: function () {
+      var widget = this;
+      this.element.bind('midgardtoolbarstatechange', function (event, options) {
+        widget.setToolbar(options.display);
+        if (window.sessionStorage) {
+          window.sessionStorage.setItem(widget.options.storagePrefix + 'Midgard.create.toolbar', options.display);
+        }
+      });
+
+      this.element.midgardToolbar({
+        display: this.options.toolbar,
+        vie: this.vie
+      });
+    },
+
+    _enableEdit: function () {
+      this._setOption('state', 'edit');
+      var widget = this;
+      var editableOptions = {
+        toolbarState: widget.options.toolbar,
+        disabled: false,
+        vie: widget.vie,
+        domService: widget.options.domService,
+        widgets: widget.options.editorWidgets,
+        editors: widget.options.editorOptions,
+        collectionWidgets: widget.options.collectionWidgets,
+        localize: widget.options.localize,
+        language: widget.options.language
+      };
+      if (widget.options.enableEditor) {
+        editableOptions.enableEditor = widget.options.enableEditor;
+      }
+      if (widget.options.disableEditor) {
+        editableOptions.disableEditor = widget.options.disableEditor;
+      }
+      this.domService.findSubjectElements(this.element).each(function () {
+        var element = this;
+        if (widget.options.highlight) {
+          var highlightEditable = function (event, options) {
+              if (!jQuery(options.element).is(':visible')) {
+                // Hidden element, don't highlight
+                return;
+              }
+              if (options.entityElement.get(0) !== element) {
+                // Propagated event from another entity, ignore
+                return;
+              }
+
+              if (window.Mousetrap) {
+                // contentEditable and form fields require special handling
+                // to allow keyboard shortcuts to work
+                options.element.addClass('mousetrap');
+              }
+
+              // Ensure other animations are stopped before proceeding
+              options.element.stop(true, true);
+
+              // Highlight the editable
+              options.element.effect('highlight', {
+                color: widget.options.highlightColor
+              }, 3000);
+            };
+
+          jQuery(this).bind('midgardeditableenableproperty', highlightEditable);
+        }
+        jQuery(this).bind('midgardeditabledisable', function () {
+          jQuery(this).unbind('midgardeditableenableproperty', highlightEditable);
+        });
+
+        if (widget.options.tags) {
+          jQuery(this).bind('midgardeditableenable', function (event, options) {
+            if (event.target !== element) {
+              return;
+            }
+            jQuery(this).midgardTags({
+              vie: widget.vie,
+              entityElement: options.entityElement,
+              entity: options.instance,
+              localize: widget.options.localize,
+              language: widget.options.language
+            });
+          });
+        }
+
+        jQuery(this).midgardEditable(editableOptions);
+      });
+
+      this._trigger('statechange', null, {
+        state: 'edit'
+      });
+    },
+
+    _disableEdit: function () {
+      var widget = this;
+      var editableOptions = {
+        disabled: true,
+        vie: widget.vie,
+        domService: widget.options.domService,
+        editorOptions: widget.options.editorOptions,
+        localize: widget.options.localize,
+        language: widget.options.language
+      };
+      this.domService.findSubjectElements(this.element).each(function () {
+        jQuery(this).midgardEditable(editableOptions);
+        jQuery(this).removeClass('ui-state-disabled');
+      });
+      this._setOption('state', 'browse');
+      this._trigger('statechange', null, {
+        state: 'browse'
+      });
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2011-2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false console:false */
+  'use strict';
+
+  // # Widget for adding items to a collection
+  jQuery.widget('Midgard.midgardCollectionAdd', {
+    options: {
+      editingWidgets: null,
+      collection: null,
+      model: null,
+      definition: null,
+      view: null,
+      disabled: false,
+      vie: null,
+      editableOptions: null,
+      templates: {
+        button: '<button class="btn"><i class="icon-<%= icon %>"></i> <%= label %></button>'
+      }
+    },
+
+    _create: function () {
+      this.addButtons = [];
+      var widget = this;
+      if (!widget.options.collection.localStorage) {
+        try {
+          widget.options.collection.url = widget.options.model.url();
+        } catch (e) {
+          if (window.console) {
+            console.log(e);
+          }
+        }
+      }
+
+      widget.options.collection.bind('add', function (model) {
+        model.primaryCollection = widget.options.collection;
+        widget.options.vie.entities.add(model);
+        model.collection = widget.options.collection;
+      });
+
+      // Re-check collection constraints
+      widget.options.collection.bind('add remove reset', widget.checkCollectionConstraints, widget);
+
+      widget._bindCollectionView(widget.options.view);
+    },
+
+    _bindCollectionView: function (view) {
+      var widget = this;
+      view.bind('add', function (itemView) {
+        itemView.$el.effect('slide', function () {
+          widget._makeEditable(itemView);
+        });
+      });
+    },
+
+    _makeEditable: function (itemView) {
+      this.options.editableOptions.disabled = this.options.disabled;
+      this.options.editableOptions.model = itemView.model;
+      itemView.$el.midgardEditable(this.options.editableOptions);
+    },
+
+    _init: function () {
+      if (this.options.disabled) {
+        this.disable();
+        return;
+      }
+      this.enable();
+    },
+
+    hideButtons: function () {
+      _.each(this.addButtons, function (button) {
+        button.hide();
+      });
+    },
+
+    showButtons: function () {
+      _.each(this.addButtons, function (button) {
+        button.show();
+      });
+    },
+
+    checkCollectionConstraints: function () {
+      if (this.options.disabled) {
+        return;
+      }
+
+      if (!this.options.view.canAdd()) {
+        this.hideButtons();
+        return;
+      }
+
+      if (!this.options.definition) {
+        // We have now information on the constraints applying to this collection
+        this.showButtons();
+        return;
+      }
+
+      if (!this.options.definition.max || this.options.definition.max === -1) {
+        // No maximum constraint
+        this.showButtons();
+        return;
+      }
+
+      if (this.options.collection.length < this.options.definition.max) {
+        this.showButtons();
+        return;
+      }
+      // Collection is already full by its definition
+      this.hideButtons();
+    },
+
+    enable: function () {
+      var widget = this;
+
+      var addButton = jQuery(_.template(this.options.templates.button, {
+        icon: 'plus',
+        label: this.options.editableOptions.localize('Add', this.options.editableOptions.language)
+      })).button();
+      addButton.addClass('midgard-create-add');
+      addButton.click(function () {
+        widget.addItem(addButton);
+      });
+      jQuery(widget.options.view.el).after(addButton);
+
+      widget.addButtons.push(addButton);
+      widget.checkCollectionConstraints();
+    },
+
+    disable: function () {
+      _.each(this.addButtons, function (button) {
+        button.remove();
+      });
+      this.addButtons = [];
+    },
+
+    _getTypeActions: function (options) {
+      var widget = this;
+      var actions = [];
+      _.each(this.options.definition.range, function (type) {
+        var nsType = widget.options.collection.vie.namespaces.uri(type);
+        if (!widget.options.view.canAdd(nsType)) {
+          return;
+        }
+        actions.push({
+          name: type,
+          label: type,
+          cb: function () {
+            widget.options.collection.add({
+              '@type': type
+            }, options);
+          },
+          className: 'create-ui-btn'
+        });
+      });
+      return actions;
+    },
+
+    addItem: function (button, options) {
+      if (options === undefined) {
+          options = {};
+      }
+      var addOptions = _.extend({}, options, { validate: false });
+
+      var itemData = {};
+      if (this.options.definition && this.options.definition.range) {
+        if (this.options.definition.range.length === 1) {
+          // Items can be of single type, add that
+          itemData['@type'] = this.options.definition.range[0];
+        } else {
+          // Ask user which type to add
+          jQuery('body').midgardNotifications('create', {
+            bindTo: button,
+            gravity: 'L',
+            body: this.options.editableOptions.localize('Choose type to add', this.options.editableOptions.language),
+            timeout: 0,
+            actions: this._getTypeActions(addOptions)
+          });
+          return;
+        }
+      }
+      this.options.collection.add(itemData, addOptions);
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2011-2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false console:false */
+  'use strict';
+
+  // # Widget for adding items anywhere inside a collection
+  jQuery.widget('Midgard.midgardCollectionAddBetween', jQuery.Midgard.midgardCollectionAdd, {
+    _bindCollectionView: function (view) {
+      var widget = this;
+      view.bind('add', function (itemView) {
+        //itemView.el.effect('slide');
+        widget._makeEditable(itemView);
+        widget._refreshButtons();
+      });
+      view.bind('remove', function () {
+        widget._refreshButtons();
+      });
+    },
+
+    _refreshButtons: function () {
+      var widget = this;
+      window.setTimeout(function () {
+        widget.disable();
+        widget.enable();
+      }, 1);
+    },
+
+    prepareButton: function (index) {
+      var widget = this;
+      var addButton = jQuery(_.template(this.options.templates.button, {
+        icon: 'plus',
+        label: ''
+      })).button();
+      addButton.addClass('midgard-create-add');
+      addButton.click(function () {
+        widget.addItem(addButton, {
+          at: index
+        });
+      });
+      return addButton;
+    },
+
+    enable: function () {
+      var widget = this;
+
+      var firstAddButton = widget.prepareButton(0);
+      jQuery(widget.options.view.el).prepend(firstAddButton);
+      widget.addButtons.push(firstAddButton);
+      jQuery.each(widget.options.view.entityViews, function (cid, view) {
+        var index = widget.options.collection.indexOf(view.model);
+        var addButton = widget.prepareButton(index + 1);
+        jQuery(view.el).append(addButton);
+        widget.addButtons.push(addButton);
+      });
+
+      this.checkCollectionConstraints();
+    },
+
+    disable: function () {
+      var widget = this;
+      jQuery.each(widget.addButtons, function (idx, button) {
+        button.remove();
+      });
+      widget.addButtons = [];
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2011-2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false VIE:false */
+  'use strict';
+
+  // # Create editing widget
+  jQuery.widget('Midgard.midgardEditable', {
+    options: {
+      editables: [],
+      collections: [],
+      model: null,
+      editors: {
+        hallo: {
+          widget: 'halloWidget',
+          options: {}
+        }
+      },
+      // the available widgets by data type
+      widgets: {
+        'default': 'hallo'
+      },
+      collectionWidgets: {
+        'default': 'midgardCollectionAdd'
+      },
+      toolbarState: 'full',
+      vie: null,
+      domService: 'rdfa',
+      predicateSelector: '[property]',
+      disabled: false,
+      localize: function (id, language) {
+        return window.midgardCreate.localize(id, language);
+      },
+      language: null
+    },
+
+    _create: function () {
+      this.vie = this.options.vie;
+      this.domService = this.vie.service(this.options.domService);
+      if (!this.options.model) {
+        var widget = this;
+        this.vie.load({
+          element: this.element
+        }).from(this.options.domService).execute().done(function (entities) {
+          widget.options.model = entities[0];
+        });
+      }
+    },
+
+    _init: function () {
+      if (this.options.disabled) {
+        this.disable();
+        return;
+      }
+      this.enable();
+    },
+
+    findEditableElements: function (callback) {
+      this.domService.findPredicateElements(this.options.model.id, jQuery(this.options.predicateSelector, this.element), false).each(callback);
+    },
+
+    enable: function () {
+      var widget = this;
+      if (!this.options.model) {
+        return;
+      }
+
+      this.findEditableElements(function () {
+        return widget._enableProperty(jQuery(this));
+      });
+
+      this._trigger('enable', null, {
+        instance: this.options.model,
+        entityElement: this.element
+      });
+
+      _.each(this.domService.views, function (view) {
+        if (view instanceof widget.vie.view.Collection && widget.options.model === view.owner) {
+          var property = view.collection.predicate;
+          var collection = widget.enableCollection({
+            model: widget.options.model,
+            collection: view.collection,
+            property: property,
+            definition: widget.getAttributeDefinition(property),
+            view: view,
+            element: view.el,
+            vie: widget.vie,
+            editableOptions: widget.options
+          });
+          widget.options.collections.push(collection);
+        }
+      });
+    },
+
+    disable: function () {
+      var widget = this;
+      jQuery.each(this.options.editables, function (index, editable) {
+        widget.disableEditor({
+          widget: widget,
+          editable: editable,
+          entity: widget.options.model,
+          element: jQuery(this)
+        });
+      });
+      this.options.editables = [];
+      jQuery.each(this.options.collections, function (index, collectionWidget) {
+        widget.disableCollection({
+          widget: widget,
+          model: widget.options.model,
+          element: collectionWidget,
+          vie: widget.vie,
+          editableOptions: widget.options
+        });
+      });
+      this.options.collections = [];
+
+      this._trigger('disable', null, {
+        instance: this.options.model,
+        entityElement: this.element
+      });
+    },
+
+    getElementPredicate: function (element) {
+      return this.domService.getElementPredicate(element);
+    },
+
+    _enableProperty: function (element) {
+      var widget = this;
+      var propertyName = this.getElementPredicate(element);
+      if (!propertyName) {
+        return true;
+      }
+      if (this.options.model.get(propertyName) instanceof Array) {
+        // For now we don't deal with multivalued properties in the editable
+        return true;
+      }
+
+      var editable = this.enableEditor({
+        widget: this,
+        element: element,
+        entity: this.options.model,
+        property: propertyName,
+        vie: this.vie,
+        modified: function (content) {
+          var changedProperties = {};
+          changedProperties[propertyName] = content;
+          widget.options.model.set(changedProperties, {
+            silent: true
+          });
+          widget._trigger('changed', null, {
+            property: propertyName,
+            instance: widget.options.model,
+            element: element,
+            entityElement: widget.element
+          });
+        },
+        activated: function () {
+          widget._trigger('activated', null, {
+            property: propertyName,
+            instance: widget.options.model,
+            element: element,
+            entityElement: widget.element
+          });
+        },
+        deactivated: function () {
+          widget._trigger('deactivated', null, {
+            property: propertyName,
+            instance: widget.options.model,
+            element: element,
+            entityElement: widget.element
+          });
+        }
+      });
+
+      if (editable) {
+        this._trigger('enableproperty', null, {
+          editable: editable,
+          property: propertyName,
+          instance: this.options.model,
+          element: element,
+          entityElement: this.element
+        });
+      }
+
+      this.options.editables.push(editable);
+    },
+
+    // returns the name of the widget to use for the given property
+    _editorName: function (data) {
+      if (this.options.widgets[data.property] !== undefined) {
+        // Widget configuration set for specific RDF predicate
+        return this.options.widgets[data.property];
+      }
+
+      // Load the widget configuration for the data type
+      var propertyType = 'default';
+      var attributeDefinition = this.getAttributeDefinition(data.property);
+      if (attributeDefinition) {
+        propertyType = attributeDefinition.range[0];
+      }
+      if (this.options.widgets[propertyType] !== undefined) {
+        return this.options.widgets[propertyType];
+      }
+      return this.options.widgets['default'];
+    },
+
+    _editorWidget: function (editor) {
+      return this.options.editors[editor].widget;
+    },
+
+    _editorOptions: function (editor) {
+      return this.options.editors[editor].options;
+    },
+
+    getAttributeDefinition: function (property) {
+      var type = this.options.model.get('@type');
+      if (!type) {
+        return;
+      }
+      if (!type.attributes) {
+        return;
+      }
+      return type.attributes.get(property);
+    },
+
+    enableEditor: function (data) {
+      var editorName = this._editorName(data);
+      if (editorName === null) {
+        return;
+      }
+
+      var editorWidget = this._editorWidget(editorName);
+
+      data.editorOptions = this._editorOptions(editorName);
+      data.toolbarState = this.options.toolbarState;
+      data.disabled = false;
+
+      if (typeof jQuery(data.element)[editorWidget] !== 'function') {
+        throw new Error(editorWidget + ' widget is not available');
+      }
+
+      jQuery(data.element)[editorWidget](data);
+      jQuery(data.element).data('createWidgetName', editorWidget);
+      return jQuery(data.element);
+    },
+
+    disableEditor: function (data) {
+      var widgetName = jQuery(data.element).data('createWidgetName');
+
+      data.disabled = true;
+
+      if (widgetName) {
+        // only if there has been an editing widget registered
+        jQuery(data.element)[widgetName](data);
+        jQuery(data.element).removeClass('ui-state-disabled');
+
+        if (data.element.is(':focus')) {
+          data.element.blur();
+        }
+      }
+    },
+
+    collectionWidgetName: function (data) {
+      if (this.options.collectionWidgets[data.property] !== undefined) {
+        // Widget configuration set for specific RDF predicate
+        return this.options.collectionWidgets[data.property];
+      }
+
+      var propertyType = 'default';
+      var attributeDefinition = this.getAttributeDefinition(data.property);
+      if (attributeDefinition) {
+        propertyType = attributeDefinition.range[0];
+      }
+      if (this.options.collectionWidgets[propertyType] !== undefined) {
+        return this.options.collectionWidgets[propertyType];
+      }
+      return this.options.collectionWidgets['default'];
+    },
+
+    enableCollection: function (data) {
+      var widgetName = this.collectionWidgetName(data);
+      if (widgetName === null) {
+        return;
+      }
+      data.disabled = false;
+      if (typeof jQuery(data.element)[widgetName] !== 'function') {
+        throw new Error(widgetName + ' widget is not available');
+      }
+      jQuery(data.element)[widgetName](data);
+      jQuery(data.element).data('createCollectionWidgetName', widgetName);
+      return jQuery(data.element);
+    },
+
+    disableCollection: function (data) {
+      var widgetName = jQuery(data.element).data('createCollectionWidgetName');
+      if (widgetName === null) {
+        return;
+      }
+      data.disabled = true;
+      if (widgetName) {
+        // only if there has been an editing widget registered
+        jQuery(data.element)[widgetName](data);
+        jQuery(data.element).removeClass('ui-state-disabled');
+      }
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Tobias Herrmann, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false document:false */
+  'use strict';
+
+  // # Base editing widget
+  //
+  // This editing widget provides a very simplistic `contentEditable` editor
+  // that can be used as standalone, but should more usually be used as
+  // the baseclass for other editing widgets.
+  //
+  // Basic editing widgets on this is easy:
+  //
+  //     jQuery.widget('Namespace.MyWidget', jQuery.Create.editWidget, {
+  //       // override any properties
+  //     });
+  jQuery.widget('Create.editWidget', {
+    options: {
+      disabled: false,
+      vie: null
+    },
+    // override to enable the widget
+    enable: function () {
+      this.element.attr('contenteditable', 'true');
+    },
+    // override to disable the widget
+    disable: function (disable) {
+      this.element.attr('contenteditable', 'false');
+    },
+    // called by the jquery ui plugin factory when creating the widget
+    // instance
+    _create: function () {
+      this._registerWidget();
+      this._initialize();
+    },
+    // called every time the widget is called
+    _init: function () {
+      if (this.options.disabled) {
+        this.disable();
+        return;
+      }
+      this.enable();
+    },
+    // override this function to initialize the widget functions
+    _initialize: function () {
+      var self = this;
+      var before = this.element.html();
+      this.element.bind('blur keyup paste', function (event) {
+        if (self.options.disabled) {
+          return;
+        }
+        var current = jQuery(this).html();
+        if (before !== current) {
+          before = current;
+          self.options.modified(current);
+        }
+      });
+    },
+    // used to register the widget name with the DOM element
+    _registerWidget: function () {
+      this.element.data("createWidgetName", this.widgetName);
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Tobias Herrmann, IKS Consortium
+//     (c) 2011 Rene Kapusta, Evo42
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false document:false Aloha:false */
+  'use strict';
+
+  // # Aloha editing widget
+  //
+  // This widget allows editing textual contents using the
+  // [Aloha](http://aloha-editor.org) rich text editor.
+  //
+  // Due to licensing incompatibilities, Aloha Editor needs to be installed
+  // and configured separately.
+  jQuery.widget('Create.alohaWidget', jQuery.Create.editWidget, {
+    enable: function () {
+      this._initialize();
+      this.options.disabled = false;
+    },
+    disable: function () {
+      Aloha.jQuery(this.options.element.get(0)).mahalo();
+      this.options.disabled = true;
+    },
+    _initialize: function () {
+      var options = this.options;
+      var editable;
+      var currentElement = Aloha.jQuery(options.element.get(0)).aloha();
+      _.each(Aloha.editables, function (aloha) {
+        // Find the actual editable instance so we can hook to the events
+        // correctly
+        if (aloha.obj.get(0) === currentElement.get(0)) {
+          editable = aloha;
+        }
+      });
+      if (!editable) {
+        return;
+      }
+      editable.vieEntity = options.entity;
+
+      // Subscribe to activation and deactivation events
+      Aloha.bind('aloha-editable-activated', function (event, data) {
+        if (data.editable !== editable) {
+          return;
+        }
+        options.activated();
+      });
+      Aloha.bind('aloha-editable-deactivated', function (event, data) {
+        if (data.editable !== editable) {
+          return;
+        }
+        options.deactivated();
+      });
+
+      Aloha.bind('aloha-smart-content-changed', function (event, data) {
+        if (data.editable !== editable) {
+          return;
+        }
+        if (!data.editable.isModified()) {
+          return true;
+        }
+        options.modified(data.editable.getContents());
+        data.editable.setUnmodified();
+      });
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Tobias Herrmann, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false document:false */
+  'use strict';
+
+  // # Hallo editing widget
+  //
+  // This widget allows editing textual content areas with the
+  // [Hallo](http://hallojs.org) rich text editor.
+  jQuery.widget('Create.halloWidget', jQuery.Create.editWidget, {
+    options: {
+      editorOptions: {},
+      disabled: true,
+      toolbarState: 'full',
+      vie: null,
+      entity: null
+    },
+    enable: function () {
+      jQuery(this.element).hallo({
+        editable: true
+      });
+      this.options.disabled = false;
+    },
+
+    disable: function () {
+      jQuery(this.element).hallo({
+        editable: false
+      });
+      this.options.disabled = true;
+    },
+
+    _initialize: function () {
+      jQuery(this.element).hallo(this.getHalloOptions());
+      var self = this;
+      jQuery(this.element).bind('halloactivated', function (event, data) {
+        self.options.activated();
+      });
+      jQuery(this.element).bind('hallodeactivated', function (event, data) {
+        self.options.deactivated();
+      });
+      jQuery(this.element).bind('hallomodified', function (event, data) {
+        self.options.modified(data.content);
+        data.editable.setUnmodified();
+      });
+
+      jQuery(document).bind('midgardtoolbarstatechange', function(event, data) {
+        // Switch between Hallo configurations when toolbar state changes
+        if (data.display === self.options.toolbarState) {
+          return;
+        }
+        self.options.toolbarState = data.display;
+        var newOptions = self.getHalloOptions();
+        self.element.hallo('changeToolbar', newOptions.parentElement, newOptions.toolbar, true);
+      });
+    },
+
+    getHalloOptions: function() {
+      var defaults = {
+        plugins: {
+          halloformat: {},
+          halloblock: {},
+          hallolists: {},
+          hallolink: {},
+          halloimage: {
+            entity: this.options.entity
+          }
+        },
+        buttonCssClass: 'create-ui-btn-small',
+        placeholder: '[' + this.options.property + ']'
+      };
+
+      if (typeof this.element.annotate === 'function' && this.options.vie.services.stanbol) {
+        // Enable Hallo Annotate plugin by default if user has annotate.js
+        // loaded and VIE has Stanbol enabled
+        defaults.plugins.halloannotate = {
+            vie: this.options.vie
+        };
+      }
+
+      if (this.options.toolbarState === 'full') {
+        // Use fixed toolbar in the Create tools area
+        defaults.parentElement = jQuery('.create-ui-toolbar-dynamictoolarea .create-ui-tool-freearea');
+        defaults.toolbar = 'halloToolbarFixed';
+      } else {
+        // Tools area minimized, use floating toolbar
+        defaults.parentElement = 'body';
+        defaults.toolbar = 'halloToolbarContextual';
+      }
+      return _.extend(defaults, this.options.editorOptions);
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false document:false */
+  'use strict';
+
+  // # Redactor editing widget
+  //
+  // This widget allows editing textual content areas with the
+  // [Redactor](http://redactorjs.com/) rich text editor.
+  jQuery.widget('Create.redactorWidget', jQuery.Create.editWidget, {
+    editor: null,
+
+    options: {
+      editorOptions: {},
+      disabled: true
+    },
+
+    enable: function () {
+      jQuery(this.element).redactor(this.getRedactorOptions());
+      this.options.disabled = false;
+    },
+
+    disable: function () {
+      jQuery(this.element).destroyEditor();
+      this.options.disabled = true;
+    },
+
+    _initialize: function () {
+      var self = this;
+      jQuery(this.element).bind('focus', function (event) {
+        self.options.activated(); 
+      });
+      /*
+      jQuery(this.element).bind('blur', function (event) {
+        self.options.deactivated(); 
+      });
+      */
+    },
+
+    getRedactorOptions: function () {
+      var self = this;
+      var overrides = {
+        keyupCallback: function (obj, event) {
+          self.options.modified(jQuery(self.element).getCode());
+        },
+        execCommandCallback: function (obj, command) {
+          self.options.modified(jQuery(self.element).getCode());
+        }
+      };
+
+      return _.extend(self.options.editorOptions, overrides);
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Jerry Jalava, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+/*
+ jQuery(this.element).data('midgardNotifications').create({body: 'Content here!'});
+ jQuery(this.element).data('midgardNotifications').create({
+ body: "Do you wan't to run tests now?",
+     actions: [
+         {
+             name: 'runtests', label: 'Run tests',
+             cb: function(e, notification) {
+                 alert('Running tests');
+                 notification.close();
+             }
+         },
+         {
+             name: 'cancel', label: 'Cancel',
+             cb: function(e, notification) {
+                 notification.close();
+             }
+         }
+     ]
+ });
+ */
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false Backbone:false document:false */
+  'use strict';
+
+  var _midgardnotifications_active = [];
+  var MidgardNotification = function (parent, options) {
+      var _defaults = {
+        class_prefix: 'midgardNotifications',
+        timeout: 3000,
+        // Set to 0 for sticky
+        auto_show: true,
+        body: '',
+        bindTo: null,
+        gravity: 'T',
+        effects: {
+          onShow: function (item, cb) {
+            item.animate({
+              opacity: 'show'
+            }, 600, cb);
+          },
+          onHide: function (item, cb) {
+            item.animate({
+              opacity: 'hide'
+            }, 600, cb);
+          }
+        },
+        actions: [],
+        callbacks: {}
+      };
+      var _config = {};
+      var _classes = {};
+      var _item = null;
+      var _id = null;
+      var _bind_target = null;
+
+      var _parent = parent;
+
+      var _story = null;
+
+      var base = {
+        constructor: function (options) {
+          _config = _.extend(_defaults, options || {});
+
+          _classes = {
+            container: _config.class_prefix + '-container',
+            item: {
+              wrapper: _config.class_prefix + '-item',
+              arrow: _config.class_prefix + '-arrow',
+              disregard: _config.class_prefix + '-disregard',
+              content: _config.class_prefix + '-content',
+              actions: _config.class_prefix + '-actions',
+              action: _config.class_prefix + '-action'
+            }
+          };
+
+          this._generate();
+        },
+        getId: function () {
+          return _id;
+        },
+        getElement: function () {
+          return _item;
+        },
+        _generate: function () {
+          var _self = this;
+          var outer, inner, content = null;
+
+          _item = outer = jQuery('<div class="' + _classes.item.wrapper + '-outer"/>');
+          outer.css({
+            display: 'none'
+          });
+          inner = jQuery('<div class="' + _classes.item.wrapper + '-inner"/>');
+          inner.appendTo(outer);
+
+          if (_config.bindTo) {
+            outer.addClass(_classes.item.wrapper + '-binded');
+
+            var arrow = jQuery('<div class="' + _classes.item.arrow + '"/>');
+            arrow.appendTo(outer);
+          } else {
+            outer.addClass(_classes.item.wrapper + '-normal');
+          }
+
+          content = jQuery('<div class="' + _classes.item.content + '"/>');
+          content.html(_config.body);
+          content.appendTo(inner);
+
+          if (_config.actions.length) {
+            var actions_holder = jQuery('<div class="' + _classes.item.actions + '"/>');
+            actions_holder.appendTo(inner);
+            jQuery.each(_config.actions, function (i, opts) {
+              var action = jQuery('<button name="' + opts.name + '" class="button-' + opts.name + '">' + opts.label + '</button>').button();
+              action.bind('click', function (e) {
+                if (_story) {
+                  opts.cb(e, _story, _self);
+                } else {
+                  opts.cb(e, _self);
+                }
+
+              });
+              if (opts.className) {
+                action.addClass(opts.className);
+              }
+              actions_holder.append(action);
+            });
+          }
+
+          _item.bind('click', function (e) {
+            if (_config.callbacks.onClick) {
+              _config.callbacks.onClick(e, _self);
+            } else {
+              if (!_story) {
+                _self.close();
+              }
+            }
+          });
+
+          if (_config.auto_show) {
+            this.show();
+          }
+
+          this._setPosition();
+
+          _id = _midgardnotifications_active.push(this);
+
+          _parent.append(_item);
+        },
+        
+       _calculatePositionForGravity: function (item, gravity, target, itemDimensions) {
+          item.find('.' + _classes.item.arrow).addClass(_classes.item.arrow + '_' + gravity);
+          switch (gravity) {
+          case 'TL':
+            return {
+              left: target.left,
+              top: target.top + target.height + 'px'
+            };
+          case 'TR':
+            return {
+              left: target.left + target.width - itemDimensions.width + 'px',
+              top: target.top + target.height + 'px'
+            };
+          case 'BL':
+            return {
+              left: target.left + 'px',
+              top: target.top - itemDimensions.height + 'px'
+            };
+          case 'BR':
+            return {
+              left: target.left + target.width - itemDimensions.width + 'px',
+              top: target.top - itemDimensions.height + 'px'
+            };
+          case 'LT':
+            return {
+              left: target.left + target.width + 'px',
+              top: target.top + 'px'
+            };
+          case 'LB':
+            return {
+              left: target.left + target.width + 'px',
+              top: target.top + target.height - itemDimensions.height + 'px'
+            };
+          case 'RT':
+            return {
+              left: target.left - itemDimensions.width + 'px',
+              top: target.top + 'px'
+            };
+          case 'RB':
+            return {
+              left: target.left - itemDimensions.width + 'px',
+              top: target.top + target.height - itemDimensions.height + 'px'
+            };
+          case 'T':
+            return {
+              left: target.left + target.width / 2 - itemDimensions.width / 2 + 'px',
+              top: target.top + target.height + 'px'
+            };
+          case 'R':
+            return {
+              left: target.left - itemDimensions.width + 'px',
+              top: target.top + target.height / 2 - itemDimensions.height / 2 + 'px'
+            };
+          case 'B':
+            return {
+              left: target.left + target.width / 2 - itemDimensions.width / 2 + 'px',
+              top: target.top - itemDimensions.height + 'px'
+            };
+          case 'L':
+            return {
+              left: target.left + target.width + 'px',
+              top: target.top + target.height / 2 - itemDimensions.height / 2 + 'px'
+            };
+          }
+        },
+        
+        _isFixed: function (element) {
+          if (element === document) {
+            return false;
+          }
+          if (element.css('position') === 'fixed') {
+            return true;
+          }
+          var parentElement = element.offsetParent();
+          if (parentElement.get(0) === element.get(0)) {
+            return false;
+          }
+          return this._isFixed(parentElement);
+        },
+
+        _setPosition: function () {
+          var pos;
+          if (_config.bindTo) {
+            var itemDimensions = {
+              width: _item.width() ? _item.width() : 280,
+              height: _item.height() ? _item.height() : 109
+            };
+            
+            _bind_target = jQuery(_config.bindTo);
+            var properties = {};
+            
+            var targetDimensions = {
+              width: _bind_target.outerWidth(),
+              height: _bind_target.outerHeight()
+            };
+            
+            if (this._isFixed(_bind_target)) {
+              properties.position = 'fixed';
+              targetDimensions.left = _bind_target.offset().left;
+              targetDimensions.top = _bind_target.position().top;
+            } else {
+              properties.position = 'absolute';
+              targetDimensions.left = _bind_target.offset().left;
+              targetDimensions.top = _bind_target.offset().top;
+            }
+            
+            pos = this._calculatePositionForGravity(_item, _config.gravity, targetDimensions, itemDimensions);
+            properties.top = pos.top;
+            properties.left = pos.left;
+
+            _item.css(properties);
+
+            return;
+          }
+
+          if (!_config.position) {
+            _config.position = 'top right';
+          }
+
+          var marginTop = jQuery('.create-ui-toolbar-wrapper').outerHeight(true) + 6;
+          pos = {
+            position: 'fixed'
+          };
+
+          var item;
+          var activeHeight = function (items) {
+            var total_height = 0;
+            jQuery.each(items, function (i, item) {
+              if (!item) {
+                return;
+              }
+              total_height += item.getElement().height();
+            });
+            return total_height;
+          };
+
+          if (_config.position.match(/top/)) {
+            pos.top = marginTop + activeHeight(_midgardnotifications_active) + 'px';
+          }
+          if (_config.position.match(/bottom/)) {
+            pos.bottom = (_midgardnotifications_active.length - 1 * item.height()) + item.height() + 10 + 'px';
+          }
+          if (_config.position.match(/right/)) {
+            pos.right = 20 + 'px';
+          }
+          if (_config.position.match(/left/)) {
+            pos.left = 20 + 'px';
+          }
+
+          _item.css(pos);
+        },
+        show: function () {
+          var self = this;
+          var w_t, w_b, b_b, b_t, e_t, e_h;
+
+          if (_config.callbacks.beforeShow) {
+            _config.callbacks.beforeShow(self);
+          }
+
+          if (_config.bindTo) {
+            var _bind_target = jQuery(_config.bindTo);
+            w_t = jQuery(window).scrollTop();
+            w_b = jQuery(window).scrollTop() + jQuery(window).height();
+            b_t = parseFloat(_item.offset().top, 10);
+            e_t = _bind_target.offset().top;
+            e_h = _bind_target.outerHeight();
+
+            if (e_t < b_t) {
+              b_t = e_t;
+            }
+
+            b_b = parseFloat(_item.offset().top, 10) + _item.height();
+            if ((e_t + e_h) > b_b) {
+              b_b = e_t + e_h;
+            }
+          }
+
+          if (_config.timeout > 0 && !_config.actions.length) {
+            window.setTimeout(function () {
+              self.close();
+            }, _config.timeout);
+          }
+
+          if (_config.bindTo && (b_t < w_t || b_t > w_b) || (b_b < w_t || b_b > w_b)) {
+            jQuery('html, body').stop().animate({
+              scrollTop: b_t
+            }, 500, 'easeInOutExpo', function () {
+              _config.effects.onShow(_item, function () {
+                if (_config.callbacks.afterShow) {
+                  _config.callbacks.afterShow(self);
+                }
+              });
+            });
+          } else {
+            _config.effects.onShow(_item, function () {
+              if (_config.callbacks.afterShow) {
+                _config.callbacks.afterShow(self);
+              }
+            });
+          }
+        },
+        close: function () {
+          var self = this;
+          if (_config.callbacks.beforeClose) {
+            _config.callbacks.beforeClose(self);
+          }
+          _config.effects.onHide(_item, function () {
+            if (_config.callbacks.afterClose) {
+              _config.callbacks.afterClose(self);
+            }
+            self.destroy();
+          });
+        },
+        destroy: function () {
+          var self = this;
+          jQuery.each(_midgardnotifications_active, function (i, item) {
+            if (item) {
+              if (item.getId() == self.getId()) {
+                delete _midgardnotifications_active[i];
+              }
+            }
+          });
+          jQuery(_item).remove();
+        },
+        setStory: function (story) {
+          _story = story;
+        },
+        setName: function (name) {
+          _item.addClass(_classes.item.wrapper + '-custom-' + name);
+          this.name = name;
+        }
+      };
+      base.constructor(options);
+      delete base.constructor;
+
+      return base;
+    };
+
+  var MidgardNotificationStoryline = function (options, items) {
+      var _defaults = {};
+      var _config = {};
+      var _storyline = {};
+      var _current_notification = {};
+      var _previous_item_name = null;
+      var _first_item_name = null;
+      var _last_item_name = null;
+      var _current_item = null;
+
+      var base = {
+        constructor: function (options) {
+          _config = _.extend(_defaults, options || {});
+        },
+        setStoryline: function (items) {
+          var default_structure = {
+            content: '',
+            actions: [],
+            show_actions: true,
+            notification: {},
+            // Notification options to override
+            back: null,
+            back_label: null,
+            forward: null,
+            forward_label: null,
+            beforeShow: null,
+            afterShow: null,
+            beforeClose: null,
+            afterClose: null
+          };
+
+          _storyline = {};
+          _current_item = null;
+          _previous_item_name = null;
+          _first_item_name = null;
+          _last_item_name = null;
+
+          var self = this;
+
+          jQuery.each(items, function (name, it) {
+            var item = jQuery.extend({}, default_structure, it);
+            item.name = name;
+            var notification = jQuery.extend({}, default_structure.notification, it.notification || {});
+            notification.body = item.content;
+
+            notification.auto_show = false;
+            if (item.actions.length) {
+              notification.delay = 0;
+            }
+            notification.callbacks = {
+              beforeShow: function (notif) {
+                if (item.beforeShow) {
+                  item.beforeShow(notif, self);
+                }
+              },
+              afterShow: function (notif) {
+                if (item.afterShow) {
+                  item.afterShow(notif, self);
+                }
+              },
+              beforeClose: function (notif) {
+                if (item.beforeClose) {
+                  item.beforeClose(notif, self);
+                }
+              },
+              afterClose: function (notif) {
+                if (item.afterClose) {
+                  item.afterClose(notif, self);
+                }
+                _previous_item_name = notif.name;
+              }
+            };
+
+            notification.actions = [];
+
+            if (item.show_actions) {
+              if (item.back) {
+                var back_label = item.back_label;
+                if (!back_label) {
+                  back_label = 'Back';
+                }
+                notification.actions.push({
+                  name: 'back',
+                  label: back_label,
+                  cb: function (e, story, notif) {
+                    story.previous();
+                  }
+                });
+              }
+
+              if (item.forward) {
+                var forward_label = item.forward_label;
+                if (!forward_label) {
+                  forward_label = 'Back';
+                }
+                notification.actions.push({
+                  name: 'forward',
+                  label: forward_label,
+                  cb: function (e, story, notif) {
+                    story.next();
+                  }
+                });
+              }
+
+              if (item.actions.length) {
+                jQuery.each(item.actions, function (i, act) {
+                  notification.actions.push(item.actions[i]);
+                });
+              }
+            }
+
+            if (!_first_item_name) {
+              _first_item_name = name;
+            }
+            _last_item_name = name;
+
+            item.notification = notification;
+
+            _storyline[name] = item;
+          });
+          return _storyline;
+        },
+        start: function () {
+          this._showNotification(_storyline[_first_item_name]);
+        },
+        stop: function () {
+          _current_item.close();
+          _current_item = null;
+          _previous_item_name = null;
+        },
+        next: function () {
+          _current_item.close();
+          if (_storyline[_current_item.name].forward) {
+            var next_item = _storyline[_current_item.name].forward;
+            this._showNotification(_storyline[next_item]);
+          } else {
+            this._showNotification(_storyline[_last_item_name]);
+          }
+        },
+        previous: function () {
+          if (_previous_item_name) {
+            _current_item.close();
+            if (_storyline[_current_item.name].back) {
+              var prev_item = _storyline[_current_item.name].back;
+              this._showNotification(_storyline[prev_item]);
+            } else {
+              this._showNotification(_storyline[_previous_item_name]);
+            }
+          } else {
+            this.stop();
+          }
+        },
+        _showNotification: function (item) {
+          _current_item = new MidgardNotification(jQuery('body'), item.notification);
+          _current_item.setStory(this);
+          _current_item.setName(item.name);
+          _current_item.show();
+
+          return _current_item;
+        }
+      };
+      base.constructor(options);
+      delete base.constructor;
+      if (items) {
+        base.setStoryline(items);
+      }
+
+      return base;
+    };
+
+  var _createTutorialStoryline = {
+    'start': {
+      content: 'Welcome to CreateJS tutorial!',
+      forward: 'toolbar_toggle',
+      forward_label: 'Start tutorial',
+      actions: [{
+        name: 'quit',
+        label: 'Quit',
+        cb: function (a, story, notif) {
+          story.stop();
+        }
+      }]
+    },
+    'toolbar_toggle': {
+      content: 'This is the CreateJS toolbars toggle button.<br />You can hide and show the full toolbar by clicking here.<br />Try it now.',
+      forward: 'edit_button',
+      show_actions: false,
+      afterShow: function (notification, story) {
+        jQuery('body').bind('midgardtoolbarstatechange', function (event, options) {
+          if (options.display == 'full') {
+            story.next();
+            jQuery('body').unbind('midgardtoolbarstatechange');
+          }
+        });
+      },
+      notification: {
+        bindTo: '#midgard-bar-hidebutton',
+        timeout: 0,
+        gravity: 'TL'
+      }
+    },
+    'edit_button': {
+      content: 'This is the edit button.<br />Try it now.',
+      show_actions: false,
+      afterShow: function (notification, story) {
+        jQuery('body').bind('midgardcreatestatechange', function (event, options) {
+          if (options.state == 'edit') {
+            story.next();
+            jQuery('body').unbind('midgardcreatestatechange');
+          }
+        });
+      },
+      notification: {
+        bindTo: '.ui-button[for=midgardcreate-edit]',
+        timeout: 0,
+        gravity: 'TL'
+      }
+    },
+    'end': {
+      content: 'Thank you for watching!<br />Happy content editing times await you!'
+    }
+  };
+
+  jQuery.widget('Midgard.midgardNotifications', {
+    options: {
+      notification_defaults: {
+        class_prefix: 'midgardNotifications',
+        position: 'top right'
+      }
+    },
+
+    _create: function () {
+      this.classes = {
+        container: this.options.notification_defaults.class_prefix + '-container'
+      };
+
+      if (jQuery('.' + this.classes.container, this.element).length) {
+        this.container = jQuery('.' + this.classes.container, this.element);
+        this._parseFromDOM();
+      } else {
+        this.container = jQuery('<div class="' + this.classes.container + '" />');
+        this.element.append(this.container);
+      }
+    },
+
+    destroy: function () {
+      this.container.remove();
+      jQuery.Widget.prototype.destroy.call(this);
+    },
+
+    _init: function () {},
+
+    _parseFromDOM: function (path) {
+
+    },
+
+    showStory: function (options, items) {
+      var story = new MidgardNotificationStoryline(options, items);
+      story.start();
+
+      return story;
+    },
+
+    create: function (options) {
+      options = jQuery.extend({}, this.options.notification_defaults, options || {});
+
+      var item = new MidgardNotification(this.container, options);
+      item.show();
+
+      return item;
+    },
+
+    showTutorial: function () {
+      this.showStory({}, _createTutorialStoryline);
+    }
+  });
+
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2011-2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false */
+  'use strict';
+
+  jQuery.widget('Midgard.midgardStorage', {
+    saveEnabled: true,
+    options: {
+      // Whether to use localstorage
+      localStorage: false,
+      removeLocalstorageOnIgnore: true,
+      // VIE instance to use for storage handling
+      vie: null,
+      // URL callback for Backbone.sync
+      url: '',
+      // Whether to enable automatic saving
+      autoSave: false,
+      // How often to autosave in milliseconds
+      autoSaveInterval: 5000,
+      // Whether to save entities that are referenced by entities
+      // we're saving to the server.
+      saveReferencedNew: false,
+      saveReferencedChanged: false,
+      // Namespace used for events from midgardEditable-derived widget
+      editableNs: 'midgardeditable',
+      // CSS selector for the Edit button, leave to null to not bind
+      // notifications to any element
+      editSelector: '#midgardcreate-edit a',
+      // CSS selector for the Save button
+      saveSelector: '#midgardcreate-save',
+      localize: function (id, language) {
+        return window.midgardCreate.localize(id, language);
+      },
+      language: null
+    },
+
+    _create: function () {
+      var widget = this;
+      this.changedModels = [];
+
+      if (window.localStorage) {
+        this.options.localStorage = true;
+      }
+
+      this.vie = this.options.vie;
+
+      this.vie.entities.bind('add', function (model) {
+        // Add the back-end URL used by Backbone.sync
+        model.url = widget.options.url;
+        model.toJSON = model.toJSONLD;
+      });
+
+      jQuery(widget.options.saveSelector).click(function () {
+        widget.saveRemoteAll({
+          success: function () {
+            jQuery(widget.options.saveSelector).button({
+              disabled: true
+            });
+          },
+          error: function () {}
+        });
+      });
+
+      widget._bindEditables();
+      if (widget.options.autoSave) {
+        widget._autoSave();
+      }
+    },
+
+    _autoSave: function () {
+      var widget = this;
+      widget.saveEnabled = true;
+
+      var doAutoSave = function () {
+        if (!widget.saveEnabled) {
+          return;
+        }
+
+        if (widget.changedModels.length === 0) {
+          return;
+        }
+
+        widget.saveRemoteAll({
+          success: function () {
+            jQuery(widget.options.saveSelector).button({
+              disabled: true
+            });
+          },
+          error: function () {},
+          // We make autosaves silent so that potential changes from server
+          // don't disrupt user while writing.
+          silent: true
+        });
+      };
+
+      var timeout = window.setInterval(doAutoSave, widget.options.autoSaveInterval);
+
+      this.element.bind('startPreventSave', function () {
+        if (timeout) {
+          window.clearInterval(timeout);
+          timeout = null;
+        }
+        widget.disableSave();
+      });
+      this.element.bind('stopPreventSave', function () {
+        if (!timeout) {
+          timeout = window.setInterval(doAutoSave, widget.options.autoSaveInterval);
+        }
+        widget.enableSave();
+      });
+
+    },
+
+    enableSave: function () {
+      this.saveEnabled = true;
+    },
+
+    disableSave: function () {
+      this.saveEnabled = false;
+    },
+
+    _bindEditables: function () {
+      var widget = this;
+      this.restorables = [];
+      var restorer;
+
+      widget.element.bind(widget.options.editableNs + 'changed', function (event, options) {
+        if (_.indexOf(widget.changedModels, options.instance) === -1) {
+          widget.changedModels.push(options.instance);
+        }
+        widget._saveLocal(options.instance);
+        jQuery(widget.options.saveSelector).button({disabled: false});
+      });
+
+      widget.element.bind(widget.options.editableNs + 'disable', function (event, options) {
+        widget._restoreLocal(options.instance);
+        jQuery(widget.options.saveSelector).hide();
+      });
+
+      widget.element.bind(widget.options.editableNs + 'enable', function (event, options) {
+        jQuery(widget.options.saveSelector).button({disabled: true});
+        jQuery(widget.options.saveSelector).show();
+
+        if (!options.instance._originalAttributes) {
+          options.instance._originalAttributes = _.clone(options.instance.attributes);
+        }
+
+        if (!options.instance.isNew() && widget._checkLocal(options.instance)) {
+          // We have locally-stored modifications, user needs to be asked
+          widget.restorables.push(options.instance);
+        }
+
+        /*_.each(options.instance.attributes, function (attributeValue, property) {
+          if (attributeValue instanceof widget.vie.Collection) {
+            widget._readLocalReferences(options.instance, property, attributeValue);
+          }
+        });*/
+      });
+
+      widget.element.bind('midgardcreatestatechange', function (event, options) {
+        if (options.state === 'browse' || widget.restorables.length === 0) {
+          widget.restorables = [];
+          if (restorer) {
+            restorer.close();
+          }
+          return;
+        }
+        restorer = widget.checkRestore();
+      });
+
+      widget.element.bind('midgardstorageloaded', function (event, options) {
+        if (_.indexOf(widget.changedModels, options.instance) === -1) {
+          widget.changedModels.push(options.instance);
+        }
+        jQuery(widget.options.saveSelector).button({
+          disabled: false
+        });
+      });
+    },
+
+    checkRestore: function () {
+      var widget = this;
+      if (widget.restorables.length === 0) {
+        return;
+      }
+
+      var message;
+      var restorer;
+      if (widget.restorables.length === 1) {
+        message = _.template(widget.options.localize('localModification', widget.options.language), {
+          label: widget.restorables[0].getSubjectUri()
+        });
+      } else {
+        message = _.template(widget.options.localize('localModifications', widget.options.language), {
+          number: widget.restorables.length
+        });
+      }
+
+      var doRestore = function (event, notification) {
+        widget.restoreLocal();
+        restorer.close();
+      };
+
+      var doIgnore = function (event, notification) {
+        widget.ignoreLocal();
+        restorer.close();
+      };
+
+      restorer = jQuery('body').midgardNotifications('create', {
+        bindTo: widget.options.editSelector,
+        gravity: 'TR',
+        body: message,
+        timeout: 0,
+        actions: [
+          {
+            name: 'restore',
+            label: widget.options.localize('Restore', widget.options.language),
+            cb: doRestore,
+            className: 'create-ui-btn'
+          },
+          {
+            name: 'ignore',
+            label: widget.options.localize('Ignore', widget.options.language),
+            cb: doIgnore,
+            className: 'create-ui-btn'
+          }
+        ],
+        callbacks: {
+          beforeShow: function () {
+            if (!window.Mousetrap) {
+              return;
+            }
+            window.Mousetrap.bind(['command+shift+r', 'ctrl+shift+r'], function (event) {
+              event.preventDefault();
+              doRestore();
+            });
+            window.Mousetrap.bind(['command+shift+i', 'ctrl+shift+i'], function (event) {
+              event.preventDefault();
+              doIgnore();
+            });
+          },
+          afterClose: function () {
+            if (!window.Mousetrap) {
+              return;
+            }
+            window.Mousetrap.unbind(['command+shift+r', 'ctrl+shift+r']);
+            window.Mousetrap.unbind(['command+shift+i', 'ctrl+shift+i']);
+          }
+        }
+      });
+      return restorer;
+    },
+
+    restoreLocal: function () {
+      _.each(this.restorables, function (instance) {
+        this._readLocal(instance);
+      }, this);
+      this.restorables = [];
+    },
+
+    ignoreLocal: function () {
+      if (this.options.removeLocalstorageOnIgnore) {
+        _.each(this.restorables, function (instance) {
+          this._removeLocal(instance);
+        }, this);
+      }
+      this.restorables = [];
+    },
+
+    saveRemoteAll: function (options) {
+      var widget = this;
+      if (widget.changedModels.length === 0) {
+        return;
+      }
+
+      widget._trigger('save', null, {
+        models: widget.changedModels
+      });
+
+      var notification_msg;
+      var needed = widget.changedModels.length;
+      if (needed > 1) {
+        notification_msg = _.template(widget.options.localize('saveSuccessMultiple', widget.options.language), {
+          number: needed
+        });
+      } else {
+        notification_msg = _.template(widget.options.localize('saveSuccess', widget.options.language), {
+          label: widget.changedModels[0].getSubjectUri()
+        });
+      }
+
+      widget.disableSave();
+      _.each(widget.changedModels, function (model) {
+
+        // Optionally handle entities referenced in this model first
+        _.each(model.attributes, function (value, property) {
+          if (!value || !value.isCollection) {
+            return;
+          }
+
+          value.each(function (referencedModel) {
+            if (widget.changedModels.indexOf(referencedModel) !== -1) {
+              // The referenced model is already in the save queue
+              return;
+            }
+
+            if (referencedModel.isNew() && widget.options.saveReferencedNew) {
+              return referencedModel.save();
+            }
+
+            if (referencedModel.hasChanged() && widget.options.saveReferencedChanged) {
+              return referencedModel.save();
+            }
+          });
+        });
+
+        model.save(null, _.extend({}, options, {
+          success: function () {
+            // From now on we're going with the values we have on server
+            model._originalAttributes = _.clone(model.attributes);
+
+            widget._removeLocal(model);
+            window.setTimeout(function () {
+              widget.changedModels.splice(widget.changedModels.indexOf(model), 1);
+            }, 0);
+            needed--;
+            if (needed <= 0) {
+              // All models were happily saved
+              widget._trigger('saved', null, {});
+              options.success();
+              jQuery('body').midgardNotifications('create', {
+                body: notification_msg
+              });
+              widget.enableSave();
+            }
+          },
+          error: function (m, err) {
+            options.error();
+            jQuery('body').midgardNotifications('create', {
+              body: _.template(widget.options.localize('saveError', widget.options.language), {
+                error: err.responseText || ''
+              }),
+              timeout: 0
+            });
+
+            widget._trigger('error', null, {
+              instance: model
+            });
+          }
+        }));
+      });
+    },
+
+    _saveLocal: function (model) {
+      if (!this.options.localStorage) {
+        return;
+      }
+
+      if (model.isNew()) {
+        // Anonymous object, save as refs instead
+        if (!model.primaryCollection) {
+          return;
+        }
+        return this._saveLocalReferences(model.primaryCollection.subject, model.primaryCollection.predicate, model);
+      }
+      window.localStorage.setItem(model.getSubjectUri(), JSON.stringify(model.toJSONLD()));
+    },
+
+    _getReferenceId: function (model, property) {
+      return model.id + ':' + property;
+    },
+
+    _saveLocalReferences: function (subject, predicate, model) {
+      if (!this.options.localStorage) {
+        return;
+      }
+
+      if (!subject || !predicate) {
+        return;
+      }
+
+      var widget = this;
+      var identifier = subject + ':' + predicate;
+      var json = model.toJSONLD();
+      if (window.localStorage.getItem(identifier)) {
+        var referenceList = JSON.parse(window.localStorage.getItem(identifier));
+        var index = _.pluck(referenceList, '@').indexOf(json['@']);
+        if (index !== -1) {
+          referenceList[index] = json;
+        } else {
+          referenceList.push(json);
+        }
+        window.localStorage.setItem(identifier, JSON.stringify(referenceList));
+        return;
+      }
+      window.localStorage.setItem(identifier, JSON.stringify([json]));
+    },
+
+    _checkLocal: function (model) {
+      if (!this.options.localStorage) {
+        return false;
+      }
+
+      var local = window.localStorage.getItem(model.getSubjectUri());
+      if (!local) {
+        return false;
+      }
+
+      return true;
+    },
+
+    _readLocal: function (model) {
+      if (!this.options.localStorage) {
+        return;
+      }
+
+      var local = window.localStorage.getItem(model.getSubjectUri());
+      if (!local) {
+        return;
+      }
+      if (!model._originalAttributes) {
+        model._originalAttributes = _.clone(model.attributes);
+      }
+      var parsed = JSON.parse(local);
+      var entity = this.vie.entities.addOrUpdate(parsed, {
+        overrideAttributes: true
+      });
+
+      this._trigger('loaded', null, {
+        instance: entity
+      });
+    },
+
+    _readLocalReferences: function (model, property, collection) {
+      if (!this.options.localStorage) {
+        return;
+      }
+
+      var identifier = this._getReferenceId(model, property);
+      var local = window.localStorage.getItem(identifier);
+      if (!local) {
+        return;
+      }
+      collection.add(JSON.parse(local));
+    },
+
+    _restoreLocal: function (model) {
+      var widget = this;
+
+      // Remove unsaved collection members
+      if (!model) { return; }
+      _.each(model.attributes, function (attributeValue, property) {
+        if (attributeValue instanceof widget.vie.Collection) {
+          var removables = [];
+          attributeValue.forEach(function (model) {
+            if (model.isNew()) {
+              removables.push(model);
+            }
+          });
+          attributeValue.remove(removables);
+        }
+      });
+
+      // Restore original object properties
+      if (!model.changedAttributes()) {
+        if (model._originalAttributes) {
+          model.set(model._originalAttributes);
+        }
+        return;
+      }
+
+      model.set(model.previousAttributes());
+    },
+
+    _removeLocal: function (model) {
+      if (!this.options.localStorage) {
+        return;
+      }
+
+      window.localStorage.removeItem(model.getSubjectUri());
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false */
+  'use strict';
+
+  jQuery.widget('Midgard.midgardTags', {
+    enhanced: false,
+
+    options: {
+      vie: null,
+      entity: null,
+      element: null,
+      entityElement: null,
+      parentElement: '.create-ui-tool-metadataarea',
+      predicate: 'skos:related',
+      templates: {
+        button: '<button class="create-ui-btn"><i class="icon-<%= icon %>"></i> <%= label %></button>',
+        contentArea: '<div class="dropdown-menu"></div>',
+        tags: '<div class="create-ui-tags <%= type %>Tags"><h3><%= label %></h3><input type="text" class="tags" value="" /></div>'
+      },
+      localize: function (id, language) {
+        return window.midgardCreate.localize(id, language);
+      },
+      language: null
+    },
+
+    _init: function () {
+      var widget = this;
+
+      this.vie = this.options.vie;
+      this.entity = this.options.entity;
+      this.element = this.options.element;
+      jQuery(this.options.entityElement).bind('midgardeditableactivated', function (event, data) {
+        if (data.instance !== widget.options.entity) {
+          return;
+        }
+        widget._renderWidget();
+        widget.loadTags();
+      });
+
+      jQuery(this.options.entityElement).bind('midgardeditablechanged', function (event, data) {
+        if (data.instance !== widget.options.entity) {
+          return;
+        }
+        widget.enhanced = false;
+      });
+
+      this._listenAnnotate(this.options.entityElement);
+    },
+
+    // Convert to reference URI as needed
+    _normalizeSubject: function(subject) {
+      if (this.entity.isReference(subject)) {
+        return subject;
+      }
+        
+      if (subject.substr(0, 7) !== 'http://') {
+        subject = 'urn:tag:' + subject;
+      }
+
+      subject = this.entity.toReference(subject);
+      return subject;
+    },
+
+    _tagLabel: function (subject) {
+      subject = this.entity.fromReference(subject);
+
+      if (subject.substr(0, 8) === 'urn:tag:') {
+        subject = subject.substr(8, subject.length - 1);
+      }
+
+      if (subject.substring(0, 7) == 'http://') {
+        subject = subject.substr(subject.lastIndexOf('/') + 1, subject.length - 1);
+        subject = subject.replace(/_/g, ' ');
+      }
+      return subject;
+    },
+
+    // Centralized method for adding new tags to an entity
+    // regardless of whether they come from this widget
+    // or Annotate.js
+    addTag: function (subject, label, type) {
+      if (label === undefined) {
+        label = this._tagLabel(subject);
+      }
+
+      subject = this._normalizeSubject(subject);
+
+      if (type && !this.entity.isReference(type)) {
+        type = this.entity.toReference(type);
+      }
+
+      var tagEntity = this.vie.entities.addOrUpdate({
+        '@subject': subject,
+        'rdfs:label': label,
+        '@type': type
+      });
+
+      var tags = this.options.entity.get(this.options.predicate);
+      if (!tags) {
+        tags = new this.vie.Collection();
+        tags.vie = this.options.vie;
+        this.options.entity.set(this.options.predicate, tags);
+      } else if (!tags.isCollection) {
+        tags = new this.vie.Collection(_.map(tags, function(tag) {
+          if (tag.isEntity) {
+            return tag;
+          }
+          return {
+            '@subject': tag
+          };
+        }));
+        tags.vie = this.options.vie;
+        this.options.entity.set(this.options.predicate, tags);
+      }
+
+      tags.addOrUpdate(tagEntity);
+
+      this.options.entityElement.trigger('midgardeditablechanged', {
+        instance: this.options.entity
+      });
+    },
+
+    removeTag: function (subject) {
+      var tags = this.options.entity.get(this.options.predicate);
+      if (!tags) {
+        return;
+      }
+
+      subject = this._normalizeSubject(subject);
+      var tag = tags.get(subject);
+      if (!tag) {
+        return;
+      }
+
+      tags.remove(subject);
+      this.options.entityElement.trigger('midgardeditablechanged', {
+        instance: this.options.entity
+      });
+    },
+
+    // Listen for accepted annotations from Annotate.js if that 
+    // is in use
+    // and register them as tags
+    _listenAnnotate: function (entityElement) {
+      var widget = this;
+      entityElement.bind('annotateselect', function (event, data) {
+        widget.addTag(data.linkedEntity.uri, data.linkedEntity.label, data.linkedEntity.type[0]);
+      });
+
+      entityElement.bind('annotateremove', function (event, data) {
+        widget.removeTag(data.linkedEntity.uri);
+      });
+    },
+
+    _prepareEditor: function (button) {
+      var contentArea = jQuery(_.template(this.options.templates.contentArea, {}));
+      var articleTags = jQuery(_.template(this.options.templates.tags, {
+        type: 'article',
+        label: this.options.localize('Item tags', this.options.language)
+      }));
+      var suggestedTags = jQuery(_.template(this.options.templates.tags, {
+        type: 'suggested',
+        label: this.options.localize('Suggested tags', this.options.language)
+      }));
+
+      // Tags plugin requires IDs to exist
+      jQuery('input', articleTags).attr('id', 'articleTags-' + this.entity.cid);
+      jQuery('input', suggestedTags).attr('id', 'suggestedTags-' + this.entity.cid);
+
+      contentArea.append(articleTags);
+      contentArea.append(suggestedTags);
+      contentArea.hide();
+
+      var offset = button.position();
+      contentArea.css('position', 'absolute');
+      contentArea.css('left', offset.left);
+
+      return contentArea;
+    },
+
+    _renderWidget: function () {
+      var widget = this;
+      var subject = this.entity.getSubject();
+
+      var button = jQuery(_.template(this.options.templates.button, {
+        icon: 'tags',
+        label: this.options.localize('Tags', this.options.language)
+      }));
+
+      var parentElement = jQuery(this.options.parentElement);
+      parentElement.empty();
+      parentElement.append(button);
+      parentElement.show();
+
+      var contentArea = this._prepareEditor(button);
+      button.after(contentArea);
+
+      this.articleTags = jQuery('.articleTags input', contentArea).tagsInput({
+        width: 'auto',
+        height: 'auto',
+        onAddTag: function (tag) {
+          widget.addTag(tag);
+        },
+        onRemoveTag: function (tag) {
+          widget.removeTag(tag);
+        },
+        defaultText: this.options.localize('add a tag', this.options.language)
+      });
+
+      var selectSuggested = function () {
+        var tag = jQuery.trim(jQuery(this).text());
+        widget.articleTags.addTag(tag);
+        widget.suggestedTags.removeTag(tag);
+      };
+
+      this.suggestedTags = jQuery('.suggestedTags input', contentArea).tagsInput({
+        width: 'auto',
+        height: 'auto',
+        interactive: false,
+        onAddTag: function (tag) {
+          jQuery('.suggestedTags .tag span', contentArea).unbind('click', selectSuggested);
+          jQuery('.suggestedTags .tag span', contentArea).bind('click', selectSuggested);
+        },
+        onRemoveTag: function (tag) {
+          jQuery('.suggestedTags .tag span', contentArea).unbind('click', selectSuggested);
+          jQuery('.suggestedTags .tag span', contentArea).bind('click', selectSuggested);
+        },
+        remove: false
+      });
+
+      button.bind('click', function() {
+        contentArea.toggle();
+      });
+    },
+
+    loadTags: function () {
+      var widget = this;
+
+      // Populate existing tags from entity
+      var tags = this.entity.get(this.options.predicate);
+      if (tags) {
+        if (_.isString(tags)) {
+          widget.articleTags.addTag(widget._tagLabel(tags));
+        } else if (tags.isCollection) {
+          tags.each(function (tag) {
+            widget.articleTags.addTag(tag.get('rdfs:label'));
+          });
+        } else {
+          _.each(tags, function (tag) {
+            widget.articleTags.addTag(widget._tagLabel(tag));
+          });
+        }
+      }
+
+      if (this.vie.services.stanbol) {
+        widget.enhance();
+      } else {
+        jQuery('.suggestedTags', widget.element).hide();
+      }
+    },
+
+    _getLabelLang: function (labels) {
+      if (!_.isArray(labels)) {
+        return null;
+      }
+
+      var langLabel;
+
+      _.each(labels, function (label) {
+        if (label['@language'] === 'en') {
+          langLabel = label['@value'];
+        }
+      });
+
+      return langLabel;
+    },
+
+    _addEnhancement: function (enhancement) {
+      if (!enhancement.isEntity) {
+        return;
+      }
+
+      var label = this._getLabelLang(enhancement.get('rdfs:label'));
+      if (!label) {
+        return;
+      }
+
+      var tags = this.options.entity.get(this.options.predicate);
+      if (tags && tags.isCollection && tags.indexOf(enhancement) !== -1) {
+        return;
+      }
+
+      this.suggestedTags.addTag(label);
+    },
+
+    enhance: function () {
+      if (this.enhanced) {
+        return;
+      }
+      this.enhanced = true;
+
+      var widget = this;
+
+      // load suggested tags
+      this.vie.analyze({
+        element: jQuery('[property]', this.options.entityElement)
+      }).using(['stanbol']).execute().success(function (enhancements) {
+        _.each(enhancements, function (enhancement) {
+          widget._addEnhancement(enhancement);
+        });
+      }).fail(function (xhr) {
+        // console.log(xhr);
+      });
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2011-2012 Henri Bergius, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false */
+  'use strict';
+
+  jQuery.widget('Midgard.midgardToolbar', {
+    options: {
+      display: 'full',
+      templates: {
+        minimized: '<div class="create-ui-logo"><a class="create-ui-toggle" id="create-ui-toggle-toolbar"></a></div>',
+        full: '<div class="create-ui-toolbar-wrapper"><div class="create-ui-toolbar-toolarea"><%= dynamic %><%= status %></div></div>',
+        toolcontainer: '<div class="create-ui-toolbar-<%= name %>toolarea"><ul class="create-ui-<%= name %>tools"><%= content %></ul></div>',
+        toolarea: '<li class="create-ui-tool-<%= name %>area"></li>'
+      }
+    },
+
+    _create: function () {
+      this.element.append(this._getMinimized());
+      this.element.append(this._getFull());
+
+      var widget = this;
+      jQuery('.create-ui-toggle', this.element).click(function () {
+        if (widget.options.display === 'full') {
+          widget.setDisplay('minimized');
+        } else {
+          widget.setDisplay('full');
+        }
+      });
+
+      jQuery(this.element).bind('midgardcreatestatechange', function (event, options) {
+        if (options.state == 'browse') {
+          widget._clearWorkflows();
+          widget._clearMetadata();
+        }
+      });
+
+      jQuery(this.element).bind('midgardworkflowschanged', function (event, options) {
+        widget._clearWorkflows();
+        if (options.workflows.length) {
+          options.workflows.each(function (workflow) {
+            var html = jQuery('body').data().midgardWorkflows.prepareItem(options.instance, workflow, function (err, model) {
+              widget._clearWorkflows();
+              if (err) {
+                return;
+              }
+            });
+            jQuery('.create-ui-tool-workflowarea', widget.element).append(html);
+          });
+        }
+      });
+    },
+
+    _init: function () {
+      this.setDisplay(this.options.display);
+    },
+
+    setDisplay: function (value) {
+      if (value === this.options.display) {
+        return;
+      }
+      if (value === 'minimized') {
+        this.hide();
+        this.options.display = 'minimized';
+      } else {
+        this.show();
+        this.options.display = 'full';
+      }
+      this._trigger('statechange', null, this.options);
+    },
+
+    hide: function () {
+      jQuery('div.create-ui-toolbar-wrapper').fadeToggle('fast', 'linear');
+    },
+
+    show: function () {
+      jQuery('div.create-ui-toolbar-wrapper').fadeToggle('fast', 'linear');
+    },
+
+    _getMinimized: function () {
+      return jQuery(_.template(this.options.templates.minimized, {}));
+    },
+
+    _getFull: function () {
+      return jQuery(_.template(this.options.templates.full, {
+        dynamic: _.template(this.options.templates.toolcontainer, {
+          name: 'dynamic',
+          content:
+            _.template(this.options.templates.toolarea, {
+              name: 'metadata'
+            }) +
+            _.template(this.options.templates.toolarea, {
+              name: 'workflow'
+            }) +
+            _.template(this.options.templates.toolarea, {
+              name: 'free'
+            })
+        }),
+        status: _.template(this.options.templates.toolcontainer, {
+          name: 'status',
+          content: ''
+        })
+      }));
+    },
+
+    _clearWorkflows: function () {
+      jQuery('.create-ui-tool-workflowarea', this.element).empty();
+    },
+
+    _clearMetadata: function () {
+      jQuery('.create-ui-tool-metadataarea', this.element).empty();
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Jerry Jalava, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://createjs.org/
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false window:false Backbone:false */
+  'use strict';
+
+  jQuery.widget('Midgard.midgardWorkflows', {
+    options: {
+      url: function (model) {},
+      templates: {
+        button: '<button class="create-ui-btn" id="<%= id %>"><%= label %></button>'
+      },
+      renderers: {
+        button: function (model, workflow, action_cb, final_cb) {
+          var button_id = 'midgardcreate-workflow_' + workflow.get('name');
+          var html = jQuery(_.template(this.options.templates.button, {
+            id: button_id,
+            label: workflow.get('label')
+          })).button();
+
+          html.bind('click', function (evt) {
+            action_cb(model, workflow, final_cb);
+          });
+          return html;
+        }
+      },
+      action_types: {
+        backbone_save: function (model, workflow, callback) {
+          var copy_of_url = model.url;
+          var original_model = model.clone();
+          original_model.url = copy_of_url;
+
+          var action = workflow.get('action');
+          if (action.url) {
+            model.url = action.url;
+          }
+          original_model.save(null, {
+            success: function (m) {
+              model.url = copy_of_url;
+              model.change();
+              callback(null, model);
+            },
+            error: function (m, err) {
+              model.url = copy_of_url;
+              model.change();
+              callback(err, model);
+            }
+          });
+        },
+        backbone_destroy: function (model, workflow, callback) {
+          var copy_of_url = model.url;
+          var original_model = model.clone();
+          original_model.url = copy_of_url;
+
+          var action = workflow.get('action');
+          if (action.url) {
+            model.url = action.url;
+          }
+
+          model.destroy({
+            success: function (m) {
+              model.url = copy_of_url;
+              model.change();
+              callback(null, m);
+            },
+            error: function (m, err) {
+              model.url = copy_of_url;
+              model.change();
+              callback(err, model);
+            }
+          });
+        },
+        http: function (model, workflow, callback) {
+          var action = workflow.get('action');
+          if (!action.url) {
+            return callback('No action url defined!');
+          }
+
+          var wf_opts = {};
+          if (action.http) {
+            wf_opts = action.http;
+          }
+
+          var ajax_options = jQuery.extend({
+            url: action.url,
+            type: 'POST',
+            data: model.toJSON(),
+            success: function () {
+              model.fetch({
+                success: function (model) {
+                  callback(null, model);
+                },
+                error: function (model, err) {
+                  callback(err, model);
+                }
+              });
+            }
+          }, wf_opts);
+
+          jQuery.ajax(ajax_options);
+        }
+      }
+    },
+
+    _init: function () {
+      this._renderers = {};
+      this._action_types = {};
+
+      this._parseRenderersAndTypes();
+
+      this._last_instance = null;
+
+      this.ModelWorkflowModel = Backbone.Model.extend({
+        defaults: {
+          name: '',
+          label: '',
+          type: 'button',
+          action: {
+            type: 'backbone_save'
+          }
+        }
+      });
+
+      this.workflows = {};
+
+      var widget = this;
+      jQuery(this.element).bind('midgardeditableactivated', function (event, options) {
+        widget._fetchWorkflows(options.instance);
+      });
+    },
+
+    _fetchWorkflows: function (model) {
+      var widget = this;
+      if (model.isNew()) {
+        widget._trigger('changed', null, {
+          instance: model,
+          workflows: []
+        });
+        return;
+      }
+
+      if (widget._last_instance == model) {
+        if (widget.workflows[model.cid]) {
+          widget._trigger('changed', null, {
+            instance: model,
+            workflows: widget.workflows[model.cid]
+          });
+        }
+        return;
+      }
+      widget._last_instance = model;
+
+      if (widget.workflows[model.cid]) {
+        widget._trigger('changed', null, {
+          instance: model,
+          workflows: widget.workflows[model.cid]
+        });
+        return;
+      }
+
+      if (widget.options.url) {
+        widget._fetchModelWorkflows(model);
+      } else {
+        var flows = new(widget._generateCollectionFor(model))([], {});
+        widget._trigger('changed', null, {
+          instance: model,
+          workflows: flows
+        });
+      }
+    },
+
+    _parseRenderersAndTypes: function () {
+      var widget = this;
+      jQuery.each(this.options.renderers, function (k, v) {
+        widget.setRenderer(k, v);
+      });
+      jQuery.each(this.options.action_types, function (k, v) {
+        widget.setActionType(k, v);
+      });
+    },
+
+    setRenderer: function (name, callbacks) {
+      this._renderers[name] = callbacks;
+    },
+    getRenderer: function (name) {
+      if (!this._renderers[name]) {
+        return false;
+      }
+
+      return this._renderers[name];
+    },
+    setActionType: function (name, callback) {
+      this._action_types[name] = callback;
+    },
+    getActionType: function (name) {
+      return this._action_types[name];
+    },
+
+    prepareItem: function (model, workflow, final_cb) {
+      var widget = this;
+
+      var renderer = this.getRenderer(workflow.get("type"));
+      var action_type_cb = this.getActionType(workflow.get("action").type);
+
+      return renderer.call(this, model, workflow, action_type_cb, function (err, m) {
+        delete widget.workflows[model.cid];
+        widget._last_instance = null;
+        if (workflow.get('action').type !== 'backbone_destroy') {
+          // Get an updated list of workflows
+          widget._fetchModelWorkflows(model);
+        }
+        final_cb(err, m);
+      });
+    },
+
+    _generateCollectionFor: function (model) {
+      var collectionSettings = {
+        model: this.ModelWorkflowModel
+      };
+      if (this.options.url) {
+        collectionSettings.url = this.options.url(model);
+      }
+      return Backbone.Collection.extend(collectionSettings);
+    },
+
+    _fetchModelWorkflows: function (model) {
+      if (model.isNew()) {
+        return;
+      }
+      var widget = this;
+
+      widget.workflows[model.cid] = new(this._generateCollectionFor(model))([], {});
+      widget.workflows[model.cid].fetch({
+        success: function (collection) {
+          widget.workflows[model.cid].reset(collection.models);
+
+          widget._trigger('changed', null, {
+            instance: model,
+            workflows: widget.workflows[model.cid]
+          });
+        },
+        error: function (model, err) {
+          //console.log('error fetching flows', err);
+        }
+      });
+    }
+  });
+})(jQuery);
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.bg = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Запази',
+  'Saving': 'Запазване',
+  'Cancel': 'Откажи',
+  'Edit': 'Редактирай',
+  // Storage status messages
+  'localModification': 'Елементът "<%= label %>" има локални модификации',
+  'localModifications': '<%= number %> елемента на тази страница имат локални модификации',
+  'Restore': 'Възстанови',
+  'Ignore': 'Игнорирай',
+  'saveSuccess': 'Елементът "<%= label %>" беше успешно запазен',
+  'saveSuccessMultiple': '<%= number %> елемента бяха успешно запазени',
+  'saveError': 'Възника грешка при запазване<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Етикети на елемента',
+  'Suggested tags': 'Препоръчани етикети',
+  'Tags': 'Етикети',
+  'add a tag': 'добави етикет',
+  // Collection widgets
+  'Add': 'Добави',
+  'Choose type to add': 'Избери тип за добавяне'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.cs = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Uložit',
+  'Saving': 'Probíhá ukládání',
+  'Cancel': 'Zrušit',
+  'Edit': 'Upravit',
+  // Storage status messages
+  'localModification': 'Blok "<%= label %>" obsahuje lokální změny',
+  'localModifications': '<%= number %> bloků na této stránce má lokální změny',
+  'Restore': 'Aplikovat lokální změny',
+  'Ignore': 'Zahodit lokální změny',
+  'saveSuccess': 'Blok "<%= label %>" byl úspěšně uložen',
+  'saveSuccessMultiple': '<%= number %> bloků bylo úspěšně uloženo',
+  'saveError': 'Při ukládání došlo k chybě<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Štítky bloku',
+  'Suggested tags': 'Navrhované štítky',
+  'Tags': 'Štítky',
+  'add a tag': 'Přidat štítek',
+  // Collection widgets
+  'Add': 'Přidat',
+  'Choose type to add': 'Vyberte typ k přidání'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.da = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Gem',
+  'Saving': 'Gemmer',
+  'Cancel': 'Annullér',
+  'Edit': 'Rediger',
+  // Storage status messages
+  'localModification': 'Element "<%= label %>" har lokale ændringer',
+  'localModifications': '<%= number %> elementer på denne side har lokale ændringer',
+  'Restore': 'Gendan',
+  'Ignore': 'Ignorer',
+  'saveSuccess': 'Element "<%= label %>" er gemt',
+  'saveSuccessMultiple': '<%= number %> elementer er gemt',
+  'saveError': 'Der opstod en fejl under lagring<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Element tags',
+  'Suggested tags': 'Foreslåede tags',
+  'Tags': 'Tags',
+  'add a tag': 'tilføj et tag',
+  // Collection widgets
+  'Add': 'Tilføj',
+  'Choose type to add': 'Vælg type der skal tilføjes'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.de = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Speichern',
+  'Saving': 'Speichert',
+  'Cancel': 'Abbrechen',
+  'Edit': 'Bearbeiten',
+  // Storage status messages
+  'localModification': 'Das Dokument "<%= label %>" auf dieser Seite hat lokale Änderungen',
+  'localModifications': '<%= number %> Dokumente auf dieser Seite haben lokale Änderungen',
+  'Restore': 'Wiederherstellen',
+  'Ignore': 'Ignorieren',
+  'saveSuccess': 'Dokument "<%= label %>" erfolgreich gespeichert',
+  'saveSuccessMultiple': '<%= number %> Dokumente erfolgreich gespeichert',
+  'saveError': 'Fehler beim Speichern<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Schlagwörter des Dokuments',
+  'Suggested tags': 'Schlagwortvorschläge',
+  'Tags': 'Schlagwörter',
+  'add a tag': 'Neues Schlagwort',
+  // Collection widgets
+  'Add': 'Hinzufügen',
+  'Choose type to add': 'Typ zum Hinzufügen wählen'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.en = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Save',
+  'Saving': 'Saving',
+  'Cancel': 'Cancel',
+  'Edit': 'Edit',
+  // Storage status messages
+  'localModification': 'Item "<%= label %>" has local modifications',
+  'localModifications': '<%= number %> items on this page have local modifications',
+  'Restore': 'Restore',
+  'Ignore': 'Ignore',
+  'saveSuccess': 'Item "<%= label %>" saved successfully',
+  'saveSuccessMultiple': '<%= number %> items saved successfully',
+  'saveError': 'Error occurred while saving<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Item tags',
+  'Suggested tags': 'Suggested tags',
+  'Tags': 'Tags',
+  'add a tag': 'add a tag',
+  // Collection widgets
+  'Add': 'Add',
+  'Choose type to add': 'Choose type to add'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.es = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Guardar',
+  'Saving': 'Guardando',
+  'Cancel': 'Cancelar',
+  'Edit': 'Editar',
+  // Storage status messages
+  'localModification': 'El elemento "<%= label %>" tiene modificaciones locales',
+  'localModifications': '<%= number %> elementos en la página tienen modificaciones locales',
+  'Restore': 'Restaurar',
+  'Ignore': 'Ignorar',
+  'saveSuccess': 'El elemento "<%= label %>" se guardó exitosamente',
+  'saveSuccessMultiple': '<%= number %> elementos se guardaron exitosamente',
+  'saveError': 'Ha ocurrido un error cuando se guardaban los datos<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Etiquetas de los elementos',
+  'Suggested tags': 'Etiquetas sugeridas',
+  'Tags': 'Etiquetas',
+  'add a tag': 'añadir una etiqueta',
+  // Collection widgets
+  'Add': 'Añadir',
+  'Choose type to add': 'Escoge el tipo a añadir'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.fi = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Tallenna',
+  'Saving': 'Tallennetaan',
+  'Cancel': 'Peruuta',
+  'Edit': 'Muokkaa',
+  // Storage status messages
+  'localModification': 'Dokumentilla "<%= label %>" on paikallisia muutoksia',
+  'localModifications': '<%= number %> dokumenttia sivulla omaa paikallisia muutoksia',
+  'Restore': 'Palauta',
+  'Ignore': 'Poista',
+  'saveSuccess': 'Dokumentti "<%= label %>" tallennettu',
+  'saveSuccessMultiple': '<%= number %> dokumenttia tallennettu',
+  'saveError': 'Virhe tallennettaessa<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Avainsanat',
+  'Suggested tags': 'Ehdotukset',
+  'Tags': 'Avainsanat',
+  'add a tag': 'lisää avainsana',
+  // Collection widgets
+  'Add': 'Lisää',
+  'Choose type to add': 'Mitä haluat lisätä?'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.fr = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Sauver',
+  'Saving': 'En cours',
+  'Cancel': 'Annuler',
+  'Edit': 'Editer',
+  // Storage status messages
+  'localModification': 'Objet "<%= label %>" sur cette page ont des modifications locales',
+  'localModifications': '<%= number %> élements sur cette page ont des modifications locales',
+  'Restore': 'Récupérer',
+  'Ignore': 'Ignorer',
+  'saveSuccess': '"<%= label %>" est sauvegardé avec succès',
+  'saveSuccessMultiple': '<%= number %> éléments ont été sauvegardé avec succès',
+  'saveError': 'Une erreur est survenue durant la sauvegarde:<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Tags des objets',
+  'Suggested tags': 'Tags suggérés',
+  'Tags': 'Tags',
+  'add a tag': 'ajouter un tag',
+  // Collection widgets
+  'Add': 'Ajouter',
+  'Choose type to add': 'Choisir le type à ajouter'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.he = {
+  // Session-state buttons for the main toolbar
+  'Save': 'שמור',
+  'Saving': 'שומר',
+  'Cancel': 'בטל',
+  'Edit': 'ערוך',
+  // Storage status messages
+  'localModification': 'לפריט "<%= label %>" שינויים מקומיים',
+  'localModifications': 'ל<%= number %> פריטים בדף זה שינויים מקומיים',
+  'Restore': 'שחזר',
+  'Ignore': 'התעלם',
+  'saveSuccess': 'פריט "<%= label %>" נשמר בהצלחה',
+  'saveSuccessMultiple': '<%= number %> פריטים נשמרו בהצלחה',
+  'saveError': 'שגיאה בשמירה<br /><%= error %>',
+  // Tagging
+  'Item tags': 'סיווגי פריט',
+  'Suggested tags': 'סיווגים מומלצים',
+  'Tags': 'סיווגים',
+  'add a tag': 'הוסף סיווג',
+  // Collection widgets
+  'Add': 'הוסף',
+  'Choose type to add': 'בחר סוג להוספה'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.it = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Salva',
+  'Saving': 'Salvataggio',
+  'Cancel': 'Cancella',
+  'Edit': 'Modifica',
+  // Storage status messages
+  'localModification': 'Articolo "<%= label %>" in questa pagina hanno modifiche locali',
+  'localModifications': '<%= number %> articoli in questa pagina hanno modifiche locali',
+  'Restore': 'Ripristina',
+  'Ignore': 'Ignora',
+  'saveSuccess': 'Articolo "<%= label %>" salvato con successo',
+  'saveSuccessMultiple': '<%= number %> articoli salvati con successo',
+  'saveError': 'Errore durante il salvataggio<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Tags articolo',
+  'Suggested tags': 'Tags suggerite',
+  'Tags': 'Tags',
+  'add a tag': 'Aggiungi una parola chiave',
+  // Collection widgets
+  'Add': 'Aggiungi',
+  'Choose type to add': 'Scegli il tipo da aggiungere'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.nl = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Opslaan',
+  'Saving': 'Bezig met opslaan',
+  'Cancel': 'Annuleren',
+  'Edit': 'Bewerken',
+  // Storage status messages
+  'localModification': 'Items "<%= label %>" op de pagina heeft lokale wijzigingen',
+  'localModifications': '<%= number %> items op de pagina hebben lokale wijzigingen',
+  'Restore': 'Herstellen',
+  'Ignore': 'Negeren',
+  'saveSuccess': 'Item "<%= label %>" succesvol opgeslagen',
+  'saveSuccessMultiple': '<%= number %> items succesvol opgeslagen',
+  'saveError': 'Fout opgetreden bij het opslaan<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Item tags',
+  'Suggested tags': 'Tag suggesties',
+  'Tags': 'Tags',
+  'add a tag': 'tag toevoegen',
+  // Collection widgets
+  'Add': 'Toevoegen',
+  'Choose type to add': 'Kies type om toe te voegen'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.no = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Lagre',
+  'Saving': 'Lagrer',
+  'Cancel': 'Avbryt',
+  'Edit': 'Rediger',
+  // Storage status messages
+  'localModification': 'Element "<%= label %>" på denne siden er modifisert lokalt',
+  'localModifications': '<%= number %> elementer på denne siden er modifisert lokalt',
+  'Restore': 'Gjenopprett',
+  'Ignore': 'Ignorer',
+  'saveSuccess': 'Element "<%= label %>" ble lagret',
+  'saveSuccessMultiple': '<%= number %> elementer ble lagret',
+  'saveError': 'En feil oppstod under lagring<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Element-tagger',
+  'Suggested tags': 'Anbefalte tagger',
+  'Tags': 'Tagger',
+  'add a tag': 'legg til tagg',
+  // Collection widgets
+  'Add': 'Legg til',
+  'Choose type to add': 'Velg type å legge til'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.pl = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Zapisz',
+  'Saving': 'Zapisuję',
+  'Cancel': 'Anuluj',
+  'Edit': 'Edytuj',
+  // Storage status messages
+  'localModification': 'Artykuł "<%= label %>" posiada lokalne modyfikacje',
+  'localModifications': '<%= number %> artykułów na tej stronie posiada lokalne modyfikacje',
+  'Restore': 'Przywróć',
+  'Ignore': 'Ignoruj',
+  'saveSuccess': 'Artykuł "<%= label %>" został poprawnie zapisany',
+  'saveSuccessMultiple': '<%= number %> artykułów zostało poprawnie zapisanych',
+  'saveError': 'Wystąpił błąd podczas zapisywania<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Tagi artykułów',
+  'Suggested tags': 'Sugerowane tagi',
+  'Tags': 'Tagi',
+  'add a tag': 'dodaj tag',
+  // Collection widgets
+  'Add': 'Dodaj',
+  'Choose type to add': 'Wybierz typ do dodania'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.pt_BR = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Salvar',
+  'Saving': 'Salvando',
+  'Cancel': 'Cancelar',
+  'Edit': 'Editar',
+  // Storage status messages
+  'localModification': 'Item "<%= label %>" nesta página possuem modificações locais',
+  'localModifications': '<%= number %> itens nesta página possuem modificações locais',
+  'Restore': 'Restaurar',
+  'Ignore': 'Ignorar',
+  'saveSuccess': 'Item "<%= label %>" salvo com sucesso',
+  'saveSuccessMultiple': '<%= number %> itens salvos com sucesso',
+  'saveError': 'Erro ocorrido ao salvar<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Tags de item',
+  'Suggested tags': 'Tags sugeridas',
+  'Tags': 'Tags',
+  'add a tag': 'adicionar uma tag',
+  // Collection widgets
+  'Add': 'Adicionar',
+  'Choose type to add': 'Selecione o tipo para adicionar'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.ro = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Salvează',
+  'Saving': 'Se salvează',
+  'Cancel': 'Anulează',
+  'Edit': 'Editare',
+  // Storage status messages
+  'localModification': 'Zona "<%= label %>" a fost modificată',
+  'localModifications': '<%= number %> zone din această pagină au fost modificate',
+  'Restore': 'Revenire',
+  'Ignore': 'Ignoră',
+  'saveSuccess': 'Zona "<%= label %>" a fost salvată',
+  'saveSuccessMultiple': '<%= number %> zone au fost salvate',
+  'saveError': 'S-a produs o eroare în timpul salvării<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Etichetele zonei',
+  'Suggested tags': 'Etichete sugerate',
+  'Tags': 'Etichete',
+  'add a tag': 'adaugă o etichetă',
+  // Collection widgets
+  'Add': 'Adăugare',
+  'Choose type to add': 'Alegeți un tip pentru adăugare'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.ru = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Сохранить',
+  'Saving': 'Сохраняю',
+  'Cancel': 'Отмена',
+  'Edit': 'Редактировать',
+  // Storage status messages
+  'localModification': 'В запись "<%= label %>" внесены несохранённые изменения',
+  'localModifications': 'В записи на этой странице (<%= number %> шт.) внесены несохранённые изменения',
+  'Restore': 'Восстановить',
+  'Ignore': 'Игнорировать',
+  'saveSuccess': 'Запись "<%= label %>" была успешно сохранена',
+  'saveSuccessMultiple': ' Записи (<%= number %> шт.) были успешно сохранены',
+  'saveError': 'Во время сохранения произошла ошибка<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Теги записей',
+  'Suggested tags': 'Предлагаемые теги',
+  'Tags': 'Теги',
+  'add a tag': 'добавить тег',
+  // Collection widgets
+  'Add': 'Добавить',
+  'Choose type to add': 'Выбрать тип для добавления'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+if (window.midgardCreate.locale === undefined) {
+  window.midgardCreate.locale = {};
+}
+
+window.midgardCreate.locale.sv = {
+  // Session-state buttons for the main toolbar
+  'Save': 'Spara',
+  'Saving': 'Sparar',
+  'Cancel': 'Avbryt',
+  'Edit': 'Redigera',
+  // Storage status messages
+  'localModification': 'Elementet "<%= label %>" har lokala förändringar',
+  'localModifications': '<%= number %> element på den här sidan har lokala förändringar',
+  'Restore': 'Återställ',
+  'Ignore': 'Ignorera',
+  'saveSuccess': 'Elementet "<%= label %>" sparades',
+  'saveSuccessMultiple': '<%= number %> element sparades',
+  'saveError': 'Ett fel uppstod under sparande<br /><%= error %>',
+  // Tagging
+  'Item tags': 'Element-taggar',
+  'Suggested tags': 'Föreslagna taggar',
+  'Tags': 'Taggar',
+  'add a tag': 'lägg till en tagg',
+  // Collection widgets
+  'Add': 'Lägg till',
+  'Choose type to add': 'Välj typ att lägga till'
+};
+if (window.midgardCreate === undefined) {
+  window.midgardCreate = {};
+}
+
+window.midgardCreate.localize = function (id, language) {
+  if (!window.midgardCreate.locale) {
+    // No localization files loaded, return as-is
+    return id;
+  }
+  if (window.midgardCreate.locale[language] && window.midgardCreate.locale[language][id]) {
+    return window.midgardCreate.locale[language][id];
+  }
+  if (window.midgardCreate.locale.en[id]) {
+    return window.midgardCreate.locale.en[id];
+  }
+  return id;
+};
