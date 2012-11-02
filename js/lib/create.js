@@ -182,6 +182,12 @@
           });
           return;
         }
+      } else {
+        // Check the view templates for possible non-Thing type to use
+        var keys = _.keys(this.options.view.templates);
+        if (keys.length == 2) {
+          itemData['@type'] = keys[0];
+        }
       }
       this.options.collection.add(itemData, addOptions);
     }
@@ -399,7 +405,6 @@
         // For now we don't deal with multivalued properties in the editable
         return true;
       }
-
       var editable = this.enableEditor({
         widget: this,
         element: element,
@@ -898,8 +903,6 @@
       // CSS selector for the Edit button, leave to null to not bind
       // notifications to any element
       editSelector: '#midgardcreate-edit a',
-      // CSS selector for the Save button
-      saveSelector: '#midgardcreate-save',
       localize: function (id, language) {
         return window.midgardCreate.localize(id, language);
       },
@@ -922,17 +925,6 @@
         model.toJSON = model.toJSONLD;
       });
 
-      jQuery(widget.options.saveSelector).click(function () {
-        widget.saveRemoteAll({
-          success: function () {
-            jQuery(widget.options.saveSelector).button({
-              disabled: true
-            });
-          },
-          error: function () {}
-        });
-      });
-
       widget._bindEditables();
       if (widget.options.autoSave) {
         widget._autoSave();
@@ -953,12 +945,6 @@
         }
 
         widget.saveRemoteAll({
-          success: function () {
-            jQuery(widget.options.saveSelector).button({
-              disabled: true
-            });
-          },
-          error: function () {},
           // We make autosaves silent so that potential changes from server
           // don't disrupt user while writing.
           silent: true
@@ -1001,18 +987,13 @@
           widget.changedModels.push(options.instance);
         }
         widget._saveLocal(options.instance);
-        jQuery(widget.options.saveSelector).button({disabled: false});
       });
 
       widget.element.bind(widget.options.editableNs + 'disable', function (event, options) {
         widget._restoreLocal(options.instance);
-        jQuery(widget.options.saveSelector).hide();
       });
 
       widget.element.bind(widget.options.editableNs + 'enable', function (event, options) {
-        jQuery(widget.options.saveSelector).button({disabled: true});
-        jQuery(widget.options.saveSelector).show();
-
         if (!options.instance._originalAttributes) {
           options.instance._originalAttributes = _.clone(options.instance.attributes);
         }
@@ -1044,9 +1025,6 @@
         if (_.indexOf(widget.changedModels, options.instance) === -1) {
           widget.changedModels.push(options.instance);
         }
-        jQuery(widget.options.saveSelector).button({
-          disabled: false
-        });
       });
     },
 
@@ -1199,7 +1177,9 @@
             if (needed <= 0) {
               // All models were happily saved
               widget._trigger('saved', null, {});
-              options.success();
+              if (options && _.isFunction(options.success)) {
+                options.success();
+              }
               jQuery('body').midgardNotifications('create', {
                 body: notification_msg
               });
@@ -1207,7 +1187,9 @@
             }
           },
           error: function (m, err) {
-            options.error();
+            if (options && _.isFunction(options.error)) {
+              options.error();
+            }
             jQuery('body').midgardNotifications('create', {
               body: _.template(widget.options.localize('saveError', widget.options.language), {
                 error: err.responseText || ''
