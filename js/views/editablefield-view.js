@@ -16,51 +16,44 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     'mouseleave': 'mouseLeave',
     'click':      'enableEditor',
     'createeditableenable': 'editorEnabled',
-    'createeditabledisable': 'editorDisabled',
-    'createeditablechanged': 'contentChanged'
+    'createeditabledisable': 'editorDisabled'
   },
 
   initialize: function (options) {
-    this.state = this.options.state;
-    this.predicate = this.options.predicate;
-    this.vie = this.options.vie;
+    // Call the parent's initialize-method.
+    Drupal.edit.views.FieldView.prototype.initialize.call(this, options);
 
-    _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave', 'enableEditor', 'editorEnabled', 'editorDisabled', 'contentChanged');
-
+    _.bindAll(this, 'stateChange');
     this.state.on('change:isViewing', this.stateChange);
   },
 
   stateChange: function () {
     if (this.state.get('isViewing')) {
+      this.model.set('state', this.model.STATE_INACTIVE);
+      // @todo: move stopEditable
       this.stopEditable();
       return;
     }
+    this.model.set('state', this.model.STATE_CANDIDATE);
+    // @todo: move startEditable
     this.startEditable();
   },
 
   // Entered edit state
   startEditable: function () {
-    this.editable = true;
-
-     this.$el.createEditable({
-        model: this.model.getVieEntity(),
-        vie: this.vie,
-        disabled: true
-      });
-
-    this.decorate();
+    this.$el.createEditable({
+      model: this.model.getVieEntity(),
+      vie: this.vie,
+      disabled: true
+    });
   },
 
   // Left edit state
   stopEditable: function () {
-    if (!this.editable) {
+    if (!this.model.isEditable()) {
       return;
     }
-
-    this.editable = false;
-
     this.disableEditor();
-    this.undecorate();
   },
 
   enableEditor: function (event) {
@@ -69,12 +62,12 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
       event.preventDefault();
     }
 
-    if (!this.editable) {
+    if (!this.model.isEditable()) {
       // Not in edit state, ignore
       return;
     }
 
-    if (this.editing) {
+    if (this.model.isEditing()) {
       // Already editing, ignore
       return;
     }
@@ -82,14 +75,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
     var that = this;
     var _enableEditor = function() {
-      that.startHighlight();
-      // @todo: 'edit-candidate' class should be removed at this point in time;
-      // it is now no longer a candidate for being edited; it's *actually*
-      // being edited!
-
-      that.$el
-      .addClass('edit-editing')
-      .css('background-color', that.$el.data('edit-background-color'));
+      that.model.set('state', that.model.STATE_ACTIVE);
 
       // Ensure others are not editable when we are
       if (that.state.get('editedFieldView')) {
@@ -132,17 +118,11 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
   disableEditor: function () {
     Drupal.edit.log('disableEditor', this.model.getVieEntity().id, this.predicate);
-
-    this.$el
-    .removeClass('edit-editing')
-    .css('background-color', '');
-
-    // TODO: Restore curtain height
-
     // Stop the Create.js editable widget
     this.disableEditableWidget();
     this.disableToolbar();
 
+    // @todo: refactor this.
     jQuery('#edit_backstage form').remove();
 
     this.state.set('fieldBeingEdited', []);
@@ -159,19 +139,15 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
   editorEnabled: function () {
     Drupal.edit.log("editorenabled", this.model.getVieEntity().id, this.predicate);
-    // Avoid re-"padding" of editable.
-    if (!this.editing) {
-      this.padEditable();
-    }
 
+    this.model.set('state', this.model.STATE_ACTIVE);
+    // @todo: refactor ToolbarView  to listen to model state.
     this.getToolbarView().show('wysiwyg-tabs');
     this.getToolbarView().show('wysiwyg');
     // Show the ops (save, close) as well.
     this.getToolbarView().show('ops');
 
-    this.setDirty(false);
     this.$el.trigger('edit-form-loaded.edit');
-    this.editing = true;
   },
 
   saveClicked: function (event) {
@@ -198,118 +174,12 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     this.disableEditor();
   },
 
-  padEditable: function () {
-    var self = this;
-    // Add 5px padding for readability. This means we'll freeze the current
-    // width and *then* add 5px padding, hence ensuring the padding is added "on
-    // the outside".
-    // 1) Freeze the width (if it's not already set); don't use animations.
-    if (this.$el[0].style.width === "") {
-      this.$el
-      .data('edit-width-empty', true)
-      .addClass('edit-animate-disable-width')
-      .css('width', this.$el.width());
-    }
-
-    // 2) Add padding; use animations.
-    var posProp = Drupal.edit.util.getPositionProperties(this.$el);
-    var $toolbar = this.getToolbarElement();
-    setTimeout(function() {
-      // Re-enable width animations (padding changes affect width too!).
-      self.$el.removeClass('edit-animate-disable-width');
-
-      // The whole toolbar must move to the top when it's an inline editable.
-      if (self.$el.css('display') == 'inline') {
-        $toolbar.css('top', parseFloat($toolbar.css('top')) - 5 + 'px');
-      }
-
-      // @todo: adjust this according to the new
-      // Drupal.theme.prototype.editToolbarContainer
-      // The toolbar must move to the top and the left.
-      var $hf = $toolbar.find('.edit-toolbar-heightfaker');
-      $hf.css({ bottom: '6px', left: '-5px' });
-      // When using a WYSIWYG editor, the width of the toolbar must match the
-      // width of the editable.
-      if (self.$el.hasClass('edit-type-direct-with-wysiwyg')) {
-        $hf.css({ width: self.$el.width() + 10 });
-      }
-
-      // Pad the editable.
-      self.$el
-      .css({
-        'position': 'relative',
-        'top':  posProp.top  - 5 + 'px',
-        'left': posProp.left - 5 + 'px',
-        'padding-top'   : posProp['padding-top']    + 5 + 'px',
-        'padding-left'  : posProp['padding-left']   + 5 + 'px',
-        'padding-right' : posProp['padding-right']  + 5 + 'px',
-        'padding-bottom': posProp['padding-bottom'] + 5 + 'px',
-        'margin-bottom':  posProp['margin-bottom'] - 10 + 'px'
-      });
-    }, 0);
-  },
-
-  unpadEditable: function () {
-    var self = this;
-
-    // 1) Set the empty width again.
-    if (this.$el.data('edit-width-empty') === true) {
-      Drupal.edit.log('restoring width');
-      this.$el
-      .addClass('edit-animate-disable-width')
-      .css('width', '');
-    }
-
-    // 2) Remove padding; use animations (these will run simultaneously with)
-    // the fading out of the toolbar as its gets removed).
-    var posProp = Drupal.edit.util.getPositionProperties(this.$el);
-    var $toolbar = this.getToolbarElement();
-
-    setTimeout(function() {
-      // Re-enable width animations (padding changes affect width too!).
-      self.$el.removeClass('edit-animate-disable-width');
-
-      // Move the toolbar back to its original position.
-      var $hf = $toolbar.find('.edit-toolbar-heightfaker');
-      $hf.css({ bottom: '1px', left: '' });
-      // When using a WYSIWYG editor, restore the width of the toolbar.
-      if (self.$el.hasClass('edit-type-direct-with-wysiwyg')) {
-        $hf.css({ width: '' });
-      }
-      // Undo our changes to the clipping (to prevent the bottom box-shadow).
-      $toolbar
-      .undelegate('.edit-toolbar', Drupal.edit.constants.transitionEnd)
-      .find('.edit-toolbar').css('clip', '');
-
-      // Unpad the editable.
-      self.$el
-      .css({
-        'position': 'relative',
-        'top':  posProp.top  + 5 + 'px',
-        'left': posProp.left + 5 + 'px',
-        'padding-top'   : posProp['padding-top']    - 5 + 'px',
-        'padding-left'  : posProp['padding-left']   - 5 + 'px',
-        'padding-right' : posProp['padding-right']  - 5 + 'px',
-        'padding-bottom': posProp['padding-bottom'] - 5 + 'px',
-        'margin-bottom': posProp['margin-bottom'] + 10 + 'px'
-      });
-    }, 0);
-  },
-
   editorDisabled: function () {
-    // Avoid re-"unpadding" of editable.
-    if (this.editing) {
-      this.unpadEditable();
-    }
+    // @todo: this needs to go into the fielddecorator-view.js
     this.$el.removeClass('edit-validation-error');
     this.$el.removeClass('ui-state-disabled');
     this.$el.removeClass('edit-wysiwyg-attached');
 
-    this.editing = false;
     this.setDirty(false);
-  },
-
-  contentChanged: function () {
-    this.setDirty(true);
   }
 });

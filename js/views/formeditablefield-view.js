@@ -45,7 +45,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
     var that = this;
 
     Drupal.edit.form.saveForm(entity, this.predicate, this.$el, null, function(error, $el) {
-      // Restart the editable.
+      // @todo: verify if this is the *right* method to call, to properly re-prepare the editable.
       that.startEditable();
     });
   },
@@ -90,7 +90,8 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
         // Make sure we track changes
         // @todo: trigger createjs' 'createeditablechanged' event rather
         // than calling the method directly?
-        that.contentChanged();
+        // temporarily using the setDirty because contentChanged has been removed.
+        that.setDirty(true);
       })
       .delegate('input', 'keypress.edit', function (event) {
         if (event.keyCode == 13) {

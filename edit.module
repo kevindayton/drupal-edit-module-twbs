@@ -158,6 +158,7 @@ function edit_library_info() {
       $path . '/js/views/field-view.js' => array('defer' => TRUE),
       $path . '/js/views/editablefield-view.js' => array('defer' => TRUE),
       $path . '/js/views/formeditablefield-view.js' => array('defer' => TRUE),
+      $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
       $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
       $path . '/js/models/state-model.js' => array('defer' => TRUE),
       $path . '/js/models/fieldview-model.js' => array('defer' => TRUE),

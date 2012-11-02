@@ -6,15 +6,14 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   $toolbar:null,
   initialize:function (options) {
     this.fieldView = options.fieldView;
-    _.bindAll(this, 'fieldChanged', 'showLoadingFormIndicator');
-    // @note: we're binding events of the parent view. If we had a FieldModel
-    // we could bind to changes there.
-    this.fieldView.on('fieldChanged', this.fieldChanged);
+    _.bindAll(this, 'modelStateChange', 'showLoadingFormIndicator');
     this.fieldView.on('showLoadingFormIndicator', this.showLoadingFormIndicator);
+    // bind changes to the "editable"
+    this.model.bind('change:state', this.modelStateChange);
   },
   // Adjust colour of Save button, when FieldView state is "dirty".
-  fieldChanged: function(dirty) {
-    if (dirty) {
+  modelStateChange: function() {
+    if (this.model.get('state') == this.model.STATE_MODIFIED) {
       this.getToolbarElement()
         .find('a.save')
         .addClass('blue-button')
