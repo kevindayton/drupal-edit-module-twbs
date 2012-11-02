@@ -40,7 +40,8 @@ Drupal.edit.init = function() {
   Drupal.edit.vie.use(new Drupal.edit.vie.SparkEditService());
   Drupal.edit.domService = Drupal.edit.vie.service('edit');
 
-  Drupal.edit.state = Drupal.edit.prepareStateModel();
+  // Instantiate StateModel
+  Drupal.edit.state = new Drupal.edit.models.StateModel();
 
   // Load the storage widget to get localStorage support
   // @todo: doc this.
@@ -94,10 +95,6 @@ Drupal.edit.init = function() {
   Backbone.history.start();
 };
 
-Drupal.edit.prepareStateModel = function () {
-  return new Drupal.edit.StateModel();
-};
-
 Drupal.edit.prepareFieldView = function () {
   var element = jQuery(this);
   var fieldViewType = Drupal.edit.views.EditableFieldView;
@@ -115,7 +112,13 @@ Drupal.edit.prepareFieldView = function () {
       return;
     }
 
+    var fvm = new Drupal.edit.models.FieldViewModel({
+      'subject': subject,
+      'predicate': predicate
+    });
+
     var fieldView = new fieldViewType({
+      model: fvm,
       state: Drupal.edit.state,
       el: element,
       model: entity,
