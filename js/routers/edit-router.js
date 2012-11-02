@@ -1,4 +1,5 @@
 // Define Drupal.edit.routers.EditRouter.
+Drupal.edit = Drupal.edit || {};
 Drupal.edit.routers = {};
 Drupal.edit.routers.EditRouter = Backbone.Router.extend({
   routes: {

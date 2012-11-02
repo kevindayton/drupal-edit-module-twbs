@@ -1,3 +1,4 @@
+Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 // ## FieldView
 //
