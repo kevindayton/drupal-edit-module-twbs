@@ -488,7 +488,7 @@
     showLoadingFormIndicator: function() {
       // Trigger this event to propagate to the appropriate ToolbarView.
       this.trigger('showLoadingFormIndicator');
-    },
+    }
   });
 
   // ## EditableFieldView

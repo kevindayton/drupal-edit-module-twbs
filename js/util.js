@@ -66,7 +66,7 @@ Drupal.edit.util.findEditablesForFields = function($fields) {
 };
 
 Drupal.edit.util.findFieldForID = function(id, context) {
-  var domID = id.replace(/\//g, ':')
+  var domID = id.replace(/\//g, ':');
   return $('[data-edit-id="' + domID + '"]', context || $('#content'));
 };
 
