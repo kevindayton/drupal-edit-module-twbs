@@ -10,56 +10,19 @@ Drupal.edit = Drupal.edit || {};
 
 Drupal.edit.form = {
   create: function($editable, cb) {
-    var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject($editable));
-    var predicate = Drupal.edit.util.getElementPredicate($editable);
-    var edit_id = entity.getSubjectUri() + '/' + predicate;
-    var $field = Drupal.edit.util.findFieldForEditable($editable);
     // @todo: this needs to be refactored, we should have access to the view
     // rather than the $editable/$el of the view.
-    // moreover, we should probably be de-coupling this and trigger events
-    // instead of mucking with the toolbar from here.
-    var toolbarView = Drupal.edit.state.get('editedFieldView').getToolbarView();
-    var $toolbar = toolbarView.getToolbarElement();
+    var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject($editable));
+    var predicate = Drupal.edit.util.getElementPredicate($editable);
+    var $field = Drupal.edit.util.findFieldForEditable($editable);
+    var fieldView = Drupal.edit.state.get('editedFieldView');
     // We only create a placeholder-div/form for the form-based instances.
     if (Drupal.edit.form.get($editable).length > 0) {
       return false;
     }
-    else {
-      // Indicate in the 'info' toolgroup that the form is loading. Animated.
-      setTimeout(function() {
-        toolbarView.addClass('info', 'loading');
-      }, 0);
 
-      // Indicate in the 'info' toolgroup that the form is loading.
-      // Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
-      toolbarView.addClass('info', 'loading');
-
-      // Render form container.
-      var $form = $(Drupal.theme('editFormContainer', {
-        id: this._id($editable),
-        loadingMsg: Drupal.t('Loading…')}
-      ));
-
-      // Insert in DOM.
-      if ($editable.css('display') == 'inline') {
-        $form.prependTo($editable.offsetParent());
-
-        var pos = $editable.position();
-        $form.css('left', pos.left).css('top', pos.top);
-        // Reset the toolbar's positioning because it'll be moved inside the
-        // form container.
-        // Drupal.edit.toolbar.get($editable).css('left', '').css('top', '');
-        $toolbar.css('left', '').css('top', '');
-      }
-      else {
-        $form.insertBefore($editable);
-      }
-
-      // Move  toolbar inside .edit-form-container, to let it snap to the width
-      // of the form instead of the field formatter.
-      // Drupal.edit.toolbar.get($editable).detach().prependTo('.edit-form');
-      $toolbar.detach().prependTo('.edit-form');
-    }
+    // Show a loading form indicator
+    fieldView.showLoadingFormIndicator();
 
     // TRICKY: for type=direct fields, this gets called when SAVING (load form,
     //fill it, submit it), instead of LOADING.
@@ -73,22 +36,6 @@ Drupal.edit.form = {
           selector: '#' + formWrapperId + ' .placeholder'
         });
 
-        // Indicate in the 'info' toolgroup that the form has loaded.
-        // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
-        toolbarView.removeClass('info', 'loading');
-
-        // Detect changes in this form.
-        Drupal.edit.form.get($editable)
-          .delegate(':input', 'formUpdated.edit', function () {
-            $editable
-              .data('edit-content-changed', true)
-              .trigger('edit-content-changed.edit');
-          })
-          .delegate('input', 'keypress.edit', function (event) {
-            if (event.keyCode == 13) {
-              return false;
-            }
-          });
         $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
       }
       else {
@@ -98,9 +45,7 @@ Drupal.edit.form = {
       }
       Drupal.edit.form._setupAjaxForm($editable, $field, $submit);
 
-      // Animations.
-      // Drupal.edit.toolbar.show($editable, 'ops');
-      toolbarView.show('ops');
+      // Trigger that the form has loaded.
       $editable.trigger('edit-form-loaded.edit');
 
       // callback to be able to decorate / continue with the editable...
@@ -137,7 +82,7 @@ Drupal.edit.form = {
   },
 
   remove: function($editable) {
-    console.log('Drupal.edit.form.remove', Drupal.edit.form.get($editable));
+    Drupal.edit.log('Drupal.edit.form.remove', Drupal.edit.form.get($editable));
     Drupal.edit.form.get($editable).remove();
   },
 
@@ -212,6 +157,7 @@ Drupal.edit.form = {
           // Stop the editing.
           var currentEditorView = Drupal.edit.state.get('editedFieldView');
           if (currentEditorView) {
+            // @todo: trigger event on the currentEditorView.
             currentEditorView.disableEditor();
           }
           // this is different from edit.module. did not understand what the
@@ -235,7 +181,7 @@ Drupal.edit.form = {
 
         // Shove the value into any field that isn't hidden or a submit button.
         $('#edit_backstage form').find(':input[type!="hidden"][type!="submit"]').val(value);
-        console.log('submitDirectForm', $submit, base, $('#edit_backstage form'));
+        Drupal.edit.log('submitDirectForm', $submit, base, $('#edit_backstage form'));
         // Set the callback.
         Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
           // Direct forms are stuffed into #edit_backstage, apparently.
@@ -243,19 +189,15 @@ Drupal.edit.form = {
           $('#edit_backstage form').remove();
           // Removing Drupal.ajax-thingy.
           delete Drupal.ajax[base];
-          // @todo: title currently returns success but no response.data.
-          if (response.data) {
-            // Stop the editing.
-            var currentEditorView = Drupal.edit.state.get('editedFieldView');
-            if (currentEditorView) {
-              currentEditorView.disableEditor();
-            }
-            callback(null, $editable);
-          } else {
-            // @todo: handle errors, empty response?
-            console.log('no response data', response, status);
-            callback(true, $editable);
+          // @note: title currently returns success but no response.data.
+          // Stop the editing.
+          var currentEditorView = Drupal.edit.state.get('editedFieldView');
+          if (currentEditorView) {
+            // @todo: trigger event on the currentEditorView.
+            currentEditorView.disableEditor();
           }
+          // First argument is TRUE if response.data was returned.
+          callback(!!response.data, $editable);
         };
         $submit.trigger('click.edit');
       };

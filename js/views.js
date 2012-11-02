@@ -15,7 +15,34 @@
     $toolbar:null,
     initialize:function (options) {
       this.fieldView = options.fieldView;
+      _.bindAll(this, 'fieldChanged', 'showLoadingFormIndicator');
+      // @note: we're binding events of the parent view. If we had a FieldModel
+      // we could bind to changes there.
+      this.fieldView.on('fieldChanged', this.fieldChanged);
+      this.fieldView.on('showLoadingFormIndicator', this.showLoadingFormIndicator);
     },
+    // Adjust colour of Save button, when FieldView state is "dirty".
+    fieldChanged: function(dirty) {
+      if (dirty) {
+        this.getToolbarElement()
+          .find('a.save')
+          .addClass('blue-button')
+          .removeClass('gray-button');
+      }
+    },
+    // Adjust toolbar as editable is loading form.
+    showLoadingFormIndicator: function() {
+      // var that = this;
+      // Indicate in the 'info' toolgroup that the form is loading. Animated.
+      /* setTimeout(function() {
+        that.addClass('info', 'loading');
+      }, 0); */
+      // @todo: why do we do this twice?
+      // Indicate in the 'info' toolgroup that the form is loading.
+      // Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
+      this.addClass('info', 'loading');
+    },
+
     getEditable:function () {
       return this.fieldView.$el;
     },
@@ -66,7 +93,7 @@
         .bind('mouseleave.edit', function (e) {
           var el = $editable[0];
           if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
-            console.log('triggering mouseleave on ', $editable);
+            Drupal.edit.log('triggering mouseleave on ', $editable);
             $editable.trigger('mouseleave.edit');
           }
           // Prevent triggering the entity's mouse leave event.
@@ -221,6 +248,22 @@
     }
   });
 
+  Drupal.edit.views.MenuView = Backbone.View.extend({
+    initialize: function (options) {
+      this.state = options.state;
+      _.bindAll(this, 'stateChange');
+      this.state.bind('change:isViewing', this.stateChange);
+      // we have to call stateChange here, because theme_menu_local_task links
+      // do not take URL-fragments for consideration.
+      this.stateChange();
+    },
+    stateChange: function () {
+      $('a.edit_view-edit-toggle').removeClass('active');
+      $('a.edit_view-edit-toggle').parent().removeClass('active');
+      $('a.edit_view-edit-toggle.edit-' + (this.state.get('isViewing') ? 'view' : 'edit')).addClass('active').parent().addClass('active');
+    }
+  });
+
   Drupal.edit.views.OverlayView = Backbone.View.extend({
     state: null,
 
@@ -233,7 +276,6 @@
       _.bindAll(this, 'stateChange', 'escapeEditor');
       this.state.bind('change:isViewing', this.stateChange);
     },
-
     stateChange: function () {
       if (this.state.get('isViewing')) {
         this.hideOverlay();
@@ -241,7 +283,6 @@
       }
       this.showOverlay();
     },
-
     // @todo .bind('click.edit', Drupal.edit.clickOverlay); is missing, thus it
     // is effectively impossible to click out of a editing a field by clicking
     // the overlay.
@@ -300,6 +341,8 @@
     state: null,
     editable: false,
     editing: false,
+    // dirty state, i.e. unpersisted changes - @todo: move to a FieldModel?
+    dirty: false,
     vie: null,
     editableViews: [],
     toolbarView: null,
@@ -308,17 +351,24 @@
       'mouseenter': 'mouseEnter',
       'mouseleave': 'mouseLeave'
     },
+    // @todo - refactor into a Model?
+    isDirty: function() {
+      return this.dirty === true;
+    },
+    setDirty: function(value) {
+      // @todo - shouldn't we use FieldModel
+      this.trigger('fieldChanged', value);
+      this.dirty = value;
+    },
 
     initialize: function (options) {
       this.state = this.options.state;
       this.predicate = this.options.predicate;
       this.vie = this.options.vie;
 
-      _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave', 'checkHighlight');
+      _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave');
 
       this.state.on('change:isViewing', this.stateChange);
-      this.state.on('change:fieldBeingHighlighted', this.checkHighlight);
-
     },
 
     stateChange: function () {
@@ -357,7 +407,7 @@
       var self = this;
       Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
         if (!self.editing) {
-          console.log('field:mouseenter', self.model.id, self.predicate);
+          Drupal.edit.log('field:mouseenter', self.model.id, self.predicate);
           self.startHighlight();
         }
         event.stopPropagation();
@@ -375,7 +425,7 @@
       var self = this;
       Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
         if (!self.editing) {
-          console.log('field:mouseleave', self.model.id, self.predicate);
+          Drupal.edit.log('field:mouseleave', self.model.id, self.predicate);
           self.stopHighlight();
         }
         event.stopPropagation();
@@ -383,7 +433,7 @@
     },
 
     startHighlight: function () {
-      console.log('startHighlight', this.model.id, this.predicate);
+      Drupal.edit.log('startHighlight', this.model.id, this.predicate);
 
       // Animations.
       var self = this;
@@ -397,7 +447,7 @@
     },
 
     stopHighlight: function () {
-      console.log('stopHighlight', this.model.id, this.predicate);
+      Drupal.edit.log('stopHighlight', this.model.id, this.predicate);
       // Animations
       this.$el.removeClass('edit-highlighted');
       this.state.set('fieldBeingHighlighted', []);
@@ -407,14 +457,6 @@
 
     },
 
-    checkHighlight: function () {
-      // @todo: check why we just return here.
-      return;
-      /* if (this.state.get('fieldBeingHighlighted') === this.$el) {
-        return;
-      }
-      this.stopHighlight();*/
-    },
     // @todo: this should be called by startHighlight(); as soon as a field is
     // highlighted the field's label should appear, which is part of the toolbar.
     enableToolbar: function () {
@@ -441,7 +483,12 @@
     },
     getToolbarElement: function() {
       return this.getToolbarView().getToolbarElement();
-    }
+    },
+
+    showLoadingFormIndicator: function() {
+      // Trigger this event to propagate to the appropriate ToolbarView.
+      this.trigger('showLoadingFormIndicator');
+    },
   });
 
   // ## EditableFieldView
@@ -469,10 +516,9 @@
       this.predicate = this.options.predicate;
       this.vie = this.options.vie;
 
-      _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave', 'checkHighlight', 'enableEditor', 'editorEnabled', 'editorDisabled', 'contentChanged');
+      _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave', 'enableEditor', 'editorEnabled', 'editorDisabled', 'contentChanged');
 
       this.state.on('change:isViewing', this.stateChange);
-      this.state.on('change:fieldBeingHighlighted', this.checkHighlight);
     },
 
     stateChange: function () {
@@ -509,6 +555,11 @@
     },
 
     enableEditor: function (event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+
       if (!this.editable) {
         // Not in edit state, ignore
         return;
@@ -519,35 +570,48 @@
         return;
       }
 
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
+
+      var that = this;
+      var _enableEditor = function() {
+        that.startHighlight();
+        // @todo: 'edit-candidate' class should be removed at this point in time;
+        // it is now no longer a candidate for being edited; it's *actually*
+        // being edited!
+
+        that.$el
+        .addClass('edit-editing')
+        .css('background-color', that.$el.data('edit-background-color'));
+
+        // Ensure others are not editable when we are
+        if (that.state.get('editedFieldView')) {
+          that.state.get('editedFieldView').disableEditor();
+        }
+        // @todo: we currently need to set that to access the current FieldView
+        // in ui-editable.js which is horrible.
+        that.state.set('editedFieldView', that);
+        // Start the Create.js editable widget
+        that.enableEditableWidget();
+        // Enable the toolbar with the save and close buttons
+        that.enableToolbar();
+
+        that.state.set('fieldBeingEdited', that.$el);
+        that.state.set('editedEditable', Drupal.edit.util.getID(that.$el));
+        that.state.set('editedFieldView', that);
+      };
+
+      // Let's make sure we do not lose any changes, if there is a currently
+      // active editableField?
+      if (this.state.get('editedFieldView') && this.state.get('editedFieldView').isDirty()) {
+        // (Async) confirmation of possibly losing changes.
+        Drupal.edit.confirm(Drupal.t('Currently edited field has changes, do you want to proceed?'), {}, function(confirmed) {
+          if (!confirmed) {
+            return false;
+          }
+          _enableEditor();
+        });
+      } else {
+        _enableEditor();
       }
-
-      this.startHighlight();
-
-      this.$el
-      // @todo: 'edit-candidate' class should be removed at this point in time;
-      // it is now no longer a candidate for being edited; it's *actually* being
-      // edited!
-      .addClass('edit-editing')
-      .css('background-color', this.$el.data('edit-background-color'));
-
-      // Ensure others are not editable when we are
-      if (this.state.get('editedFieldView')) {
-        this.state.get('editedFieldView').disableEditor();
-      }
-      // @todo: we currently need to set this to access the current FieldView
-      // in ui-editable.js which is horrible.
-      this.state.set('editedFieldView', this);
-      // Start the Create.js editable widget
-      this.enableEditableWidget();
-      // Enable the toolbar with the save and close buttons
-      this.enableToolbar();
-
-      this.state.set('fieldBeingEdited', this.$el);
-      this.state.set('editedEditable', Drupal.edit.util.getID(this.$el));
-      this.state.set('editedFieldView', this);
     },
 
     enableEditableWidget: function () {
@@ -558,7 +622,7 @@
     },
 
     disableEditor: function () {
-      console.log('disableEditor', this.model.id, this.predicate);
+      Drupal.edit.log('disableEditor', this.model.id, this.predicate);
 
       this.$el
       .removeClass('edit-editing')
@@ -585,7 +649,7 @@
     },
 
     editorEnabled: function () {
-      console.log("editorenabled", this.model.id, this.predicate);
+      Drupal.edit.log("editorenabled", this.model.id, this.predicate);
       // Avoid re-"padding" of editable.
       if (!this.editing) {
         this.padEditable();
@@ -595,8 +659,8 @@
       this.getToolbarView().show('wysiwyg');
       // Show the ops (save, close) as well.
       this.getToolbarView().show('ops');
-      // hmm, why in the DOM?
-      this.$el.data('edit-content-changed', false);
+
+      this.setDirty(false);
       this.$el.trigger('edit-form-loaded.edit');
       this.editing = true;
     },
@@ -681,7 +745,7 @@
 
       // 1) Set the empty width again.
       if (this.$el.data('edit-width-empty') === true) {
-        console.log('restoring width');
+        Drupal.edit.log('restoring width');
         this.$el
         .addClass('edit-animate-disable-width')
         .css('width', '');
@@ -732,16 +796,11 @@
       this.$el.removeClass('edit-wysiwyg-attached');
 
       this.editing = false;
+      this.setDirty(false);
     },
 
     contentChanged: function () {
-      this.$el.data('edit-content-changed', true);
-      this.$el.trigger('edit-content-changed.edit');
-
-      this.getToolbarElement()
-      .find('a.save')
-      .addClass('blue-button')
-      .removeClass('gray-button');
+      this.setDirty(true);
     }
   });
 
@@ -756,6 +815,19 @@
         vie: this.vie,
         disabled: false
       });
+
+      var toolbarView = this.getToolbarView();
+      var that = this;
+      // @todo - use backbone events.
+      this.$el.bind('edit-form-loaded.edit', function() {
+        // Indicate in the 'info' toolgroup that the form has loaded.
+        // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
+        toolbarView.removeClass('info', 'loading');
+        toolbarView.show('ops');
+
+        // Bind events
+        that.bindFormChanges();
+      });
     },
 
     disableEditableWidget: function () {
@@ -763,6 +835,7 @@
         vie: this.vie,
         disabled: true
       });
+      this.$el.unbind('edit-form-loaded.edit');
     },
 
     saveClicked: function (event) {
@@ -780,8 +853,62 @@
         // Restart the editable.
         that.startEditable();
       });
-    }
+    },
+    // Refactored from ui-editables.js
+    showLoadingFormIndicator: function() {
+      // Render form container.
+      var $form = $(Drupal.theme('editFormContainer', {
+        id: Drupal.edit.form._id(this.$el),
+        loadingMsg: Drupal.t('Loading…')}
+      ));
 
+      var $editable = this.$el;
+      // Append  & insert in DOM.
+      if ($editable.css('display') == 'inline') {
+        $form.prependTo($editable.offsetParent());
+
+        var pos = $editable.position();
+        $form.css('left', pos.left).css('top', pos.top);
+        // Reset the toolbar's positioning because it'll be moved inside the
+        // form container.
+        // Drupal.edit.toolbar.get($editable).css('left', '').css('top', '');
+        this.getToolbarElement().css('left', '').css('top', '');
+      }
+      else {
+        $form.insertBefore($editable);
+      }
+
+      // Move  toolbar inside .edit-form-container, to let it snap to the width
+      // of the form instead of the field formatter.
+      // Drupal.edit.toolbar.get($editable).detach().prependTo('.edit-form');
+      this.getToolbarElement().detach().prependTo('.edit-form');
+
+      // Trigger this event to propagate to the appropriate ToolbarView.
+      this.trigger('showLoadingFormIndicator');
+    },
+    // Refactored from ui-editables.js
+    bindFormChanges: function() {
+      var that = this;
+      // Detect changes in this form.
+      Drupal.edit.form.get(this.$el)
+        .delegate(':input', 'change.edit', function () {
+          // Make sure we track changes
+          // @todo: trigger createjs' 'createeditablechanged' event rather
+          // than calling the method directly?
+          that.contentChanged();
+        })
+        .delegate('input', 'keypress.edit', function (event) {
+          if (event.keyCode == 13) {
+            return false;
+          }
+        });
+    },
+    // Refactored from ui-editables.js
+    unbindFormChanges: function() {
+      Drupal.edit.form.get(this.$el)
+        .undelegate(':input', 'change.edit')
+        .undelegate('input', 'keypress.edit');
+    }
   });
 
 })(jQuery);

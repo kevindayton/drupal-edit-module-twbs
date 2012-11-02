@@ -15,6 +15,55 @@ Drupal.behaviors.edit = {
 Drupal.edit.constants = {};
 Drupal.edit.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
 
+// Temporary helper function: logging.
+Drupal.edit.debug = true;
+Drupal.edit.log = function() {
+  if (Drupal.edit.debug && window.console) {
+    console.log(Array.prototype.slice.call(arguments));
+  }
+};
+
+// Temporary helper function: (async) confirm dialog.
+Drupal.edit.confirm = function(message, options, cb) {
+  // @todo: use whatever confirm-dialog implementation we need.
+  if (window.confirm(message)) {
+    cb(true);
+  } else {
+    cb(false);
+  }
+};
+
+// Define Drupal.edit.routers.EditRouter.
+Drupal.edit.routers = {};
+Drupal.edit.routers.EditRouter = Backbone.Router.extend({
+  routes: {
+    "quick-edit": "edit",
+    "view": "view",
+    "": "view"
+  },
+  edit: function() {
+    Drupal.edit.state.set('isViewing', false);
+  },
+  view: function(query, page) {
+    // Let's make sure we do not lose any changes, if there is a currently
+    // active editableField?
+    if (Drupal.edit.state.get('editedFieldView') && Drupal.edit.state.get('editedFieldView').isDirty()) {
+      var that = this;
+      Drupal.edit.confirm(Drupal.t('Currently edited field has changes, do you want to proceed?'), {}, function(confirmed) {
+        if (!confirmed) {
+          that.navigate('#quick-edit');
+          return false;
+        } else {
+          Drupal.edit.state.set('isViewing', true);
+          return true;
+        }
+      });
+    } else {
+      Drupal.edit.state.set('isViewing', true);
+    }
+  }
+});
+
 Drupal.edit.init = function() {
   // VIE instance for Editing
   Drupal.edit.vie = new VIE();
@@ -43,7 +92,7 @@ Drupal.edit.init = function() {
   if (Drupal.settings.edit.wysiwyg) {
     $(document).bind('edit-wysiwyg-ready.edit', function() {
       Drupal.edit.state.set('wysiwygReady', true);
-      console.log('edit: WYSIWYG ready');
+      Drupal.edit.log('edit: WYSIWYG ready');
     });
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].init();
   }
@@ -60,24 +109,20 @@ Drupal.edit.init = function() {
   // entities, suggesting there should be *one* call to readEntities()?
   Drupal.edit.domService.findSubjectElements().each(Drupal.edit.prepareFieldView);
 
-  // Instantiate overlayview
+  // Instantiate OverlayView
   var overlayView = new Drupal.edit.views.OverlayView({
     state: Drupal.edit.state
   });
 
-  // Transition between view/edit states.
-  $("a.edit_view-edit-toggle").bind('click.edit', function(event) {
-    event.preventDefault();
-
-    var isViewing = $(this).hasClass('edit-view');
-    Drupal.edit.state.set('isViewing', isViewing);
-
-    // swap active class among the two links.
-    $('a.edit_view-edit-toggle').removeClass('active');
-    $('a.edit_view-edit-toggle').parent().removeClass('active');
-    $('a.edit_view-edit-toggle.edit-' + (isViewing ? 'view' : 'edit')).addClass('active');
-    $('a.edit_view-edit-toggle.edit-' + (isViewing ? 'view' : 'edit')).parent().addClass('active');
+  // Instantiate MenuView
+  var editMenuView = new Drupal.edit.views.MenuView({
+    state: Drupal.edit.state
   });
+
+  // Instantiate EditRouter
+  var editRouter = new Drupal.edit.routers.EditRouter();
+  // Start Backbone's history/route handling
+  Backbone.history.start();
 };
 
 Drupal.edit.prepareStateModel = function () {
