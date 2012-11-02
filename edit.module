@@ -149,9 +149,9 @@ function edit_library_info() {
     'version' => NULL,
     'js' => array(
       $path . '/js/lib/create.js' => array('defer' => TRUE),
-      $path . '/js/SparkEditService.js' => array('defer' => TRUE),
-      $path . '/js/editable.js' => array('defer' => TRUE),
-      $path . '/js/formwidget.js' => array('defer' => TRUE),
+      $path . '/js/services/SparkEditService.js' => array('defer' => TRUE),
+      $path . '/js/widgets/editable.js' => array('defer' => TRUE),
+      $path . '/js/widgets/formwidget.js' => array('defer' => TRUE),
       $path . '/js/views/menu-view.js' => array('defer' => TRUE),
       $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
       $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
