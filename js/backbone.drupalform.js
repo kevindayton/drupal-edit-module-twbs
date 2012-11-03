@@ -6,10 +6,11 @@ Backbone.sync = function(method, model, options) {
   else {
     return Backbone.syncDirect(method, model, options);
   }
-
 }
 
-
+/**
+ * @todo: HTTP status handling.
+ */
 Backbone.syncDrupalFormWidget = function(method, model, options) {
   switch (method) {
     case 'update':
@@ -40,7 +41,9 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
   };
 }
 
-
+/**
+ * @todo: HTTP status handling.
+ */
 Backbone.syncDirect = function(method, model, options) {
   switch (method) {
     case 'update':
