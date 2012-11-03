@@ -85,11 +85,6 @@ Drupal.edit.form = {
       : $('#' + this._id($editable));
   },
 
-  remove: function($editable) {
-    Drupal.edit.log('Drupal.edit.form.remove', Drupal.edit.form.get($editable));
-    Drupal.edit.form.get($editable).remove();
-  },
-
   _id: function($editable) {
     var edit_id = Drupal.edit.util.getID($editable);
     return 'edit-form-for-' + edit_id.split(':').join('_');
