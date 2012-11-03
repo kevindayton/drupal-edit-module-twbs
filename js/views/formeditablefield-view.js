@@ -43,10 +43,12 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
     var value = this.model.getVieEntity().get(this.predicate);
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject(this.$el));
     var that = this;
-
-    Drupal.edit.form.saveForm(entity, this.predicate, this.$el, null, function(error, $el) {
-      // @todo: verify if this is the *right* method to call, to properly re-prepare the editable.
-      that.startEditable();
+    // Defer to Backbone.sync implementation.
+    jQuery('body').createStorage('saveRemote', this.model.getVieEntity(), {
+      success:function () {},
+      error:function () {},
+      predicate: this.model.get('predicate'),
+      widgetType: 'drupalFormWidget'
     });
   },
   // Refactored from ui-editables.js

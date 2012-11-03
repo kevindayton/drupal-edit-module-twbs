@@ -49,7 +49,7 @@ Drupal.edit.init = function() {
   //  - Why do we need to set editableNs?
   //  - Shouldn't we also set localStorage, autoSave, editSelector, saveSelector?
   //  - How do we integrate Create.js' i18n support with Drupal.t()?
-  $('body').midgardStorage({
+  $('body').createStorage({
     vie: Drupal.edit.vie,
     editableNs: 'createeditable'
   });

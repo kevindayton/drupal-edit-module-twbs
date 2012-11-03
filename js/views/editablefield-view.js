@@ -159,9 +159,12 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     // Find entity and predicate.
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject(this.$el));
     var predicate = this.predicate;
-    // Drupal.edit.form.saveForm loads and saves form if necessary.
-    Drupal.edit.form.saveForm(entity, predicate, this.$el, this.model.getVieEntity().get(this.predicate), function() {
-      // Editable has been saved.
+    // Defer to Backbone.sync implementation.
+    jQuery('body').createStorage('saveRemote', this.model.getVieEntity(), {
+      success:function () {},
+      error:function () {},
+      predicate: this.model.get('predicate'),
+      widgetType: 'direct'
     });
   },
 
