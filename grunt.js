@@ -4,8 +4,8 @@ module.exports = function(grunt) {
     lint: {
       all: [
         'js/*.js',
-        'js/widgets/*.js',
-        'js/services/*.js',
+        'js/createjs/*.js',
+        'js/viejs/*.js',
         'js/models/*.js',
         'js/views/*.js',
         'js/routers/*.js'
@@ -15,8 +15,8 @@ module.exports = function(grunt) {
       dist: {
         // @todo: do we want to concat VIE and createjs, too?
         src: [
-          'js/widgets/*.js',
-          'js/services/*.js',
+          'js/createjs/*.js',
+          'js/viejs/*.js',
           'js/models/*.js',
           'js/views/*.js',
           'js/routers/*.js',
@@ -32,8 +32,8 @@ module.exports = function(grunt) {
       'dist-all': {
         src: [
           'js/lib/*',
-          'js/widgets/*.js',
-          'js/services/*.js',
+          'js/createjs/*.js',
+          'js/viejs/*.js',
           'js/models/*.js',
           'js/views/*.js',
           'js/routers/*.js',
