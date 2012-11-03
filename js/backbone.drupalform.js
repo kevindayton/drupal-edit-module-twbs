@@ -22,28 +22,19 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
       var $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
       var base = $submit.attr('id');
 
-      // handle the saveForm callback (edit_field_form_saved).
-      var formEditableFormSubmittedCallback = function (ajax, response, status) {
-        var edit_id = model.getSubjectUri() + '/' + predicate;
-        // response.data contains the updated rendering of the field, if any.
-        if (response.data) {
-          // Stop the editing.
-          var currentEditorView = Drupal.edit.state.get('editedFieldView');
-          if (currentEditorView) {
-            // @todo: trigger event on the currentEditorView.
-            currentEditorView.disableEditor();
-          }
-          // this is different from edit.module. did not understand what the
-          // stuff was about.
-          var $inner = jQuery(response.data).html();
-          $editable.html($inner);
-        }
-        // Remove this Drupal.ajax[base]?
+      // Set up AJAX command closures.
+      Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
+        // Clean up; the form has saved (there is no rebuilding going on), so we
+        // can get rid of this Drupal.ajax instance.
         delete Drupal.ajax[base];
-        options.success();
+
+        // Call Backbone.sync's success callback with the rerendered field.
+        var changedAttributes = {};
+        changedAttributes[predicate] = '@todo: JSON-LD representation N/A yet.';
+        changedAttributes[predicate + '/rendered'] = response.data;
+        options.success(changedAttributes);
       };
-      // Setup of a closure to handle the response at last minute.
-      Drupal.ajax[base].commands.edit_field_form_saved = formEditableFormSubmittedCallback;
+
       $submit.trigger('click.edit');
       break;
   };
@@ -69,8 +60,6 @@ Backbone.syncDirect = function(method, model, options) {
       Drupal.edit.log('submitDirectForm', $submit, base, jQuery('#edit_backstage form'));
       // Set the callback.
       Drupal.ajax[base].commands.edit_field_form_saved = function (ajax, response, status) {
-        // Direct forms are stuffed into #edit_backstage, apparently.
-        // that's why Drupal.edit.form.remove($editable); doesn't work.
         jQuery('#edit_backstage form').remove();
         // Removing Drupal.ajax-thingy.
         delete Drupal.ajax[base];

@@ -40,17 +40,23 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
       event.preventDefault();
     }
 
-    var value = this.model.getVieEntity().get(this.predicate);
-    var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject(this.$el));
-    var that = this;
-    // Defer to Backbone.sync implementation.
+    // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
+    var self = this;
     jQuery('body').createStorage('saveRemote', this.model.getVieEntity(), {
-      success:function () {},
+      // Successfully saved without validation errors.
+      success: function (model) {
+        self.disableEditor();
+        // Replace the old content with the new content.
+        var updatedField = model.get(this.predicate + '/rendered');
+        var $inner = jQuery(updatedField).html();
+        self.$el.html($inner);
+      },
       error:function () {},
       predicate: this.model.get('predicate'),
       widgetType: 'drupalFormWidget'
     });
   },
+
   // Refactored from ui-editables.js
   showLoadingFormIndicator: function() {
     // Render form container.
