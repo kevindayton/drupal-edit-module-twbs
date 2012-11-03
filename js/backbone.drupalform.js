@@ -15,15 +15,11 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
   switch (method) {
     case 'update':
       var predicate = options.predicate;
-      var edit_id = model.getSubjectUri() + '/' + predicate;
-      var $field = Drupal.edit.util.findFieldForID(edit_id);
-      var $editable = Drupal.edit.util.findEditablesForFields($field);
-
-      // Figure out the submit button for this form.
-      var $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
-      var base = $submit.attr('id');
+      // Find the submit button for this form.
+      var $submit = options.$formContainer.find('.edit-form-submit');
 
       // Set up AJAX command closures.
+      var base = $submit.attr('id');
       Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
         // Clean up; the form has saved (there is no rebuilding going on), so we
         // can get rid of this Drupal.ajax instance.

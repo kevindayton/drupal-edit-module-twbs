@@ -5,6 +5,9 @@ Drupal.edit.views = Drupal.edit.views || {};
 // elements Spark edits via regular Drupal forms.
 Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.extend({
 
+  // Keep track of the form container that is used for editing this field.
+  $formContainer: null,
+
   enableEditableWidget: function () {
     this.$el.createEditable({
       vie: this.vie,
@@ -60,6 +63,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
         // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
       },
       error:function () {},
+      $formContainer: self.$formContainer,
       predicate: this.model.get('predicate'),
       widgetType: 'drupalFormWidget'
     });
@@ -68,7 +72,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
   // Refactored from ui-editables.js
   showLoadingFormIndicator: function() {
     // Render form container.
-    var $form = jQuery(Drupal.theme('editFormContainer', {
+    this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
       id: Drupal.edit.form._id(this.$el),
       loadingMsg: Drupal.t('Loading…')}
     ));
@@ -76,17 +80,17 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
     var $editable = this.$el;
     // Append  & insert in DOM.
     if ($editable.css('display') == 'inline') {
-      $form.prependTo($editable.offsetParent());
+      this.$formContainer.prependTo($editable.offsetParent());
 
       var pos = $editable.position();
-      $form.css('left', pos.left).css('top', pos.top);
+      this.$formContainer.css('left', pos.left).css('top', pos.top);
       // Reset the toolbar's positioning because it'll be moved inside the
       // form container.
       // Drupal.edit.toolbar.get($editable).css('left', '').css('top', '');
       this.getToolbarElement().css('left', '').css('top', '');
     }
     else {
-      $form.insertBefore($editable);
+      this.$formContainer.insertBefore($editable);
     }
 
     // Move  toolbar inside .edit-form-container, to let it snap to the width
@@ -101,7 +105,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
   bindFormChanges: function() {
     var that = this;
     // Detect changes in this form.
-    Drupal.edit.form.get(this.$el)
+    this.$formContainer
       .delegate(':input', 'change.edit', function () {
         // Make sure we track changes
         // @todo: trigger createjs' 'createeditablechanged' event rather
@@ -117,7 +121,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
   },
   // Refactored from ui-editables.js
   unbindFormChanges: function() {
-    Drupal.edit.form.get(this.$el)
+    this.$formContainer
       .undelegate(':input', 'change.edit')
       .undelegate('input', 'keypress.edit');
   }
