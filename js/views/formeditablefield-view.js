@@ -50,6 +50,14 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
         var updatedField = model.get(this.predicate + '/rendered');
         var $inner = jQuery(updatedField).html();
         self.$el.html($inner);
+
+        // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
+        // overwrite an existing field, that VIE refuses to find the same
+        // predicate again for the same entity?
+        // self.$el.replaceWith(updatedField);
+        // debugger;
+        // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
+        // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
       },
       error:function () {},
       predicate: this.model.get('predicate'),

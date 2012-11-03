@@ -6,6 +6,14 @@ Drupal.edit.wysiwyg = Drupal.edit.wysiwyg || {};
 /**
  * Attach toggling behavior and in-place editing.
  */
+Drupal.behaviors.editDiscoverEditables = {
+  attach: function(context) {
+    // @todo: we need to separate the discovery of editables if we want updated
+    // or new content (added by code other than Edit) to be detected
+    // automatically. Once we implement this, we'll be able to get rid of all
+    // calls to Drupal.edit.domService.findSubjectElements() :)
+  }
+}
 Drupal.behaviors.edit = {
   attach: function(context) {
     $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
