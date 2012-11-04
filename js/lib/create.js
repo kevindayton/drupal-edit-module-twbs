@@ -347,7 +347,7 @@
     // * Highlight: user is hovering over the editable (not set by Editable widget directly)
     // * Activating: an editor widget is being activated for user to edit with it (skipped for editors that activate instantly)
     // * Active: user is actually editing something inside the editable
-    // * Modified: user has made changes to the editable
+    // * Changed: user has made changes to the editable
     // * Invalid: the contents of the editable have validation errors
     setState: function (state) {
       var previous = this.options.state;
@@ -481,7 +481,7 @@
         property: propertyName,
         vie: this.vie,
         modified: function (content) {
-          widget.setState('modified');
+          widget.setState('changed');
 
           var changedProperties = {};
           changedProperties[propertyName] = content;
@@ -754,14 +754,6 @@
   // and configured separately.
   jQuery.widget('Create.alohaWidget', jQuery.Create.editWidget, {
     enable: function () {
-      this._initialize();
-      this.options.disabled = false;
-    },
-    disable: function () {
-      Aloha.jQuery(this.options.element.get(0)).mahalo();
-      this.options.disabled = true;
-    },
-    _initialize: function () {
       var options = this.options;
       var editable;
       var currentElement = Aloha.jQuery(options.element.get(0)).aloha();
@@ -801,7 +793,12 @@
         options.modified(data.editable.getContents());
         data.editable.setUnmodified();
       });
-    }
+      this.options.disabled = false;
+    },
+    disable: function () {
+      Aloha.jQuery(this.options.element.get(0)).mahalo();
+      this.options.disabled = true;
+    },
   });
 })(jQuery);
 //     Create.js - On-site web editing interface
