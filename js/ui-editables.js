@@ -10,22 +10,13 @@ Drupal.edit = Drupal.edit || {};
 
 Drupal.edit.form = {
   create: function($editable, cb) {
+    console.log('Drupal.edit.form.create', $editable);
     // @todo: this needs to be refactored, we should have access to the view
     // rather than the $editable/$el of the view.
     var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject($editable));
     var predicate = Drupal.edit.util.getElementPredicate($editable);
     var $field = Drupal.edit.util.findFieldForEditable($editable);
-    var fieldView = Drupal.edit.state.get('editedFieldView');
     var edit_id = Drupal.edit.util.getID($field);
-    // We only create a placeholder-div/form for the form-based instances.
-    if (Drupal.edit.form.get($editable).length > 0) {
-      return false;
-    }
-
-    // @todo - this needs to move to formwidget.js - but for the love of god,
-    // make sure that there's .placeholder-div in place to avoid Drupal.ajax
-    // error hell.
-    fieldView.showLoadingFormIndicator();
 
     // TRICKY: for type=direct fields, this gets called when SAVING (load form,
     //fill it, submit it), instead of LOADING.

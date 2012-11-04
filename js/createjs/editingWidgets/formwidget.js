@@ -18,13 +18,56 @@
     },
     activate: function () {
       // Trigger "activating" state (i.e. loading the form).
-      Drupal.edit.log('Drupal.drupalFormWidget.activating');
+      Drupal.edit.log('Drupal.drupalFormWidget.activating', this);
       this.options.activating();
+
+      // Render form container.
+      this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
+        id: Drupal.edit.form._id(this.element),
+        loadingMsg: Drupal.t('Loading…')}
+      ));
+      console.log('Activate', this.element);
+      // $editable is the DOM element of the editable widget
+        var $editable = $(this.options.widget.element);
+      // $fied is the DOM element of the field/editingWidget
+      var $field = $(this.element);
+
+      // @todo: this should not be necessary anymore because we should have cleaned up the form on deactivating the widget.
+      // We only create a placeholder-div/form for the form-based instances.
+      if (Drupal.edit.form.get($editable).length > 0) {
+        console.log('Drupal.edit.form.create - Drupal.edit.form.get($editable).length > 0', Drupal.edit.form.get($editable).length, Drupal.edit.form.get($editable));
+        return cb(false);
+      }
+
+      // Append  & insert in DOM.
+      if ($editable.css('display') == 'inline') {
+        this.$formContainer.prependTo($editable.offsetParent());
+
+        var pos = $editable.position();
+        this.$formContainer.css('left', pos.left).css('top', pos.top);
+
+        // @todo: do something to toolbar - we should not touch the toolbar here!
+        // Reset the toolbar's positioning because it'll be moved inside the
+        // form container.
+        // Drupal.edit.toolbar.get($editable).css('left', '').css('top', '');
+        // this.getToolbarElement().css('left', '').css('top', '');
+      }
+      else {
+        this.$formContainer.insertBefore($editable);
+      }
+
+      // @todo: do something to toolbar - we should not touch the toolbar here!
+      // Move  toolbar inside .edit-form-container, to let it snap to the width
+      // of the form instead of the field formatter.
+      // Drupal.edit.toolbar.get($editable).detach().prependTo('.edit-form');
+      // this.getToolbarElement().detach().prependTo('.edit-form');
+
+
       // Create the form asynchronously.
       var widget = this;
-      Drupal.edit.form.create(this.element, function($editable, $field) {
+      Drupal.edit.form.create($editable, function($editable, $field) {
         widget.options.activated();
-        Drupal.edit.log('Drupal.drupalFormWidget.activated');
+        Drupal.edit.log('Drupal.drupalFormWidget.activated', $editable, $field);
         Drupal.edit.form.get($editable)
           .delegate(':input', 'formUpdated.edit', function () {
             widget.options.changed();

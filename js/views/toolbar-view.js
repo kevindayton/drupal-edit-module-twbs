@@ -12,7 +12,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     var that = this;
     // bind to the editable state changes.
     this.$el.bind('createeditablestatechange', function(event, data) {
-      // console.log('ToolbarView.createeditablestatechange %s - from %s to %s', that.model.predicate, data.previous, data.current);
+      console.log('ToolbarView.createeditablestatechange %s - from %s to %s', this.predicate, data.previous, data.current);
       switch (data.current) {
         case 'changed':
           that.getToolbarElement()
@@ -38,7 +38,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
           that.showLoadingFormIndicator();
           break;
         case 'active':
-          console.log('Setting active', that.$el, that.$el.find('.edit-toolgroup'));
           that.removeClass('info', 'loading');
           that.show('ops');
           // @todo: check that we actually are a toolbar for wysiwyg, maybe extend this accordingly.
@@ -166,7 +165,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       ]
     }))
       .delegate('a.label', 'click.edit', function (event) {
-        self.fieldView.$el.trigger('click.edit');
+        self.$el.trigger('click.edit');
         event.stopPropagation();
         event.preventDefault();
       });
@@ -200,13 +199,24 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       ]
     }))
       .delegate('a.field-save', 'click.edit', function (event) {
-        self.fieldView.saveClicked(event);
+        event.preventDefault();
+        // custom event requesting *saving*
+        self.$el.trigger('editsave.edit', {
+          originalEvent: event,
+          // we need a better name, i think this is was createjs uses ...
+          entityElement: self.$el,
+          entity: self.entity,
+          predicate: self.predicate
+        });
       })
       .delegate('a.field-close', 'click.edit', function (event) {
-        self.fieldView.closeClicked(event);
+        event.preventDefault();
+        // custom event requesting *cancelling*
+        self.$el.trigger('editcancel.edit', {
+          originalEvent: event
+        });
       });
     // @END Drupal.edit.editables.startEdit()
-
 
 
 

@@ -6,6 +6,10 @@
     vie: null,
     domService: null,
     state: null,
+    activeEditable: null,
+    getActiveEditableElement: function() {
+      return this.activeEditable;
+    },
     initialize: function() {
       // VIE instance for Editing
       this.vie = new VIE();
@@ -33,11 +37,21 @@
         $element.bind("createeditablestatechange", function(event, data) {
           // Log all state changes coming from the createEditable.
           console.log('statechange', data.previous, data.current, data.instance.getSubjectUri(), data.predicate, data.entityElement[0].className.split(' ')[1], data);
+          switch (data.current) {
+            case 'active':
+              // entityElement is the HTML element of the createEditable (?)
+              appView.activeEditable = data.entityElement;
+              break;
+          }
+          if (data.previous=='active' && this.activeEditable == data.entityElement) {
+            appView.activeEditable = null;
+          }
         });
 
         $element.createEditable({
           vie: appView.vie,
           disabled: true,
+          // decorateEditable
           decorate: function(data) {
             /* {
             editable: this.options.widget,
@@ -47,6 +61,7 @@
             entity:
             } */
           },
+          // decorateEditor
           decorateEditor: function(data) {
             data.editor.decorationView = new Drupal.edit.views.FieldDecorationView({
               state: appView.state,
@@ -72,58 +87,34 @@
             });
           }
         }).mouseenter(function(event) {
+          // no highlighting if we have a currently active editable.
+          if (appView.getActiveEditableElement()) {
+            return ;
+          }
           var self = this;
           Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
             $(self).createEditable('setState', 'highlighted');
             event.stopPropagation();
           });
         }).mouseleave(function(event) {
-            var self = this;
-            Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-              $(self).createEditable('setState', 'candidate');
-              event.stopPropagation();
-            });
+          if (appView.getActiveEditableElement()) {
+            return ;
+          }
+          var self = this;
+          Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+            $(self).createEditable('setState', 'candidate');
+            event.stopPropagation();
+          });
+        });
+        // custom events for initiating saving / cancelling
+        $element.bind('editsave.edit', function(event, data) {
+          appView.handleSave($element, data.entity, data.predicate);
+        });
+        $element.bind('editcancel.edit', function(event, data) {
+          $element.createEditable('setState', 'candidate');
         });
 
         $element.createEditable('setState', 'candidate');
-
-/*
-        var fieldViewType = Drupal.edit.views.EditableFieldView;
-        if (element.hasClass('edit-type-form')) {
-          fieldViewType = Drupal.edit.views.FormEditableFieldView;
-        }
-
-        appView.vie.load({
-          element: element
-        }).using('edit').execute().done(function (entities) {
-          var subject = appView.domService.getElementSubject(element);
-          var predicate = appView.domService.getElementPredicate(element);
-          var entity = entities[0];
-          if (!entity) {
-            return;
-          }
-
-
-
-
-          // Instantiate FieldViewModel
-          var fieldViewModel = new Drupal.edit.models.FieldViewModel({
-            'subject': subject,
-            'predicate': predicate,
-            'entity': entity
-          });
-
-          // Instantiate appropriate subtype of FieldView
-          var fieldView = new fieldViewType({
-            model: fieldViewModel,
-            state: appView.state,
-            el: element,
-            predicate: predicate,
-            vie: appView.vie
-          });
-
-        });
-        */
       });
 
 
@@ -136,6 +127,48 @@
       var editMenuView = new Drupal.edit.views.MenuView({
         state: this.state
       });
+    },
+    handleSave: function($editable, entity, predicate) {
+      // @todo: i know this is *NOT* the editable instead the form container!
+      // but i now "hangs" in the EditingWidget (formwidget.js) - and needs to
+      // be made accessible somehow.
+      var $formContainer = Drupal.edit.form.get($editable);
+
+      var that = this;
+      // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
+      this.$el.createStorage('saveRemote', entity, {
+        // Successfully saved without validation errors.
+        success: function (model) {
+          $editable.createEditable('setState', 'candidate');
+
+          // Replace the old content with the new content.
+          var updatedField = model.get(predicate + '/rendered');
+          var $inner = jQuery(updatedField).html();
+          $editable.html($inner);
+
+          // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
+          // overwrite an existing field, that VIE refuses to find the same
+          // predicate again for the same entity?
+          // self.$el.replaceWith(updatedField);
+          // debugger;
+          // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
+          // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
+        },
+        // Save attempted but failed due to validation errors.
+        error: function (validationErrorMessages) {
+          $editable
+            .find('.edit-form')
+            .addClass('edit-validation-error')
+            .find('form')
+            .prepend(validationErrorMessages);
+        },
+        $formContainer: $formContainer,
+        predicate: predicate,
+        widgetType: 'drupalFormWidget'
+      });
+    },
+    _triggerCancel: function($editable) {
+
     }
   });
 })(jQuery);

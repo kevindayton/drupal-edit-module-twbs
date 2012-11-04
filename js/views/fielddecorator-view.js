@@ -86,6 +86,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
 
   padEditable: function () {
+    // temporarily disable padding. because we manipulate the toolbar which we shouldnt do here.
+    return;
     var self = this;
     // Add 5px padding for readability. This means we'll freeze the current
     // width and *then* add 5px padding, hence ensuring the padding is added "on
@@ -136,6 +138,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     }, 0);
   },
   unpadEditable: function () {
+    // temporarily disable padding. because we manipulate the toolbar which we shouldnt do here.
+    return ;
     var self = this;
 
     // 1) Set the empty width again.
