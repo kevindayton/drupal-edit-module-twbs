@@ -303,8 +303,14 @@
         return window.midgardCreate.localize(id, language);
       },
       language: null,
+      // Current state of the Editable
       state: null,
-      acceptStateChange: true
+      // Callback function for validating changes between states. Receives the previous state, new state, possible predicate, and a callback
+      acceptStateChange: true,
+      // Callback function for decorating the full editable. Will be called on instantiation
+      decorate: null,
+      // Callback function for decorating a single editing widget. Will be called on editing widget instantiation.
+      decorateEditor: null
     },
 
     _create: function () {
@@ -316,6 +322,12 @@
           element: this.element
         }).from(this.options.domService).execute().done(function (entities) {
           widget.options.model = entities[0];
+        });
+      }
+      if (_.isFunction(this.options.decorate)) {
+        this.options.decorate({
+          editable: this,
+          element: this.element
         });
       }
     },
@@ -349,7 +361,7 @@
     // * Active: user is actually editing something inside the editable
     // * Changed: user has made changes to the editable
     // * Invalid: the contents of the editable have validation errors
-    setState: function (state) {
+    setState: function (state, predicate) {
       var previous = this.options.state;
       var current = state;
       if (current === previous) {
@@ -358,16 +370,16 @@
 
       if (this.options.acceptStateChange === undefined || !_.isFunction(this.options.acceptStateChange)) {
         // Skip state transition validation
-        this._doSetState(previous, current);
+        this._doSetState(previous, current, predicate);
         return;
       }
 
       var widget = this;
-      this.options.acceptStateChange(previous, current, function (accepted) {
+      this.options.acceptStateChange(previous, current, predicate, function (accepted) {
         if (!accepted) {
           return;
         }
-        widget._doSetState(previous, current);
+        widget._doSetState(previous, current, predicate);
       });
     },
 
@@ -375,7 +387,7 @@
       return this.options.state;
     },
 
-    _doSetState: function (previous, current) {
+    _doSetState: function (previous, current, predicate) {
       this.options.state = current;
       if (current === 'inactive') {
         this.disable();
@@ -387,6 +399,7 @@
         previous: previous,
         current: current,
         instance: this.options.model,
+        predicate: predicate,
         entityElement: this.element
       });
     },
@@ -480,8 +493,9 @@
         entity: this.options.model,
         property: propertyName,
         vie: this.vie,
+        decorate: this.options.decorateEditor,
         modified: function (content) {
-          widget.setState('changed');
+          widget.setState('changed', propertyName);
 
           var changedProperties = {};
           changedProperties[propertyName] = content;
@@ -497,10 +511,10 @@
           });
         },
         activating: function () {
-          widget.setState('activating');
+          widget.setState('activating', propertyName);
         },
         activated: function () {
-          widget.setState('active');
+          widget.setState('active', propertyName);
           widget._trigger('activated', null, {
             property: propertyName,
             instance: widget.options.model,
@@ -509,7 +523,7 @@
           });
         },
         deactivated: function () {
-          widget.setState('candidate');
+          widget.setState('candidate', propertyName);
           widget._trigger('deactivated', null, {
             property: propertyName,
             instance: widget.options.model,
@@ -692,6 +706,15 @@
     _create: function () {
       this._registerWidget();
       this._initialize();
+
+      if (_.isFunction(this.options.decorate)) {
+        this.options.decorate({
+          editable: this.options.widget,
+          editor: this,
+          predicate: this.options.property,
+          element: this.element
+        });
+      }
     },
     // called every time the widget is called
     _init: function () {
