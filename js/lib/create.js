@@ -327,7 +327,8 @@
       if (_.isFunction(this.options.decorate)) {
         this.options.decorate({
           editable: this,
-          element: this.element
+          element: this.element,
+          entity: this.options.model
         });
       }
     },
@@ -712,6 +713,7 @@
           editable: this.options.widget,
           editor: this,
           predicate: this.options.property,
+          entity: this.options.entity,
           element: this.element
         });
       }
@@ -822,6 +824,34 @@
     disable: function () {
       Aloha.jQuery(this.options.element.get(0)).mahalo();
       this.options.disabled = true;
+    }
+  });
+})(jQuery);
+//     Create.js - On-site web editing interface
+//     (c) 2012 Tobias Herrmann, IKS Consortium
+//     Create may be freely distributed under the MIT license.
+//     For all details and documentation:
+(function (jQuery, undefined) {
+  // Run JavaScript in strict mode
+  /*global jQuery:false _:false document:false */
+  'use strict';
+
+  // # CKEditor editing widget
+  //
+  // This widget allows editing textual content areas with the
+  // [CKEditor](http://ckeditor.com/) rich text editor.
+  jQuery.widget('Create.ckeditorWidget', jQuery.Create.editWidget, {
+    enable: function () {
+      this.editor = CKEditor.inline(this.element.get(0));
+      this.options.disabled = false;
+    },
+
+    disable: function () {
+      if (!this.editor) {
+        return;
+      }
+      this.editor.destroy();
+      this.editor = null;
     }
   });
 })(jQuery);
