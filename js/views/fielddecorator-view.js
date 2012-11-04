@@ -4,14 +4,14 @@ Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   initialize: function(options) {
     this.state = options.state;
-    this.fieldView = options.fieldView;
+    this.predicate = options.predicate;
+    this.entity = options.entity;
     _.bindAll(this, 'createEditableStateChange');
     // bind to the editable changes
     this.$el.bind('createeditablestatechange', this.createEditableStateChange);
   },
   // changes to individual *FieldViewModel*
   createEditableStateChange: function(event, data) {
-    // console.log(this.model.get('predicate'), 'modelStateChange from ', this.model.previous('state'), ' to ', this.model.get('state') );
     // @todo: take previous value into consideration
     var previousState = data.previous;
     var state = data.current;
@@ -23,7 +23,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       case 'candidate':
         this.decorate();
         this.stopHighlight();
-        if (previousState == this.model.STATE_ACTIVE) {
+        if (previousState == 'active') {
           this.unpadEditable();
         }
 
@@ -71,27 +71,17 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   },
 
   startHighlight: function () {
-    Drupal.edit.log('startHighlight', this.model.getVieEntity().id, this.predicate);
-
-    // Animations.
-    var self = this;
-    setTimeout(function () {
-      self.$el.addClass('edit-highlighted');
-      self.fieldView.getToolbarView().show('info');
-    }, 0);
-
+    Drupal.edit.log('startHighlight', this.entity.id, this.predicate);
     this.state.set('fieldBeingHighlighted', this.$el);
-    this.state.set('highlightedEditable', this.model.getVieEntity().id + '/' + this.predicate);
+    this.state.set('highlightedEditable', this.entity.id + '/' + this.predicate);
   },
 
   stopHighlight: function () {
-    Drupal.edit.log('stopHighlight', this.model.getVieEntity().id, this.predicate);
+    Drupal.edit.log('stopHighlight', this.entity, this.entity.id, this.predicate);
     // Animations
     this.$el.removeClass('edit-highlighted');
     this.state.set('fieldBeingHighlighted', []);
     this.state.set('highlightedEditable', null);
-    // hide info
-    this.fieldView.disableToolbar();
   },
 
 

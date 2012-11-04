@@ -29,7 +29,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
         }
       });
     } else {
-      that.appView.state.set('isViewing', true);
+      this.appView.state.set('isViewing', true);
     }
   }
 });

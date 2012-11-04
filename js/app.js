@@ -29,7 +29,54 @@
       var appView = this;
       // Instantiate Editables
       this.domService.findSubjectElements().each(function() {
-        var element = $(this);
+        var $element = $(this);
+        console.log('createEditable', $element);
+        $element.createEditable({
+          vie: appView.vie,
+          disabled: true,
+          decorate: function(data) {
+            /* {
+            editable: this.options.widget,
+            editor: this,
+            predicate: this.options.property,
+            element: this.element
+            entity:
+            } */
+          },
+          decorateEditor: function(data) {
+            data.editor.decorationView = new Drupal.edit.views.FieldDecorationView({
+              state: appView.state,
+              predicate: data.predicate,
+              el: data.element,
+              entity: data.entity
+            });
+            data.editor.toolbarView = new Drupal.edit.views.ToolbarView({
+              predicate: data.predicate,
+              el: data.element,
+              entity: data.entity
+            });
+          }
+        }).mouseenter(function(event) {
+          var self = this;
+          Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+            $(self).createEditable('setState', 'highlighted');
+            event.stopPropagation();
+          });
+        }).mouseleave(function(event) {
+            var self = this;
+            Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+              $(self).createEditable('setState', 'candidate');
+              event.stopPropagation();
+            });
+        });
+
+        $element.bind("createeditablestatechange", function(event, data) {
+          // Log all state changes coming from the createEditable.
+          console.log('createeditablestatechange', data.previous, data.current, data.instance.getSubjectUri(), data);
+        });
+        $element.createEditable('setState', 'candidate');
+
+/*
         var fieldViewType = Drupal.edit.views.EditableFieldView;
         if (element.hasClass('edit-type-form')) {
           fieldViewType = Drupal.edit.views.FormEditableFieldView;
@@ -44,6 +91,9 @@
           if (!entity) {
             return;
           }
+
+
+
 
           // Instantiate FieldViewModel
           var fieldViewModel = new Drupal.edit.models.FieldViewModel({
@@ -60,14 +110,16 @@
             predicate: predicate,
             vie: appView.vie
           });
+
         });
+        */
       });
 
 
       // Instantiate OverlayView
-      var overlayView = new Drupal.edit.views.OverlayView({
+      /* var overlayView = new Drupal.edit.views.OverlayView({
         state: this.state
-      });
+      }); */
 
       // Instantiate MenuView
       var editMenuView = new Drupal.edit.views.MenuView({

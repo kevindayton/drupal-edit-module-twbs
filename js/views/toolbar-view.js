@@ -5,7 +5,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   // @todo: this should be the toolbar's $el.
   $toolbar: null,
   initialize:function (options) {
-    this.fieldView = options.fieldView;
+    this.state = options.state;
+    this.predicate = options.predicate;
+    this.entity = options.entity;
+
     var that = this;
     // bind to the editable state changes.
     this.$el.bind('createeditablestatechange', function(event, data) {
@@ -17,10 +20,19 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
             .addClass('blue-button')
             .removeClass('gray-button');
           break;
+        case 'candidate':
+          // hide info
+          that.removeToolbar();
+          break;
         case 'highlighted':
           // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
           // @todo: clarify what wysiwyg needs/does.
           that.createToolbar();
+          // Animations.
+          setTimeout(function () {
+            that.$el.addClass('edit-highlighted');
+            that.show('info');
+          }, 0);
           break;
         case 'activating':
           that.showLoadingFormIndicator();
@@ -129,8 +141,8 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
 
     // We get the label to show from VIE's type system
-    var label = this.fieldView.predicate;
-    var attributeDef = this.fieldView.model.getVieEntity().get('@type').attributes.get(this.fieldView.predicate);
+    var label = this.predicate;
+    var attributeDef = this.entity.get('@type').attributes.get(this.predicate);
     if (attributeDef && attributeDef.metadata) {
       label = attributeDef.metadata.label;
     }
@@ -220,7 +232,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
 
       // @todo: No WYSIWYG is attached yet, then this class should not be added!
-      this.fieldView.$el.addClass('edit-wysiwyg-attached');
+      this.$el.addClass('edit-wysiwyg-attached');
     }
     return true;
   },
