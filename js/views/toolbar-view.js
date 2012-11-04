@@ -9,6 +9,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     var that = this;
     // bind to the editable state changes.
     this.$el.bind('createeditablestatechange', function(event, data) {
+      // console.log('ToolbarView.createeditablestatechange %s - from %s to %s', that.model.predicate, data.previous, data.current);
       switch (data.current) {
         case 'modified':
           that.getToolbarElement()
@@ -16,12 +17,21 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
             .addClass('blue-button')
             .removeClass('gray-button');
           break;
+        case 'highlighted':
+          // As soon as we highligh, make sure we have a toolbar in the DOM (with at least a title).
+          // @todo: clarify what wysiwyg needs/does.
+          that.createToolbar();
+          break;
         case 'activating':
           that.showLoadingFormIndicator();
           break;
         case 'active':
-          // @todo: show the appropriate ops-toolbar group (and maybe wysiwyg etc.)
-          // currently we bind to 'edit-form-loaded.edit' below.
+          console.log('Setting active', that.$el, that.$el.find('.edit-toolgroup'));
+          that.removeClass('info', 'loading');
+          that.show('ops');
+          // @todo: check that we actually are a toolbar for wysiwyg, maybe extend this accordingly.
+          that.show('wysiwyg-tabs');
+          that.show('wysiwyg');
           break;
       }
     });
