@@ -30,7 +30,11 @@
       // Instantiate Editables
       this.domService.findSubjectElements().each(function() {
         var $element = $(this);
-        console.log('createEditable', $element);
+        $element.bind("createeditablestatechange", function(event, data) {
+          // Log all state changes coming from the createEditable.
+          console.log('statechange', data.previous, data.current, data.instance.getSubjectUri(), data.predicate, data.entityElement[0].className.split(' ')[1], data);
+        });
+
         $element.createEditable({
           vie: appView.vie,
           disabled: true,
@@ -47,12 +51,23 @@
             data.editor.decorationView = new Drupal.edit.views.FieldDecorationView({
               state: appView.state,
               predicate: data.predicate,
-              el: data.element,
+              // TRICKY: the Editable element instead of the editing (editor)
+              // widget element, because events are triggered on the Editable
+              // element, not on the editor element. This is mostly because in
+              // our implementation, editable == field wrapper (formerly $field)
+              // and editor == actual part that's being edited (formerly
+              // $editable). For type=form field wrapper == part that's being
+              // edited, for type=direct, this is different.
+              // @todo: We should pass data.element instead, and pass
+              // data.editable.element separately, just for it to be able to
+              // listen to state changes.
+              el: data.editable.element,
               entity: data.entity
             });
             data.editor.toolbarView = new Drupal.edit.views.ToolbarView({
               predicate: data.predicate,
-              el: data.element,
+              // TRICKY: idem.
+              el: data.editable.element,
               entity: data.entity
             });
           }
@@ -70,10 +85,6 @@
             });
         });
 
-        $element.bind("createeditablestatechange", function(event, data) {
-          // Log all state changes coming from the createEditable.
-          console.log('createeditablestatechange', data.previous, data.current, data.instance.getSubjectUri(), data);
-        });
         $element.createEditable('setState', 'candidate');
 
 /*
