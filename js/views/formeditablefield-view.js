@@ -62,7 +62,14 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
         // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
         // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
       },
-      error:function () {},
+      // Save attempted but failed due to validation errors.
+      error: function (validationErrorMessages) {
+        self.$formContainer
+          .find('.edit-form')
+          .addClass('edit-validation-error')
+          .find('form')
+          .prepend(validationErrorMessages);
+      },
       $formContainer: self.$formContainer,
       predicate: this.model.get('predicate'),
       widgetType: 'drupalFormWidget'

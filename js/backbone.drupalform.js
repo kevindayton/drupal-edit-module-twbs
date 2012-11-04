@@ -31,6 +31,10 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
         changedAttributes[predicate + '/rendered'] = response.data;
         options.success(changedAttributes);
       };
+      Drupal.ajax[base].commands.edit_field_form_validation_errors = function(ajax, response, status) {
+        // Call Backbone.sync's error callback with the validation error messages.
+        options.error(response.data);
+      };
 
       $submit.trigger('click.edit');
       break;
