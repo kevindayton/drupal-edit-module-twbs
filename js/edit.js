@@ -42,89 +42,21 @@ Drupal.edit.confirm = function(message, options, cb) {
 };
 
 Drupal.edit.init = function() {
-  // VIE instance for Editing
-  Drupal.edit.vie = new VIE();
-  // Use our custom DOM parsing service until RDFa is available
-  Drupal.edit.vie.use(new Drupal.edit.vie.SparkEditService());
-  Drupal.edit.domService = Drupal.edit.vie.service('edit');
-
-  // Instantiate StateModel
-  Drupal.edit.state = new Drupal.edit.models.StateModel();
-
-  // Load the storage widget to get localStorage support
-  // @todo: doc this.
-  //  - Why is it called 'midgardStorage'?
-  //  - Why do we need to set editableNs?
-  //  - Shouldn't we also set localStorage, autoSave, editSelector, saveSelector?
-  //  - How do we integrate Create.js' i18n support with Drupal.t()?
-  $('body').createStorage({
-    vie: Drupal.edit.vie,
-    editableNs: 'createeditable'
+  var appView = new Drupal.edit.EditAppView({
+    el: $('body')
   });
-  // TODO: Check localStorage for unsaved changes
-  // $('body').midgardStorage('checkRestore');
-
-  // Create a backstage area. This is where we store the form when editing a
-  // type=direct field, so that it's hidden from view (hence "backstage").
-  // @todo: this belongs in formwidget.js; don't Create.js' editWidgets have
-  // an initialization phase, e.g. to prefetch CSS/JS?
-  $(Drupal.theme('editBackstage', {})).appendTo('body');
-
-  // Instantiate FieldViews
-  // @todo: isn't this terribly inefficient? This results in one call to
-  // readEntities() per field, whereas Drupal fields are currently mapped to VIE
-  // entities, suggesting there should be *one* call to readEntities()?
-  Drupal.edit.domService.findSubjectElements().each(Drupal.edit.prepareFieldView);
-
-  // Instantiate OverlayView
-  var overlayView = new Drupal.edit.views.OverlayView({
-    state: Drupal.edit.state
-  });
-
-  // Instantiate MenuView
-  var editMenuView = new Drupal.edit.views.MenuView({
-    state: Drupal.edit.state
-  });
+  // @todo refactor these globals, if possible (should go away once FieldView and FieldViewModel) dies.
+  Drupal.edit.vie = appView.vie;
+  Drupal.edit.state = appView.state;
 
   // Instantiate EditRouter
-  var editRouter = new Drupal.edit.routers.EditRouter();
+  var editRouter = new Drupal.edit.routers.EditRouter({
+    appView: appView
+  });
+
   // Start Backbone's history/route handling
   Backbone.history.start();
-};
 
-Drupal.edit.prepareFieldView = function () {
-  var element = jQuery(this);
-  var fieldViewType = Drupal.edit.views.EditableFieldView;
-  if (element.hasClass('edit-type-form')) {
-    fieldViewType = Drupal.edit.views.FormEditableFieldView;
-  }
-
-  Drupal.edit.vie.load({
-    element: element
-  }).using('edit').execute().done(function (entities) {
-    var subject = Drupal.edit.domService.getElementSubject(element);
-    var predicate = Drupal.edit.domService.getElementPredicate(element);
-    var entity = entities[0];
-    if (!entity) {
-      return;
-    }
-
-    // Instantiate FieldViewModel
-    var fieldViewModel = new Drupal.edit.models.FieldViewModel({
-      'subject': subject,
-      'predicate': predicate,
-      'entity': entity
-    });
-
-    // Instantiate appropriate subtype of FieldView
-    var fieldView = new fieldViewType({
-      model: fieldViewModel,
-      state: Drupal.edit.state,
-      el: element,
-      predicate: predicate,
-      vie: Drupal.edit.vie
-    });
-  });
 };
 
 })(jQuery, VIE);
