@@ -153,6 +153,7 @@ function edit_library_info() {
       $path . '/js/createjs/editable.js' => array('defer' => TRUE),
       $path . '/js/createjs/storage.js' => array('defer' => TRUE),
       $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/drupalalohawidget.js' => array('defer' => TRUE),
       $path . '/js/views/menu-view.js' => array('defer' => TRUE),
       $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
       $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),

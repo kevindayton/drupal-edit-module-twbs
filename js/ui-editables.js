@@ -22,7 +22,9 @@ Drupal.edit.form = {
       return false;
     }
 
-    // Show a loading form indicator
+    // @todo - this needs to move to formwidget.js - but for the love of god,
+    // make sure that there's .placeholder-div in place to avoid Drupal.ajax
+    // error hell.
     fieldView.showLoadingFormIndicator();
 
     // TRICKY: for type=direct fields, this gets called when SAVING (load form,

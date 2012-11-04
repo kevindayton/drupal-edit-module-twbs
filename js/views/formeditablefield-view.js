@@ -13,19 +13,6 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
       vie: this.vie,
       disabled: false
     });
-
-    var toolbarView = this.getToolbarView();
-    var that = this;
-    // @todo - use backbone events.
-    this.$el.bind('edit-form-loaded.edit', function() {
-      // Indicate in the 'info' toolgroup that the form has loaded.
-      // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
-      toolbarView.removeClass('info', 'loading');
-      toolbarView.show('ops');
-
-      // Bind events
-      that.bindFormChanges();
-    });
   },
 
   disableEditableWidget: function () {
@@ -33,7 +20,7 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
       vie: this.vie,
       disabled: true
     });
-    this.$el.unbind('edit-form-loaded.edit');
+    this.$el.createEditable('setState', 'candidate');
   },
 
   saveClicked: function (event) {
@@ -108,28 +95,4 @@ Drupal.edit.views.FormEditableFieldView = Drupal.edit.views.EditableFieldView.ex
     // Trigger this event to propagate to the appropriate ToolbarView.
     this.trigger('showLoadingFormIndicator');
   },
-  // Refactored from ui-editables.js
-  bindFormChanges: function() {
-    var that = this;
-    // Detect changes in this form.
-    this.$formContainer
-      .delegate(':input', 'change.edit', function () {
-        // Make sure we track changes
-        // @todo: trigger createjs' 'createeditablechanged' event rather
-        // than calling the method directly?
-        // temporarily using the setDirty because contentChanged has been removed.
-        that.setDirty(true);
-      })
-      .delegate('input', 'keypress.edit', function (event) {
-        if (event.keyCode == 13) {
-          return false;
-        }
-      });
-  },
-  // Refactored from ui-editables.js
-  unbindFormChanges: function() {
-    this.$formContainer
-      .undelegate(':input', 'change.edit')
-      .undelegate('input', 'keypress.edit');
-  }
 });

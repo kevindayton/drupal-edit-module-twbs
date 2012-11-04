@@ -29,13 +29,10 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
   stateChange: function () {
     if (this.state.get('isViewing')) {
-      this.model.set('state', this.model.STATE_INACTIVE);
       // @todo: move stopEditable
       this.stopEditable();
       return;
     }
-    this.model.set('state', this.model.STATE_CANDIDATE);
-    // @todo: move startEditable
     this.startEditable();
   },
 
@@ -46,14 +43,16 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
       vie: this.vie,
       disabled: true
     });
+    this.$el.createEditable('setState', 'candidate');
   },
 
   // Left edit state
   stopEditable: function () {
-    if (!this.model.isEditable()) {
+    if (!this.isEditable()) {
       return;
     }
     this.disableEditor();
+    this.$el.createEditable('setState', 'inactive');
   },
 
   enableEditor: function (event) {
@@ -62,12 +61,12 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
       event.preventDefault();
     }
 
-    if (!this.model.isEditable()) {
+    if (!this.isEditable()) {
       // Not in edit state, ignore
       return;
     }
 
-    if (this.model.isEditing()) {
+    if (this.isEditing()) {
       // Already editing, ignore
       return;
     }
@@ -75,7 +74,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
     var that = this;
     var _enableEditor = function() {
-      that.model.set('state', that.model.STATE_ACTIVE);
+      that.$el.createEditable('setState', 'active');
 
       // Ensure others are not editable when we are
       if (that.state.get('editedFieldView')) {
@@ -96,7 +95,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
 
     // Let's make sure we do not lose any changes, if there is a currently
     // active editableField?
-    if (this.state.get('editedFieldView') && this.state.get('editedFieldView').isDirty()) {
+    if (this.state.get('editedFieldView') && this.state.get('editedFieldView').hasModifications()) {
       // (Async) confirmation of possibly losing changes.
       Drupal.edit.confirm(Drupal.t('Currently edited field has changes, do you want to proceed?'), {}, function(confirmed) {
         if (!confirmed) {
@@ -121,7 +120,6 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     // Stop the Create.js editable widget
     this.disableEditableWidget();
     this.disableToolbar();
-
     // @todo: refactor this.
     jQuery('#edit_backstage form').remove();
 
@@ -135,6 +133,7 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
       vie: this.vie,
       disabled: true
     });
+    this.$el.createEditable('setState', 'candidate');
   },
 
   editorEnabled: function () {
@@ -146,8 +145,6 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     this.getToolbarView().show('wysiwyg');
     // Show the ops (save, close) as well.
     this.getToolbarView().show('ops');
-
-    this.$el.trigger('edit-form-loaded.edit');
   },
 
   saveClicked: function (event) {
@@ -182,7 +179,5 @@ Drupal.edit.views.EditableFieldView = Drupal.edit.views.FieldView.extend({
     this.$el.removeClass('edit-validation-error');
     this.$el.removeClass('ui-state-disabled');
     this.$el.removeClass('edit-wysiwyg-attached');
-
-    this.setDirty(false);
   }
 });

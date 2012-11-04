@@ -13,7 +13,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
   view: function(query, page) {
     // Let's make sure we do not lose any changes, if there is a currently
     // active editableField?
-    if (Drupal.edit.state.get('editedFieldView') && Drupal.edit.state.get('editedFieldView').isDirty()) {
+    if (Drupal.edit.state.get('editedFieldView') && Drupal.edit.state.get('editedFieldView').hasModifications()) {
       var that = this;
       Drupal.edit.confirm(Drupal.t('Currently edited field has changes, do you want to proceed?'), {}, function(confirmed) {
         if (!confirmed) {

@@ -22,16 +22,19 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     'mouseenter': 'mouseEnter',
     'mouseleave': 'mouseLeave'
   },
-  // @todo: remove isDirty and setDirty.
-  isDirty: function() {
-    return this.model.hasModifications();
+
+  /* isEditable: currently means: is it "possible" to activate or already active */
+  isEditable: function() {
+    // i.e. anything but inactive.
+    return this.$el.createEditable && this.$el.createEditable('getState') != 'inactive';
   },
-  setDirty: function(value) {
-    if (value) {
-      return this.model.set('state', this.model.STATE_MODIFIED);
-    } else {
-      return this.model.set('state', this.model.STATE_CANDIDATE);
-    }
+  /* isEditing: is active, modified or invalid */
+  isEditing: function() {
+    var editableState = this.$el.createEditable('getState');
+    return (editableState == 'active' || editableState == 'modified' || editableState == 'invalid');
+  },
+  hasModifications: function() {
+    return this.$el.createEditable('getState') == 'modified';
   },
 
   initialize: function (options) {
@@ -39,50 +42,29 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     this.predicate = options.predicate;
     this.vie = options.vie;
 
-    _.bindAll(this, 'stateChange', 'mouseEnter', 'mouseLeave');
-
-    this.state.on('change:isViewing', this.stateChange);
-    this.bindEditableEvents();
     this.decorationView = new Drupal.edit.views.FieldDecorationView({
       model: this.model,
       state: this.state,
       fieldView: this,
       el: this.el
     });
-  },
-  bindEditableEvents: function() {
-    // @note: these are "createeditabledisable" rather than "midgardeditabledisable"
-    // because we are subclassing it in
-    // createjs' editable event mapping
-    var editableEventsMapping = {
-      'createeditabledisable': this.model.STATE_INACTIVE,
-      'createeditableenable': this.model.STATE_CANDIDATE,
-      // @todo highlight event not implemented yet!
-      'createeditablehighlight': this.model.STATE_HIGHLIGHTED,
-      'createeditableactivated': this.model.STATE_ACTIVE,
-      // @note: on leaving the active state, we go back to being a candidate.
-      'createeditabledeactivated': this.model.STATE_CANDIDATE,
-      'createeditablechanged': this.model.STATE_MODIFIED
-      // @todo validation event not implemented yet!
-    };
-    _.each(editableEventsMapping, function(value, key, list) {
-      var that = this;
-      this.$el.bind(key, function(e, data) {
-        that.model.set('state', value);
-      });
-    }, this);
-  },
-  unbindEditableEvents: function() {
-    // @todo - when removing this view unbindEditable Events.
+
+    this.toolbarView = new Drupal.edit.views.ToolbarView({
+      fieldView: this,
+      model: this.model,
+      el: this.el
+    });
+
+    var that = this;
+    this.$el.bind("createeditablestatechange", function(event, data) {
+      // Log all state changes coming from the createEditable.
+      console.log('createeditablestatechange', data.previous, data.current, data.instance.getSubjectUri(), that.predicate);
+    });
   },
 
-  isEditing: function() {
-    // it is "editing", if it is STATE_ACTIVE, STATE_MODIFIED, STATE_INVALID
-    return this.model.get('state') >= this.model.STATE_ACTIVE;
-  },
 
   mouseEnter: function (event) {
-    if (!this.model.isEditable()) {
+    if (!this.isEditable()) {
       return;
     }
     // @todo: this should not be necessary; the overlay should prevent this.
@@ -92,16 +74,16 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     }
     var self = this;
     Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-      if (!self.model.isEditing()) {
+      if (!self.isEditing()) {
         Drupal.edit.log('field:mouseenter', self.model.getVieEntity().id, self.predicate);
-        self.model.set('state', self.model.STATE_HIGHLIGHTED);
+        self.$el.createEditable('setState', 'highlighted');
       }
       event.stopPropagation();
     });
   },
 
   mouseLeave: function (event) {
-    if (!this.model.isEditable()) {
+    if (!this.isEditable()) {
       return;
     }
     if (this.state.get('editedFieldView')) {
@@ -110,47 +92,29 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
     }
     var self = this;
     Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-      if (!self.model.isEditing()) {
+      if (!self.isEditing()) {
         Drupal.edit.log('field:mouseleave', self.model.getVieEntity().id, self.predicate);
-        self.model.set('state', self.model.STATE_CANDIDATE);
+        self.$el.createEditable('setState', 'candidate');
       }
       event.stopPropagation();
     });
   },
 
-  // Below here we still need to refactor, ToolbarView needs to bind to
-  // FieldViewModel.
+  // Below here will all go away.
   // @todo: this should be called by startHighlight(); as soon as a field is
   // highlighted the field's label should appear, which is part of the toolbar.
   enableToolbar: function () {
-    if (!this.toolbarView) {
-      this.toolbarView = new Drupal.edit.views.ToolbarView({
-        fieldView: this,
-        model: this.model
-      });
-    }
     this.toolbarView.createToolbar();
   },
   disableToolbar: function() {
-    if (this.toolbarView) {
-      this.toolbarView.removeToolbar();
-      this.toolbarView.remove();
-      // @todo: make sure everything is unbound.
-      delete this.toolbarView;
-    }
+    this.toolbarView.removeToolbar();
   },
   getToolbarView: function() {
-    if (!this.toolbarView) {
-      this.enableToolbar();
-    }
     return this.toolbarView;
   },
   getToolbarElement: function() {
     return this.getToolbarView().getToolbarElement();
   },
-
-  showLoadingFormIndicator: function() {
-    // Trigger this event to propagate to the appropriate ToolbarView.
-    this.trigger('showLoadingFormIndicator');
-  }
+  // This will be refactored to formwidget.js
+  showLoadingFormIndicator: function() {}
 });

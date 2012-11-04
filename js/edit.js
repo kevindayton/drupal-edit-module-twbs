@@ -64,17 +64,6 @@ Drupal.edit.init = function() {
   // TODO: Check localStorage for unsaved changes
   // $('body').midgardStorage('checkRestore');
 
-  // Initialize WYSIWYG, if any.
-  // @todo: Edit should not be aware of any WYSIWYG stuff; Create.js should
-  // handle all of that. Otherwise it's a leaky abstraction.
-  if (Drupal.settings.edit.wysiwyg) {
-    $(document).bind('edit-wysiwyg-ready.edit', function() {
-      Drupal.edit.state.set('wysiwygReady', true);
-      Drupal.edit.log('edit: WYSIWYG ready');
-    });
-    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].init();
-  }
-
   // Create a backstage area. This is where we store the form when editing a
   // type=direct field, so that it's hidden from view (hence "backstage").
   // @todo: this belongs in formwidget.js; don't Create.js' editWidgets have

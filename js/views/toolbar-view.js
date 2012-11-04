@@ -3,22 +3,35 @@ Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
   fieldView:null,
   // @todo: this should be the toolbar's $el.
-  $toolbar:null,
+  $toolbar: null,
   initialize:function (options) {
     this.fieldView = options.fieldView;
-    _.bindAll(this, 'modelStateChange', 'showLoadingFormIndicator');
-    this.fieldView.on('showLoadingFormIndicator', this.showLoadingFormIndicator);
-    // bind changes to the "editable"
-    this.model.bind('change:state', this.modelStateChange);
-  },
-  // Adjust colour of Save button, when FieldView state is "dirty".
-  modelStateChange: function() {
-    if (this.model.get('state') == this.model.STATE_MODIFIED) {
-      this.getToolbarElement()
-        .find('a.save')
-        .addClass('blue-button')
-        .removeClass('gray-button');
-    }
+    var that = this;
+    // bind to the editable state changes.
+    this.$el.bind('createeditablestatechange', function(event, data) {
+      switch (data.current) {
+        case 'modified':
+          that.getToolbarElement()
+            .find('a.save')
+            .addClass('blue-button')
+            .removeClass('gray-button');
+          break;
+        case 'activating':
+          that.showLoadingFormIndicator();
+          break;
+        case 'active':
+          // @todo: show the appropriate ops-toolbar group (and maybe wysiwyg etc.)
+          // currently we bind to 'edit-form-loaded.edit' below.
+          break;
+      }
+    });
+
+    this.$el.bind('edit-form-loaded.edit', function() {
+      // Indicate in the 'info' toolgroup that the form has loaded.
+      // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
+      that.removeClass('info', 'loading');
+      that.show('ops');
+    });
   },
   // Adjust toolbar as editable is loading form.
   showLoadingFormIndicator: function() {
@@ -34,7 +47,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   getEditable:function () {
-    return this.fieldView.$el;
+    return this.$el;
   },
   getToolbarElement:function () {
     return jQuery('#' + this._id() );

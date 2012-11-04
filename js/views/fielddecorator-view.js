@@ -5,26 +5,22 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   initialize: function(options) {
     this.state = options.state;
     this.fieldView = options.fieldView;
-    _.bindAll(this, 'stateChange', 'modelStateChange');
-    // bind changes to the global state
-    this.state.bind('change:state', this.stateChange);
-    // bind changes to the "editable"
-    this.model.bind('change:state', this.modelStateChange);
-  },
-  // changes to global *StateModel*
-  stateChange: function() {
-    // @todo: if this goes to isViewing move everything to INACTIVE.
+    _.bindAll(this, 'createEditableStateChange');
+    // bind to the editable changes
+    this.$el.bind('createeditablestatechange', this.createEditableStateChange);
   },
   // changes to individual *FieldViewModel*
-  modelStateChange: function() {
+  createEditableStateChange: function(event, data) {
     // console.log(this.model.get('predicate'), 'modelStateChange from ', this.model.previous('state'), ' to ', this.model.get('state') );
     // @todo: take previous value into consideration
-    var previousState = this.model.previous('state');
-    switch (this.model.get('state')) {
-      case this.model.STATE_INACTIVE:
+    var previousState = data.previous;
+    var state = data.current;
+
+    switch (state) {
+      case 'inactive':
         this.undecorate();
         break;
-      case this.model.STATE_CANDIDATE:
+      case 'candidate':
         this.decorate();
         this.stopHighlight();
         if (previousState == this.model.STATE_ACTIVE) {
@@ -37,10 +33,13 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
           .css('background-color', '');
 
         break;
-      case this.model.STATE_HIGHLIGHTED:
+      case 'highlighted':
         this.startHighlight();
         break;
-      case this.model.STATE_ACTIVE:
+      case 'activating':
+        console.log('activating');
+        break;
+      case 'active':
         // make sure we're highlighted, this should not be necessary.
         this.startHighlight();
         this.padEditable();
