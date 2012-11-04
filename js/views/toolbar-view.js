@@ -11,14 +11,14 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.$el.bind('createeditablestatechange', function(event, data) {
       // console.log('ToolbarView.createeditablestatechange %s - from %s to %s', that.model.predicate, data.previous, data.current);
       switch (data.current) {
-        case 'modified':
+        case 'changed':
           that.getToolbarElement()
             .find('a.save')
             .addClass('blue-button')
             .removeClass('gray-button');
           break;
         case 'highlighted':
-          // As soon as we highligh, make sure we have a toolbar in the DOM (with at least a title).
+          // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
           // @todo: clarify what wysiwyg needs/does.
           that.createToolbar();
           break;

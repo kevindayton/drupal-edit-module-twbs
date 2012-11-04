@@ -26,8 +26,8 @@
         widget.options.activated();
         Drupal.edit.log('Drupal.drupalFormWidget.activated');
         Drupal.edit.form.get($editable)
-          .delegate(':input', 'change.edit', function () {
-            widget.options.modified();
+          .delegate(':input', 'formUpdated.edit', function () {
+            widget.options.changed();
           })
           .delegate('input', 'keypress.edit', function (event) {
             if (event.keyCode == 13) {

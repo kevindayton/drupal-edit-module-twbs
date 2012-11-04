@@ -31,10 +31,10 @@ Drupal.edit.views.FieldView = Backbone.View.extend({
   /* isEditing: is active, modified or invalid */
   isEditing: function() {
     var editableState = this.$el.createEditable('getState');
-    return (editableState == 'active' || editableState == 'modified' || editableState == 'invalid');
+    return (editableState == 'active' || editableState == 'changed' || editableState == 'invalid');
   },
   hasModifications: function() {
-    return this.$el.createEditable('getState') == 'modified';
+    return this.$el.createEditable('getState') == 'changed';
   },
 
   initialize: function (options) {
