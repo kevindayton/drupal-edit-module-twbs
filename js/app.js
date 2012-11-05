@@ -32,81 +32,21 @@
       $(Drupal.theme('editBackstage', {})).appendTo(this.$el);
 
       var appView = this;
-      // Instantiate Editables
+
+      // Instantiate Editable widgets.
       this.$editableElements = this.domService.findSubjectElements().each(function() {
         var subject = appView.domService.getElementSubject(this);
         var predicate = appView.domService.getElementPredicate(this);
         var $element = $(this);
         appView.bindEditableStateChanges($element);
 
+        // Create an Editable widget for each predicate (field).
         $element.createEditable({
           vie: appView.vie,
           disabled: true,
-          // decorateEditable
-          decorate: function(data) {
-            /* {
-            editable: this.options.widget,
-            editor: this,
-            predicate: this.options.property,
-            element: this.element
-            entity:
-            } */
-          },
-          // decorateEditor
           decorateEditor: function(data) {
-            data.editor.decorationView = new Drupal.edit.views.FieldDecorationView({
-              state: appView.state,
-              predicate: data.predicate,
-              // TRICKY: the Editable element instead of the editing (editor)
-              // widget element, because events are triggered on the Editable
-              // element, not on the editor element. This is mostly because in
-              // our implementation, editable == field wrapper (formerly $field)
-              // and editor == actual part that's being edited (formerly
-              // $editable). For type=form field wrapper == part that's being
-              // edited, for type=direct, this is different.
-              // @todo: We should pass data.element instead, and pass
-              // data.editable.element separately, just for it to be able to
-              // listen to state changes.
-              el: data.editable.element,
-              entity: data.entity
-            });
-            data.editor.toolbarView = new Drupal.edit.views.ToolbarView({
-              predicate: data.predicate,
-              // TRICKY: idem.
-              el: data.editable.element,
-              entity: data.entity
-            });
+            appView.decorateEditor(data.editable.element, data.element, data.editable, data.editor, data.entity, data.predicate);
           }
-        }).mouseenter(function(event) {
-          // no highlighting if we aren't in candidate state.
-          if ($(this).createEditable('getState') !== 'candidate') {
-            return ;
-          }
-          // no highlighting if we have a currently active editable.
-          if (appView.getActiveEditableElement()) {
-            return ;
-          }
-          var self = this;
-          Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-            $(self).createEditable('setState', 'highlighted', predicate);
-            event.stopPropagation();
-          });
-        }).mouseleave(function(event) {
-          if (appView.getActiveEditableElement()) {
-            return ;
-          }
-          var self = this;
-          Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-            $(self).createEditable('setState', 'candidate', predicate);
-            event.stopPropagation();
-          });
-        });
-        // custom events for initiating saving / cancelling
-        $element.bind('editsave.edit', function(event, data) {
-          appView.handleSave($element, data.entity, data.predicate);
-        });
-        $element.bind('editcancel.edit', function(event, data) {
-          $element.createEditable('setState', 'candidate', predicate);
         });
 
         // Begin as inactive; switch on appView.state.isViewing changes.
@@ -126,6 +66,77 @@
         state: this.state
       });
     },
+
+    /**
+     * Decorates each editor.
+     *
+     * Upon the page load, all appropriate editors are initialized and decorated
+     * (i.e. even before anything of the editing UI becomes visible; even before
+     * edit mode is enabled).
+     */
+    decorateEditor: function($editableElement, $editorElement, editable, editor, entity, predicate) {
+      var appView = this;
+
+      // Set up Backbone Views.
+      editor.decorationView = new Drupal.edit.views.FieldDecorationView({
+        state: appView.state,
+        predicate: predicate,
+        // TRICKY: the Editable element instead of the editing (editor)
+        // widget element, because events are triggered on the Editable
+        // element, not on the editor element. This is mostly because in
+        // our implementation, editable == field wrapper (formerly $field)
+        // and editor == actual part that's being edited (formerly
+        // $editable). For type=form field wrapper == part that's being
+        // edited, for type=direct, this is different.
+        // @todo: We should pass data.element instead, and pass
+        // data.editable.element separately, just for it to be able to
+        // listen to state changes.
+        el: $editableElement,
+        entity: entity
+      });
+      editor.toolbarView = new Drupal.edit.views.ToolbarView({
+        predicate: predicate,
+        // TRICKY: idem.
+        el: $editableElement,
+        entity: entity
+      });
+
+      // Editor-specific event handling.
+      $editorElement
+      // Start hover: transition to 'highlight' state, unless another editor is
+      // active.
+      .mouseenter(function(event) {
+        // no highlighting if we aren't in candidate state.
+        if ($(this).createEditable('getState') !== 'candidate') {
+          return ;
+        }
+        if (appView.getActiveEditableElement()) {
+          return ;
+        }
+        Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+          editable.setState('highlighted', predicate);
+          event.stopPropagation();
+        });
+      })
+      // Stop hover: back to 'candidate' state, unless another editor is active.
+      .mouseleave(function(event) {
+        if (appView.getActiveEditableElement()) {
+          return ;
+        }
+        Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+          editable.setState('candidate', predicate);
+          event.stopPropagation();
+        });
+      })
+      // custom events for initiating saving / cancelling
+      .bind('editsave.edit', function(event, data) {
+        appView.handleSave($element, entity, predicate);
+      })
+      .bind('editcancel.edit', function(event, data) {
+        editable.setState('candidate', predicate);
+      });
+    },
+
     handleSave: function($editable, entity, predicate) {
       // @todo: i know this is *NOT* the editable instead the form container!
       // but i now "hangs" in the EditingWidget (formwidget.js) - and needs to
