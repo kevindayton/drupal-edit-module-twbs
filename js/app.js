@@ -33,10 +33,13 @@
       var appView = this;
       // Instantiate Editables
       this.domService.findSubjectElements().each(function() {
+        var subject = appView.domService.getElementSubject(this);
+        var predicate = appView.domService.getElementPredicate(this);
+
         var $element = $(this);
         $element.bind("createeditablestatechange", function(event, data) {
           // Log all state changes coming from the createEditable.
-          console.log('statechange', data.previous, data.current, data.instance.getSubjectUri(), data.predicate, data.entityElement[0].className.split(' ')[1], data);
+          console.log('statechange', data.previous, data.current, data.instance.getSubjectUri(), data.predicatedata);
           switch (data.current) {
             case 'active':
               // entityElement is the HTML element of the createEditable (?)
@@ -93,7 +96,7 @@
           }
           var self = this;
           Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-            $(self).createEditable('setState', 'highlighted');
+            $(self).createEditable('setState', 'highlighted', predicate);
             event.stopPropagation();
           });
         }).mouseleave(function(event) {
@@ -102,7 +105,7 @@
           }
           var self = this;
           Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-            $(self).createEditable('setState', 'candidate');
+            $(self).createEditable('setState', 'candidate', predicate);
             event.stopPropagation();
           });
         });
@@ -111,10 +114,10 @@
           appView.handleSave($element, data.entity, data.predicate);
         });
         $element.bind('editcancel.edit', function(event, data) {
-          $element.createEditable('setState', 'candidate');
+          $element.createEditable('setState', 'candidate', predicate);
         });
 
-        $element.createEditable('setState', 'candidate');
+        $element.createEditable('setState', 'candidate', predicate);
       });
 
 
@@ -139,7 +142,7 @@
       this.$el.createStorage('saveRemote', entity, {
         // Successfully saved without validation errors.
         success: function (model) {
-          $editable.createEditable('setState', 'candidate');
+          $editable.createEditable('setState', 'candidate', predicate);
 
           // Replace the old content with the new content.
           var updatedField = model.get(predicate + '/rendered');
