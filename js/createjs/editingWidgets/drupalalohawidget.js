@@ -6,7 +6,6 @@
      */
     _init: function() {
       var widget = this;
-      this.options.activating();
       Drupal.aloha.init(function() {
         // Let Create's Aloha widget do the rest.
         jQuery.Create.editWidget.prototype._init.call(widget);
