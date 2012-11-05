@@ -44,6 +44,7 @@
         $element.createEditable({
           vie: appView.vie,
           disabled: true,
+          acceptStateChange: _.bind(appView.acceptStateChange, appView),
           decorateEditor: function(data) {
             appView.decorateEditor(data.editable.element, data.element, data.editable, data.editor, data.entity, data.predicate);
           }
@@ -65,6 +66,45 @@
       var editMenuView = new Drupal.edit.views.MenuView({
         state: this.state
       });
+    },
+
+    /**
+     * Accepts or reject state changes
+     *
+     * This is what ensures that the app is in control of what happens.
+     */
+    acceptStateChange: function(from, to, predicate, callback) {
+      var accept = true;
+      var focusedEditorStates = ['activating', 'active'];
+      var singleEditorStates = _.union(['highlighted'], focusedEditorStates);
+
+      // If the app is in view mode, then reject all state changes except for
+      // those to 'inactive'.
+      if (this.state.get('isViewing')) {
+        if (to !== 'inactive') {
+          accept = false;
+        }
+      }
+      // Handling of edit mode state changes is more granular.
+      else {
+        // Ensure only one editor (field) at a time may be higlighted or active.
+        if (from === 'candidate' && _.indexOf(singleEditorStates, to) !== -1) {
+          if (this.getActiveEditableElement()) {
+            accept = false;
+          }
+        }
+        // Reject going from activating/active to candidate, except when the
+        // the state change was triggered by clicking on the 'cancel' button.
+        // @todo: THIS NEEDS TO DISCERN BETWEEN A MOUSELEAVE AND A 'CANCEL'
+        // BUTTON CLICK! Possibly this will need a new parameter for Create's
+        // setState() and acceptStateChange().
+        else if (_.indexOf(focusedEditorStates, from) !== -1 && to === 'candidate') {
+          accept = false;
+        }
+      }
+
+      Drupal.edit.log(accept ? 'accepting' : 'rejecting', from, to, predicate);
+      callback(accept);
     },
 
     /**
@@ -103,26 +143,15 @@
 
       // Editor-specific event handling.
       $editorElement
-      // Start hover: transition to 'highlight' state, unless another editor is
-      // active.
+      // Start hover: transition to 'highlight' state.
       .mouseenter(function(event) {
-        // no highlighting if we aren't in candidate state.
-        if ($(this).createEditable('getState') !== 'candidate') {
-          return ;
-        }
-        if (appView.getActiveEditableElement()) {
-          return ;
-        }
         Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
           editable.setState('highlighted', predicate);
           event.stopPropagation();
         });
       })
-      // Stop hover: back to 'candidate' state, unless another editor is active.
+      // Stop hover: back to 'candidate' state.
       .mouseleave(function(event) {
-        if (appView.getActiveEditableElement()) {
-          return ;
-        }
         Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
           editable.setState('candidate', predicate);
           event.stopPropagation();
