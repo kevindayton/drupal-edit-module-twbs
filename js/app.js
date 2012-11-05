@@ -7,6 +7,7 @@
     domService: null,
     state: null,
     activeEditable: null,
+    $editableElements: [],
     getActiveEditableElement: function() {
       return this.activeEditable;
     },
@@ -32,24 +33,11 @@
 
       var appView = this;
       // Instantiate Editables
-      this.domService.findSubjectElements().each(function() {
+      this.$editableElements = this.domService.findSubjectElements().each(function() {
         var subject = appView.domService.getElementSubject(this);
         var predicate = appView.domService.getElementPredicate(this);
-
         var $element = $(this);
-        $element.bind("createeditablestatechange", function(event, data) {
-          // Log all state changes coming from the createEditable.
-          console.log('statechange', data.previous, data.current, data.instance.getSubjectUri(), data.predicatedata);
-          switch (data.current) {
-            case 'active':
-              // entityElement is the HTML element of the createEditable (?)
-              appView.activeEditable = data.entityElement;
-              break;
-          }
-          if (data.previous=='active' && this.activeEditable == data.entityElement) {
-            appView.activeEditable = null;
-          }
-        });
+        appView.bindEditableStateChanges($element);
 
         $element.createEditable({
           vie: appView.vie,
@@ -90,6 +78,10 @@
             });
           }
         }).mouseenter(function(event) {
+          // no highlighting if we aren't in candidate state.
+          if ($(this).createEditable('getState') !== 'candidate') {
+            return ;
+          }
           // no highlighting if we have a currently active editable.
           if (appView.getActiveEditableElement()) {
             return ;
@@ -117,14 +109,17 @@
           $element.createEditable('setState', 'candidate', predicate);
         });
 
-        $element.createEditable('setState', 'candidate', predicate);
+        // Begin as inactive; switch on appView.state.isViewing changes.
+        $element.createEditable('setState', 'inactive', predicate);
       });
 
+      // Setup handling of "app" state changes (is viewing/quick edit).
+      this.bindAppStateChanges();
 
       // Instantiate OverlayView
-      /* var overlayView = new Drupal.edit.views.OverlayView({
+      var overlayView = new Drupal.edit.views.OverlayView({
         state: this.state
-      }); */
+      });
 
       // Instantiate MenuView
       var editMenuView = new Drupal.edit.views.MenuView({
@@ -136,6 +131,11 @@
       // but i now "hangs" in the EditingWidget (formwidget.js) - and needs to
       // be made accessible somehow.
       var $formContainer = Drupal.edit.form.get($editable);
+      var editableWidgetInstance = $editable.data('createEditable');
+      // @todo: this is a quick hack - i still need to *pick* by predicate (i.e. options.property == predicate).
+      var $editingWidgetElement = editableWidgetInstance.options.editables[0];
+      // We need to pass on the widgetType to the Backbone.sync.
+      var editingWidgetType = $editingWidgetElement.data('createWidgetName');
 
       var that = this;
       // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
@@ -167,11 +167,57 @@
         },
         $formContainer: $formContainer,
         predicate: predicate,
-        widgetType: 'drupalFormWidget'
+        widgetType: editingWidgetType
       });
     },
     _triggerCancel: function($editable) {
+    },
+    bindEditableStateChanges: function($element) {
+      var appView = this;
+      $element.bind("createeditablestatechange", function(event, data) {
+        // jqueryui-widget, oh my.
+        var editableWidgetInstance = $element.data('createEditable');
+        // Log all state changes coming from the createEditable.
+        switch (data.current) {
+          case 'active':
+            // entityElement is the HTML element of the createEditable (?)
+            appView.activeEditable = data.entityElement;
+            break;
+        }
+        if (data.previous=='active' && this.activeEditable == data.entityElement) {
+          appView.activeEditable = null;
+        }
 
+        // push the statechanges to the editingWidgets - which confusingly are called editables
+        _.each(editableWidgetInstance.options.editables, function($editingWidgetElement, key) {
+          // meh for DOM.
+          var widgetType = $editingWidgetElement.data('createWidgetName');
+          var editingWidgetInstance = $editingWidgetElement.data(widgetType);
+          if (widgetType == 'drupalFormWidget') {
+            // so predicate is called property on the widget?!
+            console.log('State changes on drupalFormWidget (%o) %s - from %s to %s', editingWidgetInstance.options, editingWidgetInstance.property, data.previous, data.current);
+            switch (data.current) {
+             case 'active':
+                break;
+            }
+          }
+        });
+      });
+    },
+    bindAppStateChanges: function() {
+      var that = this;
+      this.state.on('change:isViewing', function() {
+        that.$editableElements.each(function() {
+          var $element = $(this);
+          if (that.state.get('isViewing')) {
+            that.$editableElements.each(function() {
+              $(this).createEditable('setState', 'inactive');
+            })
+          } else {
+            $(this).createEditable('setState', 'candidate');
+          }
+        });
+      });
     }
   });
 })(jQuery);
