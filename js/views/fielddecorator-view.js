@@ -2,14 +2,18 @@ Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 
 Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
+
+  $editableElementForStateChanges: null,
+
   initialize: function(options) {
     this.state = options.state;
     this.predicate = options.predicate;
     this.entity = options.entity;
+    this.$editableElementForStateChanges = options.$editableElementForStateChanges;
     _.bindAll(this, 'createEditableStateChange');
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
     // bind to the editable changes
-    this.$el.bind('createeditablestatechange', this.createEditableStateChange);
+    this.$editableElementForStateChanges.bind('createeditablestatechange', this.createEditableStateChange);
   },
   // changes to individual *FieldViewModel*
   createEditableStateChange: function(event, data) {

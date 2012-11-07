@@ -88,6 +88,9 @@ Drupal.theme.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
+    if (!button.hasOwnProperty('url')) {
+      button.url = '';
+    }
     if (!button.hasOwnProperty('hasButtonRole')) {
       button.hasButtonRole = true;
     }

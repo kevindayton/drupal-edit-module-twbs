@@ -12,18 +12,9 @@
 
     // State.
     state: null,
+    highlightedEditor: null,
     activeEditor: null,
     $entityElements: [],
-
-    /**
-     * Returns the active property editor.
-     *
-     * @return object|null
-     *   The active property editor, or null if none is active.
-     */
-    getActiveEditor: function() {
-      return this.activeEditor;
-    },
 
     initialize: function() {
       // VIE instance for Editing
@@ -105,7 +96,7 @@
       else {
         // Ensure only one editor (field) at a time may be higlighted or active.
         if (from === 'candidate' && _.indexOf(this.singleEditorStates, to) !== -1) {
-          if (this.getActiveEditor()) {
+          if (this.highlightedEditor || this.activeEditor) {
             accept = false;
           }
         }
@@ -133,6 +124,14 @@
       }
 
       var editor = data.propertyEditor;
+
+      // Keep track of the highlighted editor in the global state.
+      if (_.indexOf(this.singleEditorStates, to) !== -1 && this.highlightedEditor != editor) {
+        this.highlightedEditor = editor;
+      }
+      else if (_.indexOf(this.singleEditorStates, from) !== -1 && to === 'candidate') {
+        this.highlightedEditor = null;
+      }
 
       // Keep track of the active editor in the global state.
       if (_.indexOf(this.activeEditorStates, to) !== -1 && this.activeEditor != editor) {
@@ -163,6 +162,7 @@
 
       // Set up Backbone Views.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
+        el: $editorElement,
         state: appView.state,
         predicate: predicate,
         // TRICKY: the Editable element instead of the editing (editor)
@@ -175,28 +175,30 @@
         // @todo: We should pass data.element instead, and pass
         // data.editable.element separately, just for it to be able to
         // listen to state changes.
-        el: $editableElement,
+        $editableElementForStateChanges: $editableElement,
         entity: entity
       });
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
+        el: $editorElement,
+        entity: entity,
         predicate: predicate,
-        // TRICKY: idem.
-        el: $editableElement,
-        entity: entity
+        // @todo: get rid of this.
+        $editableElementForStateChanges: $editableElement
       });
 
       // Editor-specific event handling.
       $editorElement
       // Start hover: transition to 'highlight' state.
-      .mouseenter(function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+      .bind('mouseenter.edit', function(event) {
+        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.id(), function () {
           editable.setState('highlighted', predicate);
           event.stopPropagation();
         });
       })
       // Stop hover: back to 'candidate' state.
-      .mouseleave(function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
+      .bind('mouseleave.edit', function(event) {
+        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.id(), function () {
+          console.log('editor mouseleave on…', $editorElement);
           editable.setState('candidate', predicate, { reason: 'mouseleave' });
           event.stopPropagation();
         });

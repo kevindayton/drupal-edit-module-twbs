@@ -1,231 +1,140 @@
+/**
+ * @file toolbar-view.js
+ *
+ * A Backbone View that provides an interactive toolbar (1 per property editor).
+ * It listens to state changes of the property editor.
+ */
+
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
-  fieldView:null,
-  // @todo: this should be the toolbar's $el.
+
+  entity: null,
+  predicate : null,
+  $editableElementForStateChanges: null,
+
+  /**
+   * The toolbar container, when it exists.
+   */
   $toolbar: null,
+
   initialize:function (options) {
-    this.state = options.state;
     this.predicate = options.predicate;
     this.entity = options.entity;
+    this.$editableElementForStateChanges = options.$editableElementForStateChanges;
 
     var that = this;
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
     // bind to the editable state changes.
-    this.$el.bind('createeditablestatechange', function(event, data) {
-      console.log('ToolbarView.createeditablestatechange %s - from %s to %s', this.predicate, data.previous, data.current);
-      switch (data.current) {
-        case 'changed':
-          that.getToolbarElement()
-            .find('a.save')
-            .addClass('blue-button')
-            .removeClass('gray-button');
-          break;
-        case 'candidate':
-          // hide info
-          that.removeToolbar();
-          break;
-        case 'highlighted':
-          // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
-          // @todo: clarify what wysiwyg needs/does.
-          that.createToolbar();
-          // Animations.
-          setTimeout(function () {
-            that.$el.addClass('edit-highlighted');
-            that.show('info');
-          }, 0);
-          break;
-        case 'activating':
-          that.showLoadingFormIndicator();
-          break;
-        case 'active':
-          that.removeClass('info', 'loading');
-          that.show('ops');
-          // @todo: check that we actually are a toolbar for wysiwyg, maybe extend this accordingly.
-          that.show('wysiwyg-tabs');
-          that.show('wysiwyg');
-          break;
-      }
-    });
-
-    this.$el.bind('edit-form-loaded.edit', function() {
-      // Indicate in the 'info' toolgroup that the form has loaded.
-      // Drupal.edit.toolbar.removeClass($editable, 'primary', 'info', 'loading');
-      that.removeClass('info', 'loading');
-      that.show('ops');
+    this.$editableElementForStateChanges.bind('createeditablestatechange', function(event, data) {
+      that.stateChange(data.previous, data.current);
     });
   },
-  // Adjust toolbar as editable is loading form.
-  showLoadingFormIndicator: function() {
-    // var that = this;
-    // Indicate in the 'info' toolgroup that the form is loading. Animated.
-    /* setTimeout(function() {
-      that.addClass('info', 'loading');
-    }, 0); */
-    // @todo: why do we do this twice?
-    // Indicate in the 'info' toolgroup that the form is loading.
-    // Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
-    this.addClass('info', 'loading');
-  },
 
-  getEditable:function () {
-    return this.$el;
-  },
-  getToolbarElement:function () {
-    return jQuery('#' + this._id() );
-  },
-  // This function contains the former:
-  //   - Drupal.edit.toolbar.create()
-  //   - Drupal.edit.toolbar.startHighlight()
-  //   - Drupal.edit.toolbar.startEdit()
-  //   - _updateDirectEditable()
-  createToolbar:function () {
-    // @START Drupal.edit.toolbar.create()
-    if (this.getToolbarElement().length) {
-      return true;
-    }
-    var $editable = this.getEditable();
-    // Render toolbar.
-    var $toolbar = jQuery(Drupal.theme('editToolbarContainer', {
-      id:this._id()
-    }));
-    // Insert in DOM.
-    if ($editable.css('display') == 'inline') {
-      $toolbar.prependTo($editable.offsetParent());
-      var pos = $editable.position();
-      $toolbar.css('left', pos.left).css('top', pos.top);
-    }
-    else {
-      $toolbar.insertBefore($editable);
-    }
-
-    // Animate the toolbar into visibility.
-    setTimeout(function () {
-      $toolbar.removeClass('edit-animate-invisible');
-    }, 0);
-
-    // Remove any and all existing toolbars, except for any that are for a
-    // currently being edited field.
-    jQuery('.edit-toolbar-container:not(:has(.edit-editing))')
-      .trigger('edit-toolbar-remove.edit');
-
-    // Event bindings.
-    $toolbar
-      .bind('mouseenter.edit', function (e) {
-        // Prevent triggering the entity's mouse enter event.
-        e.stopPropagation();
-      })
-      .bind('mouseleave.edit', function (e) {
-        var el = $editable[0];
-        if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
-          Drupal.edit.log('triggering mouseleave on ', $editable);
-          $editable.trigger('mouseleave.edit');
+  stateChange: function(from, to) {
+    // @todo: get rid of this; rely on editor info instead.
+    var type = this.$editableElementForStateChanges.hasClass('edit-type-form') ? 'form' : (this.$editableElementForStateChanges.hasClass('edit-type-direct-with-wysiwyg') ? 'direct-with-wysiwyg' : 'direct');
+    switch (to) {
+      case 'candidate':
+        if (from !== 'inactive') {
+          this.remove();
         }
-        // Prevent triggering the entity's mouse leave event.
-        e.stopPropagation();
-      })
-      // Immediate removal whenever requested.
-      // (This is necessary when showing many toolbars in rapid succession: we
-      // don't want all of them to show up!)
-      .bind('edit-toolbar-remove.edit', function (e) {
-        $toolbar.remove();
-      })
-      .delegate('.edit-toolbar, .edit-toolgroup', 'click.edit mousedown.edit', function (e) {
-        if (!jQuery(e.target).is(':input')) {
-          return false;
+        break;
+      case 'highlighted':
+        // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
+        this.insert();
+        this.startHighlight();
+        break;
+      case 'activating':
+        if (type === 'form') {
+          // Indicate in the 'info' toolgroup that the form is loading. Animated.
+          this.addClass('info', 'loading');
         }
-      });
-    // @END Drupal.edit.toolbar.create()
+        break;
+      case 'active':
+        this.startEdit();
+        if (type === 'direct-with-wysiwyg') {
+          this.insertWYSIWYGToolGroups();
+        }
+        break;
+      case 'changed':
+        this.$toolbar
+          .find('a.save')
+          .addClass('blue-button')
+          .removeClass('gray-button');
+        break;
+    }
+  },
 
-
-
-
-    // We get the label to show from VIE's type system
+  startHighlight: function() {
+    // We get the label to show for this property from VIE's type system.
     var label = this.predicate;
     var attributeDef = this.entity.get('@type').attributes.get(this.predicate);
     if (attributeDef && attributeDef.metadata) {
       label = attributeDef.metadata.label;
     }
-    var self = this;
 
-
-
-    // @START Drupal.edit.editables.startHighlight(), minus label handling,
-    // which is now handled by VIE in the above code block AND minus
-    // the adding of the edit-highlighted class (which is animated).
-    $toolbar.find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
+    this.$toolbar
+      .find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
+      // Append the "info" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
-      classes:'info',
-      buttons:[
-        {
-          url:'#',
-          label:label,
-          classes:'blank-button label',
-          hasButtonRole:false
-        }
-      ]
-    }))
+        classes: 'info',
+        buttons: [
+          { label: label, classes: 'blank-button label', hasButtonRole: false }
+        ]
+      }))
+      // When the user clicks the info label, nothing should happen.
       .delegate('a.label', 'click.edit', function (event) {
-        self.$el.trigger('click.edit');
+        that.$el.trigger('click.edit');
         event.stopPropagation();
         event.preventDefault();
       });
-    // @END Drupal.edit.editables.startHighlight()
 
+    // Animations.
+    var that = this;
+    setTimeout(function () {
+      that.$el.addClass('edit-highlighted');
+      that.show('info');
+    }, 0);
+  },
 
-
-
-    // @START Drupal.edit.editables.startEdit(), minus the event handling for
-    // content-changed.edit, AND minus the background-color handling, AND
-    // minus the "prevent multiple simultaneous editables" handling (though
-    // Create.js might be doing this for us) AND minus the _updateFormEditable
-    // vs. _updateDirectEditable calling, it just includes a subset of the
-    // latter directly.
-    $toolbar
+  startEdit: function() {
+    var that = this;
+    this.$toolbar
       .addClass('edit-editing')
       .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
+      // Append the "ops" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
-      classes:'ops',
-      buttons:[
-        {
-          url:'#',
-          label:Drupal.t('Save'),
-          classes:'field-save save gray-button'
-        },
-        {
-          url:'#',
-          label:'<span class="close"></span>',
-          classes:'field-close close gray-button'
-        }
-      ]
-    }))
+        classes: 'ops',
+        buttons: [
+          { label: Drupal.t('Save'), classes: 'field-save save gray-button' },
+          { label: '<span class="close"></span>', classes: 'field-close close gray-button' }
+        ]
+      }))
+      // Upon clicking "Save", trigger a custom event to save this property.
       .delegate('a.field-save', 'click.edit', function (event) {
+        event.stopPropagation();
         event.preventDefault();
-        // custom event requesting *saving*
-        self.$el.trigger('editsave.edit', {
-          originalEvent: event,
-          // we need a better name, i think this is was createjs uses ...
-          entityElement: self.$el,
-          entity: self.entity,
-          predicate: self.predicate
-        });
+        that.$el.trigger('editsave.edit', { originalEvent: event });
       })
+      // Upon clicking "Cancel", trigger a custom event to cancel editing.
       .delegate('a.field-close', 'click.edit', function (event) {
+        event.stopPropagation();
         event.preventDefault();
-        // custom event requesting *cancelling*
-        self.$el.trigger('editcancel.edit', {
-          originalEvent: event
-        });
+        that.$el.trigger('editcancel.edit', { originalEvent: event });
       });
-    // @END Drupal.edit.editables.startEdit()
 
+      // Indicate in the 'info' toolgroup that the form has loaded, but only
+      // do it after half a second to prevent it from flashing, which is bad
+      // UX.
+      setTimeout(function() {
+        that.removeClass('info', 'loading');
+      }, 500);
+      this.show('ops');
+  },
 
-
-    // @START Drupal.edit.editables._updateDirectEditable(), minus padding AND
-    // minus transformation filter handling AND minus _wysiwify() call AND
-    // minus changed content handling
-    if ($editable.hasClass('edit-type-direct-with-wysiwyg')) {
-      $toolbar
+  insertWYSIWYGToolGroups: function() {
+    this.$toolbar
       .find('.edit-toolbar:not(:has(.edit-toolbar-wysiwyg-tabs))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg-tabs',
@@ -237,22 +146,65 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         classes: 'wysiwyg',
         buttons: []
       }));
-      // @END Drupal.edit.editables._updateDirectEditable()
 
 
-
-
-      // @todo: No WYSIWYG is attached yet, then this class should not be added!
-      this.$el.addClass('edit-wysiwyg-attached');
-    }
-    return true;
+    // Animate the toolgroups into visibility.
+    setTimeout(function () {
+      that.show('wysiwyg-tabs');
+      that.show('wysiwyg');
+    }, 0);
   },
-  // @todo: proper Backbone.remove() and unbind all events above!
-  // @todo: near-identical to Drupal.edit.toolbar.remove()
-  removeToolbar:function () {
-    var $toolbar  = this.getToolbarElement();
+
+  /**
+   * Inserts the Toolbar's mark-up into the DOM.
+   *
+   * Note: depending on whether the 'display' property of the $el for which a
+   * toolbar is being inserted into the DOM, it will be inserted differently.
+   */
+  insert: function () {
+    var that = this;
+
+    // Render toolbar.
+    this.$toolbar = jQuery(Drupal.theme('editToolbarContainer', {
+      id: this.id()
+    }));
+
+    // Insert in DOM.
+    if (this.$el.css('display') == 'inline') {
+      this.$toolbar.prependTo(this.$el.offsetParent());
+      var pos = this.$el.position();
+      this.$toolbar.css('left', pos.left).css('top', pos.top);
+    }
+    else {
+      this.$toolbar.insertBefore(this.$el);
+    }
+
+    // Animate the toolbar into visibility.
+    setTimeout(function () {
+      that.$toolbar.removeClass('edit-animate-invisible');
+    }, 0);
+
+    this.$toolbar
+      // A mouseleave to the editor doesn't matter; a mouseleave to something
+      // else counts as a mouseleave on the editor itself.
+      .bind('mouseleave.edit', function (e) {
+        var el = that.$el[0];
+        if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
+          that.$el.trigger('mouseleave.edit');
+        }
+        e.stopPropagation();
+      });
+  },
+
+  remove: function () {
+    if (!this.$toolbar) {
+      return;
+    }
+
     // Remove after animation.
-    $toolbar
+    var that = this;
+    var $toolbar = this.$toolbar;
+    this.$toolbar
       .addClass('edit-animate-invisible')
       // Prevent this toolbar from being detected *while* it is being removed.
       .removeAttr('id')
@@ -261,25 +213,61 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .bind(Drupal.edit.constants.transitionEnd, function (e) {
         $toolbar.remove();
       });
+    // Immediately set to null, so that if the user hovers over the property
+    // before the removal been completed, a new toolbar can be created.
+    this.$toolbar = null;
   },
-  // Animate into view.
-  show:function (toolgroup) {
+
+  /**
+   * Calculates the ID for this toolbar container.
+   *
+   * Only used to make sane hovering behavior possible.
+   *
+   * @return string
+   *   A string that can be used as the ID for this toolbar container.
+   */
+  id: function() {
+    var propertyID = this.entity.getSubjectUri() + '-' + this.predicate;
+    return 'edit-toolbar-for-' + propertyID.replace(/\//g, '-');
+  },
+
+  /**
+   * Shows a toolgroup.
+   *
+   * @param string toolgroup
+   *   A toolgroup name.
+   */
+  show: function (toolgroup) {
     this._find(toolgroup).removeClass('edit-animate-invisible');
   },
-  hide:function (toolgroup) {
-    this._find(toolgroup).addClass('edit-animate-invisible');
-  },
-  addClass:function (toolgroup, classes) {
+
+  /**
+   * Adds classes to a toolgroup.
+   *
+   * @param string toolgroup
+   *   A toolgroup name.
+   */
+  addClass: function (toolgroup, classes) {
     this._find(toolgroup).addClass(classes);
   },
-  removeClass:function (toolgroup, classes) {
+
+  /**
+   * Removes classes from a toolgroup.
+   *
+   * @param string toolgroup
+   *   A toolgroup name.
+   */
+  removeClass: function (toolgroup, classes) {
     this._find(toolgroup).removeClass(classes);
   },
-  _find:function (toolgroup) {
-    return this.getToolbarElement().find('.edit-toolbar .edit-toolgroup.' + toolgroup);
-  },
-  _id:function () {
-    var edit_id = Drupal.edit.util.getID(this.getEditable());
-    return 'edit-toolbar-for-' + edit_id.split(':').join('_');
+
+  /**
+   * Finds a toolgroup.
+   *
+   * @param string toolgroup
+   *   A toolgroup name.
+   */
+  _find: function (toolgroup) {
+    return this.$toolbar.find('.edit-toolbar .edit-toolgroup.' + toolgroup);
   }
 });
