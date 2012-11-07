@@ -93,7 +93,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     // Animations.
     var that = this;
     setTimeout(function () {
-      that.$el.addClass('edit-highlighted');
       that.show('info');
     }, 0);
   },
@@ -147,8 +146,8 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         buttons: []
       }));
 
-
     // Animate the toolgroups into visibility.
+    var that = this;
     setTimeout(function () {
       that.show('wysiwyg-tabs');
       that.show('wysiwyg');
