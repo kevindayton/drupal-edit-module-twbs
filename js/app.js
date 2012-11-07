@@ -5,18 +5,36 @@
   Drupal.edit.EditAppView = Backbone.View.extend({
     vie: null,
     domService: null,
+
+    // Configuration.
+    activeEditorStates: [],
+    singleEditorStates: [],
+
+    // State.
     state: null,
-    activeEditable: null,
-    $editableElements: [],
-    getActiveEditableElement: function() {
-      return this.activeEditable;
+    activeEditor: null,
+    $entityElements: [],
+
+    /**
+     * Returns the active property editor.
+     *
+     * @return object|null
+     *   The active property editor, or null if none is active.
+     */
+    getActiveEditor: function() {
+      return this.activeEditor;
     },
+
     initialize: function() {
       // VIE instance for Editing
       this.vie = new VIE();
       // Use our custom DOM parsing service until RDFa is available
       this.vie.use(new this.vie.SparkEditService());
       this.domService = this.vie.service('edit');
+
+      // Instantiate configuration.
+      this.activeEditorStates = ['activating', 'active'];
+      this.singleEditorStates = _.union(['highlighted'], this.activeEditorStates);
 
       // Instantiate StateModel
       this.state = new Drupal.edit.models.StateModel();
@@ -33,25 +51,25 @@
 
       var appView = this;
 
-      // Instantiate Editable widgets.
-      this.$editableElements = this.domService.findSubjectElements().each(function() {
+      // Instantiate EditableEntity widgets.
+      this.$entityElements = this.domService.findSubjectElements().each(function() {
         var subject = appView.domService.getElementSubject(this);
         var predicate = appView.domService.getElementPredicate(this);
-        var $element = $(this);
-        appView.bindEditableStateChanges($element);
+        var $entityElement = $(this);
 
         // Create an Editable widget for each predicate (field).
-        $element.createEditable({
+        $entityElement.createEditable({
           vie: appView.vie,
           disabled: true,
+          state: 'inactive',
           acceptStateChange: _.bind(appView.acceptStateChange, appView),
-          decorateEditor: function(data) {
-            appView.decorateEditor(data.editable.element, data.element, data.editable, data.editor, data.entity, data.predicate);
+          statechange: function(event, data) {
+            appView.stateChange(data.previous, data.current, data.predicate, data.context, data);
+          },
+          decoratePropertyEditor: function(data) {
+            appView.decorateEditor(data.entityElement, data.propertyElement, data.editableEntity, data.propertyEditor, data.entity, data.predicate);
           }
         });
-
-        // Begin as inactive; switch on appView.state.isViewing changes.
-        $element.createEditable('setState', 'inactive', predicate);
       });
 
       // Setup handling of "app" state changes (is viewing/quick edit).
@@ -69,14 +87,12 @@
     },
 
     /**
-     * Accepts or reject state changes
+     * Accepts or reject state changes.
      *
      * This is what ensures that the app is in control of what happens.
      */
-    acceptStateChange: function(from, to, predicate, callback) {
+    acceptStateChange: function(from, to, predicate, context, callback) {
       var accept = true;
-      var focusedEditorStates = ['activating', 'active'];
-      var singleEditorStates = _.union(['highlighted'], focusedEditorStates);
 
       // If the app is in view mode, then reject all state changes except for
       // those to 'inactive'.
@@ -88,23 +104,51 @@
       // Handling of edit mode state changes is more granular.
       else {
         // Ensure only one editor (field) at a time may be higlighted or active.
-        if (from === 'candidate' && _.indexOf(singleEditorStates, to) !== -1) {
-          if (this.getActiveEditableElement()) {
+        if (from === 'candidate' && _.indexOf(this.singleEditorStates, to) !== -1) {
+          if (this.getActiveEditor()) {
             accept = false;
           }
         }
-        // Reject going from activating/active to candidate, except when the
-        // the state change was triggered by clicking on the 'cancel' button.
-        // @todo: THIS NEEDS TO DISCERN BETWEEN A MOUSELEAVE AND A 'CANCEL'
-        // BUTTON CLICK! Possibly this will need a new parameter for Create's
-        // setState() and acceptStateChange().
-        else if (_.indexOf(focusedEditorStates, from) !== -1 && to === 'candidate') {
-          accept = false;
+        // Reject going from activating/active to candidate because of a
+        // mouseleave.
+        else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
+          if (context && context.reason === 'mouseleave') {
+            accept = false;
+          }
         }
       }
 
-      Drupal.edit.log(accept ? 'accepting' : 'rejecting', from, to, predicate);
+      Drupal.edit.log("accept state:", accept ? 'A' : 'R', from, to, predicate, (context) ? context.reason : undefined);
       callback(accept);
+    },
+
+    /**
+     * Track global state and pass on the events to the editor widgets.
+     */
+    stateChange: function(from, to, predicate, context, data) {
+      // Only in the initialization phase the predicate is not yet available; we
+      // don't care about those state changes.
+      if (!predicate) {
+        return;
+      }
+
+      var editor = data.propertyEditor;
+
+      // Keep track of the active editor in the global state.
+      if (_.indexOf(this.activeEditorStates, to) !== -1 && this.activeEditor != editor) {
+        this.activeEditor = editor;
+      }
+      else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
+        this.activeEditor = null;
+      }
+
+      // @todo Propagate the state change to the predicate editors.
+      // @todo Ensure Create.js sets the widgetType as a property on
+      // propertyEditor, so we can get rid of this filth.
+      // var editorWidgetType = editor.element.data('createWidgetName');
+      // Drupal.edit.log('editor state:', from, to, predicate, editorWidgetType, editor);
+      // editor.decorationView.createEditableStateChange({}, data);
+      // editor.toolbarView.createEditableStateChange({}, data);
     },
 
     /**
@@ -153,16 +197,16 @@
       // Stop hover: back to 'candidate' state.
       .mouseleave(function(event) {
         Drupal.edit.util.ignoreHoveringVia(event, '.edit-toolbar-container', function () {
-          editable.setState('candidate', predicate);
+          editable.setState('candidate', predicate, { reason: 'mouseleave' });
           event.stopPropagation();
         });
       })
       // custom events for initiating saving / cancelling
       .bind('editsave.edit', function(event, data) {
-        appView.handleSave($element, entity, predicate);
+        appView.handleSave($editorElement, entity, predicate);
       })
       .bind('editcancel.edit', function(event, data) {
-        editable.setState('candidate', predicate);
+        editable.setState('candidate', predicate, { reason: 'cancel' });
       });
     },
 
@@ -212,50 +256,14 @@
     },
     _triggerCancel: function($editable) {
     },
-    bindEditableStateChanges: function($element) {
-      var appView = this;
-      $element.bind("createeditablestatechange", function(event, data) {
-        // jqueryui-widget, oh my.
-        var editableWidgetInstance = $element.data('createEditable');
-        // Log all state changes coming from the createEditable.
-        switch (data.current) {
-          case 'active':
-            // entityElement is the HTML element of the createEditable (?)
-            appView.activeEditable = data.entityElement;
-            break;
-        }
-        if (data.previous=='active' && this.activeEditable == data.entityElement) {
-          appView.activeEditable = null;
-        }
-
-        // push the statechanges to the editingWidgets - which confusingly are called editables
-        _.each(editableWidgetInstance.options.editables, function($editingWidgetElement, key) {
-          // meh for DOM.
-          var widgetType = $editingWidgetElement.data('createWidgetName');
-          var editingWidgetInstance = $editingWidgetElement.data(widgetType);
-          if (widgetType == 'drupalFormWidget') {
-            // so predicate is called property on the widget?!
-            console.log('State changes on drupalFormWidget (%o) %s - from %s to %s', editingWidgetInstance.options, editingWidgetInstance.property, data.previous, data.current);
-            switch (data.current) {
-             case 'active':
-                break;
-            }
-          }
-        });
-      });
-    },
     bindAppStateChanges: function() {
       var that = this;
       this.state.on('change:isViewing', function() {
-        that.$editableElements.each(function() {
-          var $element = $(this);
-          if (that.state.get('isViewing')) {
-            that.$editableElements.each(function() {
-              $(this).createEditable('setState', 'inactive');
-            })
-          } else {
-            $(this).createEditable('setState', 'candidate');
-          }
+        var newEditableEntityState = (that.state.get('isViewing'))
+          ? 'inactive'
+          : 'candidate';
+        that.$entityElements.each(function() {
+          $(this).createEditable('setState', newEditableEntityState);
         });
       });
     }

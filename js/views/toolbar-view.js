@@ -10,6 +10,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.entity = options.entity;
 
     var that = this;
+    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
     // bind to the editable state changes.
     this.$el.bind('createeditablestatechange', function(event, data) {
       console.log('ToolbarView.createeditablestatechange %s - from %s to %s', this.predicate, data.previous, data.current);

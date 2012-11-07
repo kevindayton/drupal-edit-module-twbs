@@ -7,6 +7,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.predicate = options.predicate;
     this.entity = options.entity;
     _.bindAll(this, 'createEditableStateChange');
+    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
     // bind to the editable changes
     this.$el.bind('createeditablestatechange', this.createEditableStateChange);
   },

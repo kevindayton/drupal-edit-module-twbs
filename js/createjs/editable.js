@@ -29,7 +29,7 @@
       jQuery.Midgard.midgardEditable.prototype._create.call(this);
     },
 
-    _editorName: function (data) {
+    _propertyEditorName: function (data) {
       if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct')) {
         if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
           return 'directWysiwyg';
