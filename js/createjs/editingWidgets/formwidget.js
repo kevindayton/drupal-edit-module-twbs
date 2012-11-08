@@ -121,7 +121,7 @@
         Drupal.edit.form.get($editable)
         .find('.edit-form')
         .addClass('edit-editable edit-highlighted edit-editing')
-        .css('background-color', $editable.data('edit-background-color'));
+        .css('background-color', $editable.css('background-color'));
       });
     },
 
