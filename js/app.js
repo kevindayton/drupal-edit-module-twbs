@@ -74,13 +74,17 @@
       this.bindAppStateChanges();
 
       // Instantiate OverlayView
+      // @todo: overlayView can trigger an "escapeEditor" event on EditAppView.
+      // EditAppView decides if it is ok to return to "View" and sets state.
       var overlayView = new Drupal.edit.views.OverlayView({
-        state: this.state
+        appView: this,
+        model: this.state
       });
 
       // Instantiate MenuView
       var editMenuView = new Drupal.edit.views.MenuView({
-        state: this.state
+        el: this.el,
+        model: this.state
       });
     },
 

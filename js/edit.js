@@ -24,7 +24,7 @@ Drupal.edit.constants = {};
 Drupal.edit.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
 
 // Temporary helper function: logging.
-Drupal.edit.debug = true;
+Drupal.edit.debug = false;
 Drupal.edit.log = function() {
   if (Drupal.edit.debug && window.console) {
     console.log(Array.prototype.slice.call(arguments));
