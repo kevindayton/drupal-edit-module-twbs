@@ -170,10 +170,13 @@
       // @todo Propagate the state change to the predicate editors.
       // @todo Ensure Create.js sets the widgetType as a property on
       // propertyEditor, so we can get rid of this filth.
-      // var editorWidgetType = editor.element.data('createWidgetName');
-      // Drupal.edit.log('editor state:', from, to, predicate, editorWidgetType, editor);
-      // editor.decorationView.createEditableStateChange({}, data);
-      // editor.toolbarView.createEditableStateChange({}, data);
+      if (editor) {
+        var editorWidgetType = editor.element.data('createWidgetName');
+        Drupal.edit.log('editor state:', from, to, predicate, editorWidgetType, editor);
+        // editor.decorationView.createEditableStateChange({}, data);
+        // editor.toolbarView.createEditableStateChange({}, data);
+        editor.stateChange(from, to);
+      }
     },
 
     /**
