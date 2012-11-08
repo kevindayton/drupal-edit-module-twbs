@@ -35,6 +35,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     // @todo: get rid of this; rely on editor info instead.
     var type = this.$editableElementForStateChanges.hasClass('edit-type-form') ? 'form' : (this.$editableElementForStateChanges.hasClass('edit-type-direct-with-wysiwyg') ? 'direct-with-wysiwyg' : 'direct');
     switch (to) {
+      case 'inactive':
+        // Nothing happens in this stage.
+        break;
       case 'candidate':
         if (from !== 'inactive') {
           this.remove();
@@ -62,6 +65,17 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
           .find('a.save')
           .addClass('blue-button')
           .removeClass('gray-button');
+        break;
+      // @todo: set this state in EditAppView.
+      case 'saving':
+        // Indicate in the 'info' toolgroup that the form is being saved. Animated.
+        this.addClass('info', 'loading');
+        break;
+      // @todo: set this state in EditAppView.
+      case 'saved':
+        break;
+      // @todo: set this state in EditAppView.
+      case 'invalid':
         break;
     }
   },
