@@ -186,10 +186,9 @@
     decorateEditor: function($editableElement, $editorElement, editable, editor, entity, predicate) {
       var appView = this;
 
-      // Set up Backbone Views.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
         el: $editorElement,
-        state: appView.state,
+        entity: entity,
         predicate: predicate,
         // TRICKY: the Editable element instead of the editing (editor)
         // widget element, because events are triggered on the Editable
@@ -201,10 +200,8 @@
         // @todo: We should pass data.element instead, and pass
         // data.editable.element separately, just for it to be able to
         // listen to state changes.
-        $editableElementForStateChanges: $editableElement,
-        entity: entity
+        $editableElementForStateChanges: $editableElement
       });
-
       // Toolbars are rendered "on-demand" (highlighting or activating).
       // They are a sibling element before the $editorElement.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({

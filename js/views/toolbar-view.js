@@ -92,6 +92,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         break;
       case 'candidate':
         if (from !== 'inactive') {
+          if (from !== 'highlighted' && type !== 'form') {
+            this._unpad(type);
+          }
           this.remove();
         }
         break;
@@ -107,7 +110,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         }
         break;
       case 'active':
-        this.startEdit();
+        this.startEdit(type);
+        if (type !== 'form') {
+          this._pad(type);
+        }
         if (type === 'direct-with-wysiwyg') {
           this.insertWYSIWYGToolGroups();
         }
@@ -177,6 +183,43 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         that.removeClass('info', 'loading');
       }, 500);
       this.show('ops');
+  },
+
+  /**
+   * Adjusts the toolbar to accomodate padding on the PropertyEditor widget.
+   *
+   * @see FieldDecorationView._pad().
+   */
+  _pad: function(type) {
+      // The whole toolbar must move to the top when the property's DOM element
+      // is displayed inline.
+      if (this.$editorElement.css('display') == 'inline') {
+        this.$el.css('top', parseFloat(this.$el.css('top')) - 5 + 'px');
+      }
+
+      // The toolbar must move to the top and the left.
+      var $hf = this.$el.find('.edit-toolbar-heightfaker');
+      $hf.css({ bottom: '6px', left: '-5px' });
+      // When using a WYSIWYG editor, the width of the toolbar must match the
+      // width of the editable.
+      if (type === 'direct-with-wysiwyg') {
+        $hf.css({ width: this.$editorElement.width() + 10 });
+      }
+  },
+
+  /**
+   * Undoes the changes made by _pad().
+   *
+   * @see FieldDecorationView._unpad().
+   */
+  _unpad: function(type) {
+      // Move the toolbar back to its original position.
+      var $hf = this.$el.find('.edit-toolbar-heightfaker');
+      $hf.css({ bottom: '1px', left: '' });
+      // When using a WYSIWYG editor, restore the width of the toolbar.
+      if (type === 'direct-with-wysiwyg') {
+        $hf.css({ width: '' });
+      }
   },
 
   insertWYSIWYGToolGroups: function() {

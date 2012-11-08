@@ -111,25 +111,6 @@ Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
 };
 
 /**
- * Get the background color of an element (or the inherited one).
- */
-Drupal.edit.util.getBgColor = function($e) {
-  var c;
-
-  if ($e === null || $e[0].nodeName == 'HTML') {
-    // Fallback to white.
-    return 'rgb(255, 255, 255)';
-  }
-  c = $e.css('background-color');
-  // TRICKY: edge case for Firefox' "transparent" here; this is a
-  // browser bug: https://bugzilla.mozilla.org/show_bug.cgi?id=635724
-  if (c == 'rgba(0, 0, 0, 0)' || c == 'transparent') {
-    return Drupal.edit.util.getBgColor($e.parent());
-  }
-  return c;
-};
-
-/**
  * Ignore hovering to/from the given closest element, but as soon as a hover
  * occurs to/from *another* element, then call the given callback.
  */
@@ -140,38 +121,6 @@ Drupal.edit.util.ignoreHoveringVia = function(e, closest, callback) {
   else {
     callback();
   }
-};
-
-/**
- * If no position properties defined, replace value with zero.
- */
-Drupal.edit.util.replaceBlankPosition = function(pos) {
-  // @todo: this was pos == NaN (which always returns false, keeping this
-  // notice in case we find a regression.
-  if (pos == 'auto' || !pos) {
-    pos = '0px';
-  }
-  return pos;
-};
-
-/**
- * Get the top and left properties of an element and convert extraneous
- * values and information into numbers ready for subtraction.
- */
-Drupal.edit.util.getPositionProperties = function($e) {
-  var p,
-      r = {},
-      props = [
-        'top', 'left', 'bottom', 'right',
-        'padding-top', 'padding-left', 'padding-right', 'padding-bottom',
-        'margin-bottom'
-      ];
-
-  for (var i = 0; i < props.length; i++) {
-    p = props[i];
-    r[p] = parseFloat(this.replaceBlankPosition($e.css(p)));
-  }
-  return r;
 };
 
 })(jQuery);
