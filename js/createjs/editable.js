@@ -12,7 +12,7 @@
       this.options.predicateSelector = '*'; //'.edit-field.edit-allowed';
 
       this.options.editors.direct = {
-        widget: 'editWidget',
+        widget: 'drupalContentEditableWidget',
         options: {}
       };
       // @todo: it *is* possible to make 'alohaWidget' a setting that is passed
