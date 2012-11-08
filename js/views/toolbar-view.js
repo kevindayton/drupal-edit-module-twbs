@@ -39,9 +39,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    * @param event
    */
   onMouseLeave: function(e) {
-    var el = this.$el[0];
+    var el = this.$editorElement[0];
     if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
-      this.$el.trigger('mouseleave.edit');
+      this.$editorElement.trigger('mouseleave.edit');
     }
     e.stopPropagation();
   },
