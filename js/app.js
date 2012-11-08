@@ -6,7 +6,8 @@
     vie: null,
     domService: null,
 
-    // Configuration.
+    // Configuration for state handling.
+    states: [],
     activeEditorStates: [],
     singleEditorStates: [],
 
@@ -23,7 +24,11 @@
       this.vie.use(new this.vie.SparkEditService());
       this.domService = this.vie.service('edit');
 
-      // Instantiate configuration.
+      // Instantiate configuration for state handling.
+      this.states = [
+        null, 'inactive', 'candidate', 'highlighted',
+        'activating', 'active', 'changed', 'saving', 'saved', 'invalid'
+      ];
       this.activeEditorStates = ['activating', 'active'];
       this.singleEditorStates = _.union(['highlighted'], this.activeEditorStates);
 
@@ -94,17 +99,38 @@
       }
       // Handling of edit mode state changes is more granular.
       else {
-        // Ensure only one editor (field) at a time may be higlighted or active.
-        if (from === 'candidate' && _.indexOf(this.singleEditorStates, to) !== -1) {
-          if (this.highlightedEditor || this.activeEditor) {
-            accept = false;
+        // In general, enforce the states sequence. Disallow going back from a
+        // "later" state to an "earlier" state, except in explicitly allowed
+        // cases.
+        if (_.indexOf(this.states, from) > _.indexOf(this.states, to)) {
+          accept = false;
+          // Allow: activating/active -> candidate.
+          // Necessary to stop editing a property.
+          if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
+            accept = true;
+          }
+          // Allow: highlighted -> candidate.
+          // Necessary to stop highlighting a property.
+          else if (from === 'highlighted' && to === 'candidate') {
+            accept = true;
           }
         }
-        // Reject going from activating/active to candidate because of a
-        // mouseleave.
-        else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
-          if (context && context.reason === 'mouseleave') {
-            accept = false;
+
+        // If it's not against the general principle, then here are more
+        // disallowed cases to check.
+        if (accept) {
+          // Ensure only one editor (field) at a time may be higlighted or active.
+          if (from === 'candidate' && _.indexOf(this.singleEditorStates, to) !== -1) {
+            if (this.highlightedEditor || this.activeEditor) {
+              accept = false;
+            }
+          }
+          // Reject going from activating/active to candidate because of a
+          // mouseleave.
+          else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
+            if (context && context.reason === 'mouseleave') {
+              accept = false;
+            }
           }
         }
       }
