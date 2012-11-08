@@ -28,6 +28,7 @@
     _init: function () {
       var widget = this;
       var activator = function () {
+        widget.options.activated();
         widget.enable();
         widget.element.unbind("click", activator);
       };
