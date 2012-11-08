@@ -109,9 +109,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
   startEdit: function(type) {
     if (type === 'form') {
-      this.$el
-        .addClass('edit-belowoverlay')
-        .removeClass('edit-highlighted edit-editable');
+      this.$el.addClass('edit-belowoverlay');
     }
     else {
       this._pad();
@@ -120,11 +118,11 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
   stopEdit: function(type) {
     this.$el
-      .removeClass('edit-editing')
+      .removeClass('edit-highlighted edit-editing')
       .css('background-color', '');
 
     if (type === 'form') {
-
+      this.$el.removeClass('edit-belowoverlay');
     }
     else {
       this._unpad();
