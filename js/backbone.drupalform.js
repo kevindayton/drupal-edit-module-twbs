@@ -6,55 +6,52 @@ Backbone.sync = function(method, model, options) {
   else {
     return Backbone.syncDirect(method, model, options);
   }
-}
+};
 
 /**
  * @todo: HTTP status handling.
  */
 Backbone.syncDrupalFormWidget = function(method, model, options) {
-  switch (method) {
-    case 'update':
-      var predicate = options.predicate;
-      // Find the submit button for this form.
-      var $submit = options.$formContainer.find('.edit-form-submit');
+  if (method === 'update') {
+    var predicate = options.predicate;
+    // Find the submit button for this form.
+    var $submit = options.$formContainer.find('.edit-form-submit');
 
-      // Set up AJAX command closures.
-      var base = $submit.attr('id');
-      Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
-        // Clean up; the form has saved (there is no rebuilding going on), so we
-        // can get rid of this Drupal.ajax instance.
-        delete Drupal.ajax[base];
+    // Set up AJAX command closures.
+    var base = $submit.attr('id');
+    Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
+      // Clean up; the form has saved (there is no rebuilding going on), so we
+      // can get rid of this Drupal.ajax instance.
+      delete Drupal.ajax[base];
 
-        // Call Backbone.sync's success callback with the rerendered field.
-        var changedAttributes = {};
-        changedAttributes[predicate] = '@todo: JSON-LD representation N/A yet.';
-        changedAttributes[predicate + '/rendered'] = response.data;
-        options.success(changedAttributes);
-      };
-      Drupal.ajax[base].commands.edit_field_form_validation_errors = function(ajax, response, status) {
-        // Call Backbone.sync's error callback with the validation error messages.
-        options.error(response.data);
-      };
+      // Call Backbone.sync's success callback with the rerendered field.
+      var changedAttributes = {};
+      changedAttributes[predicate] = '@todo: JSON-LD representation N/A yet.';
+      changedAttributes[predicate + '/rendered'] = response.data;
+      options.success(changedAttributes);
+    };
+    Drupal.ajax[base].commands.edit_field_form_validation_errors = function(ajax, response, status) {
+      // Call Backbone.sync's error callback with the validation error messages.
+      options.error(response.data);
+    };
 
-      $submit.trigger('click.edit');
-      break;
-  };
-}
+    $submit.trigger('click.edit');
+  }
+};
 
 /**
  * @todo: HTTP status handling.
  */
 Backbone.syncDirect = function(method, model, options) {
-  switch (method) {
-    case 'update':
-      var predicate = options.predicate;
-      var edit_id = model.getSubjectUri() + '/' + predicate;
-      var $field = Drupal.edit.util.findFieldForID(edit_id);
-      var $editable = Drupal.edit.util.findEditablesForFields($field);
+  if (method === 'update') {
+    var predicate = options.predicate;
+    var edit_id = model.getSubjectUri() + '/' + predicate;
+    var $field = Drupal.edit.util.findFieldForID(edit_id);
+    var $editable = Drupal.edit.util.findEditablesForFields($field);
 
-      var value = model.get(predicate);
+    var value = model.get(predicate);
 
-      var submitDirectForm = function (value) {
+    var submitDirectForm = function (value) {
       var $submit = jQuery('#edit_backstage form .edit-form-submit');
       var base = $submit.attr('id');
 
@@ -92,4 +89,4 @@ Backbone.syncDirect = function(method, model, options) {
       submitDirectForm(value);
     }
   }
-}
+};

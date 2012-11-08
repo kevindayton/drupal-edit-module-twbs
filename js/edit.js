@@ -13,7 +13,7 @@ Drupal.behaviors.editDiscoverEditables = {
     // automatically. Once we implement this, we'll be able to get rid of all
     // calls to Drupal.edit.domService.findSubjectElements() :)
   }
-}
+};
 Drupal.behaviors.edit = {
   attach: function(context) {
     $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
@@ -56,7 +56,6 @@ Drupal.edit.init = function() {
 
   // Start Backbone's history/route handling
   Backbone.history.start();
-
 };
 
 })(jQuery, VIE);

@@ -20,11 +20,7 @@ module.exports = function(grunt) {
           'js/models/*.js',
           'js/views/*.js',
           'js/routers/*.js',
-          'js/ui-editables.js',
-          'js/theme.js',
-          'js/ajax.js',
-          'js/util.js',
-          'js/edit.js'
+          'js/*.js'
         ],
         // @todo: shouldn't we keep source and build/ more separate?
         dest: 'js/build/edit.js'
@@ -37,11 +33,7 @@ module.exports = function(grunt) {
           'js/models/*.js',
           'js/views/*.js',
           'js/routers/*.js',
-          'js/ui-editables.js',
-          'js/theme.js',
-          'js/ajax.js',
-          'js/util.js',
-          'js/edit.js'
+          'js/*.js'
         ],
         dest: 'js/build/edit-all.js'
       }

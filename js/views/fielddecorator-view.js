@@ -147,11 +147,6 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       // Re-enable width animations (padding changes affect width too!).
       self.$el.removeClass('edit-animate-disable-width');
 
-      // The whole toolbar must move to the top when it's an inline editable.
-      if (self.$el.css('display') == 'inline') {
-        $toolbar.css('top', parseFloat($toolbar.css('top')) - 5 + 'px');
-      }
-
       // Pad the editable.
       self.$el
       .css({

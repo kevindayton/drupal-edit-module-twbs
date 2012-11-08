@@ -34,6 +34,8 @@
 
       // Instantiate StateModel
       this.state = new Drupal.edit.models.StateModel();
+
+      // Use Create's Storage widget.
       this.$el.createStorage({
         vie: this.vie,
         editableNs: 'createeditable'
@@ -240,9 +242,11 @@
       });
     },
 
+    // @todo: this was picked from formeditablefield-view, i.e. it is specific
+    // to type=form, it doesn't work at all (yet) for type=direct!
     handleSave: function($editable, entity, predicate) {
       // @todo: i know this is *NOT* the editable instead the form container!
-      // but i now "hangs" in the EditingWidget (formwidget.js) - and needs to
+      // but it now "hangs" in the EditingWidget (formwidget.js) - and needs to
       // be made accessible somehow.
       var $formContainer = Drupal.edit.form.get($editable);
       var editableWidgetInstance = $editable.data('createEditable');
