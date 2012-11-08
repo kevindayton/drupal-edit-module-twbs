@@ -178,10 +178,13 @@
         $editableElementForStateChanges: $editableElement,
         entity: entity
       });
+
+      // Toolbars are rendered "on-demand" (highlighting or activating).
+      // They are a sibling element before the $editorElement.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
-        el: $editorElement,
         entity: entity,
         predicate: predicate,
+        $editorElement: $editorElement,
         // @todo: get rid of this.
         $editableElementForStateChanges: $editableElement
       });
@@ -190,15 +193,14 @@
       $editorElement
       // Start hover: transition to 'highlight' state.
       .bind('mouseenter.edit', function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.id(), function () {
+        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.getId(), function () {
           editable.setState('highlighted', predicate);
           event.stopPropagation();
         });
       })
       // Stop hover: back to 'candidate' state.
       .bind('mouseleave.edit', function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.id(), function () {
-          console.log('editor mouseleave on…', $editorElement);
+        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.getId(), function () {
           editable.setState('candidate', predicate, { reason: 'mouseleave' });
           event.stopPropagation();
         });

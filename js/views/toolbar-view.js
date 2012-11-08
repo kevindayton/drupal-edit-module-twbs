@@ -8,20 +8,72 @@
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
-
   entity: null,
   predicate : null,
   $editableElementForStateChanges: null,
-
+  $editorElement: null,
+  events: {
+    // @todo: verify if we want the {EVENT}.edit namespace here.
+    'click a.label': 'onClickInfoLabel',
+    'mouseleave': 'onMouseLeave',
+    'click a.field-save': 'onClickSave',
+    'click a.field-close': 'onClickClose'
+  },
+  // Event handlers
   /**
-   * The toolbar container, when it exists.
+   * When the user clicks the info label, nothing should happen.
+   * @note currently redirects the click.edit-event to the $editorElement.
+   *
+   * @param event
    */
-  $toolbar: null,
+  onClickInfoLabel: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    // Redirects the event to the $editorElement itself.
+    this.$editorElement.trigger('click.edit');
+  },
+  /**
+   * A mouseleave to the editor doesn't matter; a mouseleave to something else
+   * counts as a mouseleave on the editor itself.
+   *
+   * @param event
+   */
+  onMouseLeave: function(e) {
+    var el = this.$el[0];
+    if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
+      this.$el.trigger('mouseleave.edit');
+    }
+    e.stopPropagation();
+  },
+  /**
+   * Upon clicking "Save", trigger a custom event to save this property.
+   *
+   * @param event
+   */
+  onClickSave: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.$editorElement.trigger('editsave.edit', { originalEvent: event });
+  },
+  /**
+   * Upon clicking "Cancel", trigger a custom event to cancel editing.
+   *
+   * @param event
+   */
+  onClickClose: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.$editorElement.trigger('editcancel.edit', { originalEvent: event });
+  },
 
   initialize:function (options) {
     this.predicate = options.predicate;
     this.entity = options.entity;
     this.$editableElementForStateChanges = options.$editableElementForStateChanges;
+    this.$editorElement = options.$editorElement;
+    // Generate a DOM-compatible ID for the toolbar DOM-element.
+    var propertyId = this.entity.getSubjectUri() + '-' + this.predicate;
+    this.id = 'edit-toolbar-for-' + propertyId.replace(/\//g, '-');
 
     var that = this;
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
@@ -45,7 +97,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         break;
       case 'highlighted':
         // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
-        this.insert();
+        this.render();
         this.startHighlight();
         break;
       case 'activating':
@@ -61,7 +113,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         }
         break;
       case 'changed':
-        this.$toolbar
+        this.$el
           .find('a.save')
           .addClass('blue-button')
           .removeClass('gray-button');
@@ -88,7 +140,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       label = attributeDef.metadata.label;
     }
 
-    this.$toolbar
+    this.$el
       .find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
       // Append the "info" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
@@ -96,13 +148,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         buttons: [
           { label: label, classes: 'blank-button label', hasButtonRole: false }
         ]
-      }))
-      // When the user clicks the info label, nothing should happen.
-      .delegate('a.label', 'click.edit', function (event) {
-        that.$el.trigger('click.edit');
-        event.stopPropagation();
-        event.preventDefault();
-      });
+      }));
 
     // Animations.
     var that = this;
@@ -113,7 +159,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
   startEdit: function() {
     var that = this;
-    this.$toolbar
+    this.$el
       .addClass('edit-editing')
       .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
       // Append the "ops" toolgroup into the toolbar.
@@ -123,20 +169,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
           { label: Drupal.t('Save'), classes: 'field-save save gray-button' },
           { label: '<span class="close"></span>', classes: 'field-close close gray-button' }
         ]
-      }))
-      // Upon clicking "Save", trigger a custom event to save this property.
-      .delegate('a.field-save', 'click.edit', function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        that.$el.trigger('editsave.edit', { originalEvent: event });
-      })
-      // Upon clicking "Cancel", trigger a custom event to cancel editing.
-      .delegate('a.field-close', 'click.edit', function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        that.$el.trigger('editcancel.edit', { originalEvent: event });
-      });
-
+      }));
       // Indicate in the 'info' toolgroup that the form has loaded, but only
       // do it after half a second to prevent it from flashing, which is bad
       // UX.
@@ -147,7 +180,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   insertWYSIWYGToolGroups: function() {
-    this.$toolbar
+    this.$el
       .find('.edit-toolbar:not(:has(.edit-toolbar-wysiwyg-tabs))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg-tabs',
@@ -169,66 +202,56 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   /**
-   * Inserts the Toolbar's mark-up into the DOM.
+   * Renders the Toolbar's markup into the DOM.
    *
    * Note: depending on whether the 'display' property of the $el for which a
    * toolbar is being inserted into the DOM, it will be inserted differently.
    */
-  insert: function () {
-    var that = this;
-
+  render: function () {
     // Render toolbar.
-    this.$toolbar = jQuery(Drupal.theme('editToolbarContainer', {
-      id: this.id()
-    }));
+    this.setElement(jQuery(Drupal.theme('editToolbarContainer', {
+      id: this.getId()
+    })));
 
     // Insert in DOM.
     if (this.$el.css('display') == 'inline') {
-      this.$toolbar.prependTo(this.$el.offsetParent());
-      var pos = this.$el.position();
-      this.$toolbar.css('left', pos.left).css('top', pos.top);
+      this.$el.prependTo(this.$editorElement.offsetParent());
+      var pos = this.$editorElement.position();
+      this.$el.css('left', pos.left).css('top', pos.top);
     }
     else {
-      this.$toolbar.insertBefore(this.$el);
+      this.$el.insertBefore(this.$editorElement);
     }
 
+    var that = this;
     // Animate the toolbar into visibility.
     setTimeout(function () {
-      that.$toolbar.removeClass('edit-animate-invisible');
+      that.$el.removeClass('edit-animate-invisible');
     }, 0);
-
-    this.$toolbar
-      // A mouseleave to the editor doesn't matter; a mouseleave to something
-      // else counts as a mouseleave on the editor itself.
-      .bind('mouseleave.edit', function (e) {
-        var el = that.$el[0];
-        if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
-          that.$el.trigger('mouseleave.edit');
-        }
-        e.stopPropagation();
-      });
   },
 
   remove: function () {
-    if (!this.$toolbar) {
+    if (!this.$el) {
       return;
     }
 
     // Remove after animation.
     var that = this;
-    var $toolbar = this.$toolbar;
-    this.$toolbar
+    var $el = this.$el;
+    this.$el
       .addClass('edit-animate-invisible')
       // Prevent this toolbar from being detected *while* it is being removed.
       .removeAttr('id')
       .find('.edit-toolbar .edit-toolgroup')
       .addClass('edit-animate-invisible')
       .bind(Drupal.edit.constants.transitionEnd, function (e) {
-        $toolbar.remove();
+        $el.remove();
       });
+    // @todo: verify/confirm that this really necessary. Messing with this.$el
+    // is not recommended - maybe temporarily unbind/undelegate events?
     // Immediately set to null, so that if the user hovers over the property
     // before the removal been completed, a new toolbar can be created.
-    this.$toolbar = null;
+    // this.$el = null;
   },
 
   /**
@@ -239,9 +262,8 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    * @return string
    *   A string that can be used as the ID for this toolbar container.
    */
-  id: function() {
-    var propertyID = this.entity.getSubjectUri() + '-' + this.predicate;
-    return 'edit-toolbar-for-' + propertyID.replace(/\//g, '-');
+  getId: function() {
+    return this.id;
   },
 
   /**
@@ -281,6 +303,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *   A toolgroup name.
    */
   _find: function (toolgroup) {
-    return this.$toolbar.find('.edit-toolbar .edit-toolgroup.' + toolgroup);
+    return this.$el.find('.edit-toolbar .edit-toolgroup.' + toolgroup);
   }
 });
