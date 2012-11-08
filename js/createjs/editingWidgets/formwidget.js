@@ -118,10 +118,6 @@
             }
           });
 
-        $editable
-          .addClass('edit-belowoverlay')
-          .removeClass('edit-highlighted edit-editable');
-
         Drupal.edit.form.get($editable)
         .find('.edit-form')
         .addClass('edit-editable edit-highlighted edit-editing')
@@ -138,12 +134,6 @@
       // @todo: handle this better on the basis of the editable type.
       // Currently we stuff forms into two places ...
       Drupal.edit.form.get(this.element).remove();
-
-      // Revert the changes to classes applied in the the enable/loadForm
-      // methods above.
-      this.element
-        .removeClass('edit-belowoverlay')
-        .addClass('edit-highlighted edit-editable');
 
       Drupal.edit.form.get(this.element)
         .undelegate(':input', 'change.edit')
