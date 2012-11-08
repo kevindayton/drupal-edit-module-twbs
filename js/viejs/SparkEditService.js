@@ -39,9 +39,9 @@
     // each entity element in the format
     // `<entity type>:<id>:<field name>:<language code>:<view mode>`.
     _getID: function (element) {
-      var id = jQuery(element).data('edit-id');
+      var id = jQuery(element).attr('data-edit-id');
       if (!id) {
-        id = jQuery(element).closest('[data-edit-id]').data('edit-id');
+        id = jQuery(element).closest('[data-edit-id]').attr('data-edit-id');
       }
       return id;
     },
