@@ -56,19 +56,21 @@
      * Enables the widget.
      */
     enable: function () {
-      // Trigger "activating" state (i.e. loading the form).
-      Drupal.edit.log('Drupal.drupalFormWidget.activating', this);
+      // $editable is the DOM element of the editable widget
+      var $editable = $(this.options.widget.element);
+      // $fied is the DOM element of the field/editingWidget
+      var $field = $(this.element);
 
       // Render form container.
       this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
         id: Drupal.edit.form._id(this.element),
         loadingMsg: Drupal.t('Loading…')}
       ));
-      console.log('Activate', this.element);
-      // $editable is the DOM element of the editable widget
-        var $editable = $(this.options.widget.element);
-      // $fied is the DOM element of the field/editingWidget
-      var $field = $(this.element);
+
+      this.$formContainer
+        .find('.edit-form')
+        .addClass('edit-editable edit-highlighted edit-editing')
+        .css('background-color', $editable.css('background-color'));
 
       // @todo: this should not be necessary anymore because we should have cleaned up the form on deactivating the widget.
       // We only create a placeholder-div/form for the form-based instances.
@@ -117,11 +119,6 @@
               return false;
             }
           });
-
-        Drupal.edit.form.get($editable)
-        .find('.edit-form')
-        .addClass('edit-editable edit-highlighted edit-editing')
-        .css('background-color', $editable.css('background-color'));
       });
     },
 

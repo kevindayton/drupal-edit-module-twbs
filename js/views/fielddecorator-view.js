@@ -15,7 +15,6 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   predicate : null,
   $editableElementForStateChanges: null,
 
-  backgroundColor: null,
   widthAttributeIsEmpty: null,
 
   initialize: function(options) {
@@ -23,7 +22,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.entity = options.entity;
     this.$editableElementForStateChanges = options.$editableElementForStateChanges;
 
-    this.backgroundColor = this._getBgColor(this.$el);
+    this.$el.css('background-color', this._getBgColor(this.$el));
 
     var that = this;
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
@@ -102,24 +101,17 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   },
 
   prepareEdit: function() {
-    this.$el
-      .addClass('edit-editing')
-      .css('background-color', this.backgroundColor);
+    this.$el.addClass('edit-editing edit-belowoverlay');
   },
 
   startEdit: function(type) {
-    if (type === 'form') {
-      this.$el.addClass('edit-belowoverlay');
-    }
-    else {
+    if (type !== 'form') {
       this._pad();
     }
   },
 
   stopEdit: function(type) {
-    this.$el
-      .removeClass('edit-highlighted edit-editing')
-      .css('background-color', '');
+    this.$el.removeClass('edit-highlighted edit-editing')
 
     if (type === 'form') {
       this.$el.removeClass('edit-belowoverlay');
