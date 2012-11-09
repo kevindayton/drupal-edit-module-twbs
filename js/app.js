@@ -120,6 +120,11 @@
           else if (from === 'highlighted' && to === 'candidate') {
             accept = true;
           }
+          // Allow: saved -> candidate.
+          // Necessary when successfully saved a property.
+          else if (from === 'saved' && to === 'candidate') {
+            accept = true;
+          }
         }
 
         // If it's not against the general principle, then here are more
@@ -158,18 +163,18 @@
       var editor = data.propertyEditor;
 
       // Keep track of the highlighted editor in the global state.
-      if (_.indexOf(this.singleEditorStates, to) !== -1 && this.highlightedEditor != editor) {
+      if (_.indexOf(this.singleEditorStates, to) !== -1 && this.highlightedEditor !== editor) {
         this.highlightedEditor = editor;
       }
-      else if (_.indexOf(this.singleEditorStates, from) !== -1 && to === 'candidate') {
+      else if (this.highlightedEditor === editor && to === 'candidate') {
         this.highlightedEditor = null;
       }
 
       // Keep track of the active editor in the global state.
-      if (_.indexOf(this.activeEditorStates, to) !== -1 && this.activeEditor != editor) {
+      if (_.indexOf(this.activeEditorStates, to) !== -1 && this.activeEditor !== editor) {
         this.activeEditor = editor;
       }
-      else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
+      else if (this.activeEditor === editor && to === 'candidate') {
         this.activeEditor = null;
       }
 
@@ -239,37 +244,32 @@
       })
       // custom events for initiating saving / cancelling
       .bind('editsave.edit', function(event, data) {
-        appView.handleSave($editorElement, entity, predicate);
+        appView.handleSave(editable, $editorElement, entity, predicate);
       })
       .bind('editcancel.edit', function(event, data) {
         editable.setState('candidate', predicate, { reason: 'cancel' });
       });
     },
 
-    // @todo: this was picked from formeditablefield-view, i.e. it is specific
-    // to type=form, it doesn't work at all (yet) for type=direct!
-    handleSave: function($editable, entity, predicate) {
-      // @todo: i know this is *NOT* the editable instead the form container!
-      // but it now "hangs" in the EditingWidget (formwidget.js) - and needs to
-      // be made accessible somehow.
-      var $formContainer = Drupal.edit.form.get($editable);
-      var editableWidgetInstance = $editable.data('createEditable');
-      // @todo: this is a quick hack - i still need to *pick* by predicate (i.e. options.property == predicate).
-      var $editingWidgetElement = editableWidgetInstance.options.editables[0];
+    // @todo: this is still specific to type=form, it doesn't work at all (yet) for type=direct!
+    handleSave: function(editableEntity, $editorElement, entity, predicate) {
+      editableEntity.setState('saving', predicate);
+
+      var $formContainer = Drupal.edit.form.get($editorElement);
       // We need to pass on the widgetType to the Backbone.sync.
-      var editingWidgetType = $editingWidgetElement.data('createWidgetName');
+      var editingWidgetType = $editorElement.data('createWidgetName');
 
       var that = this;
       // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
       this.$el.createStorage('saveRemote', entity, {
         // Successfully saved without validation errors.
         success: function (model) {
-          $editable.createEditable('setState', 'candidate', predicate);
+          editableEntity.setState('saved', predicate);
 
           // Replace the old content with the new content.
-          var updatedField = model.get(predicate + '/rendered');
+          var updatedField = entity.get(predicate + '/rendered');
           var $inner = jQuery(updatedField).html();
-          $editable.html($inner);
+          $editorElement.html($inner);
 
           // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
           // overwrite an existing field, that VIE refuses to find the same
@@ -278,10 +278,14 @@
           // debugger;
           // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
           // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
+
+          editableEntity.setState('candidate', predicate);
         },
         // Save attempted but failed due to validation errors.
         error: function (validationErrorMessages) {
-          $editable
+          editableEntity.setState('invalid', predicate);
+
+          $formContainer
             .find('.edit-form')
             .addClass('edit-validation-error')
             .find('form')

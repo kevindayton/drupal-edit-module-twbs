@@ -105,12 +105,12 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         break;
       case 'activating':
         if (type === 'form') {
-          // Indicate in the 'info' toolgroup that the form is loading. Animated.
-          this.addClass('info', 'loading');
+          this.setLoadingIndicator(true);
         }
         break;
       case 'active':
         this.startEdit(type);
+        this.setLoadingIndicator(false);
         if (type !== 'form') {
           this._pad(type);
         }
@@ -124,17 +124,35 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
           .addClass('blue-button')
           .removeClass('gray-button');
         break;
-      // @todo: set this state in EditAppView.
       case 'saving':
-        // Indicate in the 'info' toolgroup that the form is being saved. Animated.
-        this.addClass('info', 'loading');
+        this.setLoadingIndicator(true);
         break;
-      // @todo: set this state in EditAppView.
       case 'saved':
+        this.setLoadingIndicator(false);
         break;
-      // @todo: set this state in EditAppView.
       case 'invalid':
+        this.setLoadingIndicator(false);
         break;
+    }
+  },
+
+  /**
+   * Indicate in the 'info' toolgroup that we're waiting for a server reponse.
+   *
+   * @param bool enabled
+   *   Whether the loading indicator should be displayed or not.
+   */
+  setLoadingIndicator: function(enabled) {
+    if (enabled) {
+      this.addClass('info', 'loading');
+    }
+    else {
+      // Only stop showing the loading indicator after half a second to prevent
+      // it from flashing, which is bad UX.
+      var that = this;
+      setTimeout(function() {
+        that.removeClass('info', 'loading');
+      }, 500);
     }
   },
 
@@ -164,7 +182,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   startEdit: function() {
-    var that = this;
     this.$el
       .addClass('edit-editing')
       .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
@@ -176,13 +193,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
           { label: '<span class="close"></span>', classes: 'field-close close gray-button' }
         ]
       }));
-      // Indicate in the 'info' toolgroup that the form has loaded, but only
-      // do it after half a second to prevent it from flashing, which is bad
-      // UX.
-      setTimeout(function() {
-        that.removeClass('info', 'loading');
-      }, 500);
-      this.show('ops');
+    this.show('ops');
   },
 
   /**
