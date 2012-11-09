@@ -74,11 +74,16 @@
       this.bindAppStateChanges();
 
       // Instantiate OverlayView
-      // @todo: overlayView can trigger an "escapeEditor" event on EditAppView.
-      // EditAppView decides if it is ok to return to "View" and sets state.
       var overlayView = new Drupal.edit.views.OverlayView({
         appView: this,
         model: this.state
+      });
+
+      // The OverlayView triggers the escapedEditor event if is clicked
+      this.bind('escapeEditor', function() {
+        // Ensure to prompt for confirmation if the active editor has pending
+        // changes.
+        appView.revertActiveEditorToCandidate();
       });
 
       // Instantiate MenuView
@@ -86,6 +91,29 @@
         el: this.el,
         model: this.state
       });
+    },
+
+    /**
+     * If there is an active editor, attempt to revert the active editor back to
+     * candidate. Prompts user to confirm transition, if changes can be lost in
+     * that process.
+     */
+    revertActiveEditorToCandidate: function(cb) {
+      if (this.activeEditor) {
+        // Get reference to the EntityEditable from the activeEditor.
+        var editable = this.activeEditor.options.widget;
+        var predicate = this.activeEditor.predicate;
+        // Check if this state change is acceptable - this can trigger a modal dialog.
+        this.acceptStateChange(editable.getState(), 'candidate', predicate, {}, function(accept) {
+          if (accept) {
+            // Pass {confirmed: true} to avoid showing the modal again.
+            editable.setState('candidate', predicate, {confirmed: true});
+          }
+          cb && cb(accept);
+        });
+      } else {
+        cb && cb(true);
+      }
     },
 
     /**
@@ -155,8 +183,13 @@
               accept = false;
             }
             else {
+              // Check whether the transition has been confirmed?
+              if (context && context.confirmed) {
+                accept = true;
+              }
+              // Confirm this transition.
               // @todo: revive Drupal.edit.modal for this!
-              if (window.confirm('You have unsaved changes. Continuing will drop them. Do you want to continue?')) {
+              else if (window.confirm('You have unsaved changes. Continuing will drop them. Do you want to continue?')) {
                 accept = true;
               }
               else {
@@ -316,8 +349,6 @@
         predicate: predicate,
         widgetType: editingWidgetType
       });
-    },
-    _triggerCancel: function($editable) {
     },
     bindAppStateChanges: function() {
       var that = this;
