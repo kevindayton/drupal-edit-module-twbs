@@ -56,11 +56,11 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       case 'activating':
         // NOTE: this step only exists for type=form! It is skipped by
         // type=direct, because no loading is necessary.
-        this.prepareEdit();
+        this.prepareEdit(type);
         break;
       case 'active':
         if (type !== 'form') {
-          this.prepareEdit();
+          this.prepareEdit(type);
         }
         this.startEdit(type);
         break;
@@ -100,8 +100,11 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       .removeClass('edit-highlighted');
   },
 
-  prepareEdit: function() {
-    this.$el.addClass('edit-editing edit-belowoverlay');
+  prepareEdit: function(type) {
+    this.$el.addClass('edit-editing');
+    if (type === 'form') {
+      this.$el.addClass('edit-belowoverlay');
+    }
   },
 
   startEdit: function(type) {
