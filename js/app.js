@@ -115,6 +115,11 @@
           if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
             accept = true;
           }
+          // Allow: changed/invalid -> candidate.
+          // Necessary to stop editing a property when it is changed or invalid.
+          else if ((from === 'changed' || from === 'invalid') && to === 'candidate') {
+            accept = true;
+          }
           // Allow: highlighted -> candidate.
           // Necessary to stop highlighting a property.
           else if (from === 'highlighted' && to === 'candidate') {
@@ -141,6 +146,22 @@
           else if (_.indexOf(this.activeEditorStates, from) !== -1 && to === 'candidate') {
             if (context && context.reason === 'mouseleave') {
               accept = false;
+            }
+          }
+          // When attempting to stop editing a changed/invalid property, ask for
+          // confirmation.
+          else if ((from === 'changed' || from === 'invalid') && to === 'candidate') {
+            if (context && context.reason === 'mouseleave') {
+              accept = false;
+            }
+            else {
+              // @todo: revive Drupal.edit.modal for this!
+              if (window.confirm('You have unsaved changes. Continuing will drop them. Do you want to continue?')) {
+                accept = true;
+              }
+              else {
+                accept = false;
+              }
             }
           }
         }
