@@ -307,20 +307,25 @@
       })
       // custom events for initiating saving / cancelling
       .bind('editsave.edit', function(event, data) {
-        appView.handleSave(editable, $editorElement, entity, predicate);
+        appView.saveProperty(editable, $editorElement, entity, predicate);
       })
       .bind('editcancel.edit', function(event, data) {
         editable.setState('candidate', predicate, { reason: 'cancel' });
       });
     },
 
-    // @todo: this is still specific to type=form, it doesn't work at all (yet) for type=direct!
-    handleSave: function(editableEntity, $editorElement, entity, predicate) {
+    saveProperty: function(editableEntity, $editorElement, entity, predicate) {
       editableEntity.setState('saving', predicate);
 
-      var $formContainer = Drupal.edit.form.get($editorElement);
-      // We need to pass on the widgetType to the Backbone.sync.
-      var editingWidgetType = $editorElement.data('createWidgetName');
+      var editorWidgetName = $editorElement.data('createWidgetName');
+
+      // We need to pass on the editorWidgetName to the Backbone.sync, as well
+      // as some editor widget name-specific options.
+      var editorSpecificOptions = {};
+      var renderValidationErrors = null;
+      if (editorWidgetName === 'drupalFormWidget') {
+        editorSpecificOptions.$formContainer = Drupal.edit.form.get($editorElement);
+      }
 
       var that = this;
       // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
@@ -348,15 +353,24 @@
         error: function (validationErrorMessages) {
           editableEntity.setState('invalid', predicate);
 
-          $formContainer
-            .find('.edit-form')
-            .addClass('edit-validation-error')
-            .find('form')
-            .prepend(validationErrorMessages);
+          if (editorWidgetName === 'drupalFormWidget') {
+            editorSpecificOptions.$formContainer
+              .find('.edit-form')
+              .addClass('edit-validation-error')
+              .find('form')
+              .prepend(validationErrorMessages);
+          }
+          else {
+            var $errors = $('<div class="edit-validation-errors"></div>')
+              .append(validationErrorMessages);
+            $editorElement
+              .addClass('edit-validation-error')
+              .after($errors);
+          }
         },
-        $formContainer: $formContainer,
         predicate: predicate,
-        widgetType: editingWidgetType
+        editorWidgetName: editorWidgetName,
+        editorSpecific: editorSpecificOptions
       });
     },
     bindAppStateChanges: function() {

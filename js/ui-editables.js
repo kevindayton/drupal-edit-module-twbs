@@ -45,6 +45,11 @@ Drupal.edit.form = {
         $('#edit_backstage form').attr('novalidate', true);
         $submit = $('#edit_backstage form .edit-form-submit');
       }
+
+      // Time to get rid of the Drupal.ajax instance that loaded the form.
+      delete Drupal.ajax[ajax.selector.substring(1)];
+      ajax.element.unbind(ajax.event);
+
       Drupal.edit.form._setupAjaxForm($editable, $field, $submit);
 
       // Trigger that the form has loaded.
@@ -70,11 +75,7 @@ Drupal.edit.form = {
       submit: { nocssjs : ($field.hasClass('edit-type-direct')) }
     };
     var base = $submit.attr('id');
-    // Removing existing Drupal.ajax-thingy.
-    if (Drupal.ajax.hasOwnProperty(base)) {
-      delete Drupal.ajax[base];
-      $editable.unbind('edit-internal.edit');
-    }
+
     Drupal.ajax[base] = new Drupal.ajax(base, $submit[0], element_settings);
   },
   get: function($editable) {
@@ -110,11 +111,6 @@ Drupal.edit.form = {
       submit   : { nocssjs : ($field.hasClass('edit-type-direct')) },
       progress : { type : null } // No progress indicator.
     };
-    // Removing existing Drupal.ajax-thingy.
-    if (Drupal.ajax.hasOwnProperty(edit_id)) {
-      delete Drupal.ajax[edit_id];
-      $editable.unbind('edit-internal.edit');
-    }
     Drupal.ajax[edit_id] = new Drupal.ajax(edit_id, $editable, element_settings);
     // Some form of closure.
     Drupal.ajax[edit_id].commands.edit_field_form = function(ajax, response, status) {
