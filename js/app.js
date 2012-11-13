@@ -109,10 +109,14 @@
             // Pass {confirmed: true} to avoid showing the modal again.
             editable.setState('candidate', predicate, {confirmed: true});
           }
-          cb && cb(accept);
+          if (_.isFunction(cb)) {
+            cb(accept);
+          }
         });
       } else {
-        cb && cb(true);
+        if (_.isFunction(cb)) {
+          cb(true);
+        }
       }
     },
 

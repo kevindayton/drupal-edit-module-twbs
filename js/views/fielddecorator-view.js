@@ -114,7 +114,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   },
 
   stopEdit: function(type) {
-    this.$el.removeClass('edit-highlighted edit-editing')
+    this.$el.removeClass('edit-highlighted edit-editing');
 
     if (type === 'form') {
       this.$el.removeClass('edit-belowoverlay');
