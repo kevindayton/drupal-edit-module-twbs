@@ -128,6 +128,13 @@
     disable: function () {
       Drupal.edit.log('Drupal.drupalFormWidget.disable');
 
+      // Get rid of the Drupal.ajax instance that would be called when saving
+      // the form.
+      // No need to unbind; the DOM element on which an event was bound will be
+      // deleted below.
+      var $submit = Drupal.edit.form.get(this.element).find('.edit-form-submit');
+      delete Drupal.ajax[$submit.attr('id')];
+
       // @todo: handle this better on the basis of the editable type.
       // Currently we stuff forms into two places ...
       Drupal.edit.form.get(this.element).remove();
