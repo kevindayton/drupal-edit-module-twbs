@@ -17,12 +17,12 @@
      */
     _initialize: function() {
       var self = this;
-      var before = this.element.html();
+      var before = jQuery.trim(this.element.text());
       this.element.bind('keyup paste', function (event) {
         if (self.options.disabled) {
           return;
         }
-        var current = jQuery(this).html();
+        var current = jQuery.trim(self.element.text());
         if (before !== current) {
           before = current;
           self.options.changed(current);
