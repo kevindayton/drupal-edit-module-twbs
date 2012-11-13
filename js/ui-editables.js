@@ -38,6 +38,11 @@ Drupal.edit.form = {
       else {
         // Direct forms are stuffed into #edit_backstage, apparently.
         $('#edit_backstage').append(form);
+        // Disable the browser's HTML5 validation; we only care about server-
+        // side validation. (Not disabling this will actually cause problems
+        // because browsers don't like to set HTML5 validation errors on hidden
+        // forms.)
+        $('#edit_backstage form').attr('novalidate', true);
         $submit = $('#edit_backstage form .edit-form-submit');
       }
       Drupal.edit.form._setupAjaxForm($editable, $field, $submit);
