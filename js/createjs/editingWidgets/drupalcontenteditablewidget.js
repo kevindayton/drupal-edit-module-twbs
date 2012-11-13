@@ -44,6 +44,8 @@
           if (from !== 'inactive') {
             // Removes the "contenteditable" attribute.
             this.disable();
+            this._removeValidationErrors();
+            this._cleanUp();
           }
           break;
         case 'highlighted':
@@ -63,6 +65,39 @@
         case 'invalid':
           break;
       }
+    },
+
+    /**
+     * Removes validation errors' markup changes, if any.
+     *
+     * Note: this only needs to happen for type=direct, because for type=direct,
+     * the property DOM element itself is modified; this is not the case for
+     * type=form.
+     */
+    _removeValidationErrors: function() {
+      this.element
+        .removeClass('edit-validation-error')
+        .next('.edit-validation-errors').remove();
+    },
+
+    /**
+     * Cleans up after the widget has been saved.
+     *
+     * Note: this is where the Create.Storage and accompanying Backbone.sync
+     * abstractions "leak" implementation details. That is only the case because
+     * we have to use Drupal's Form API as a transport mechanism. It is
+     * unfortunately a stateful transport mechanism, and that's why we have to
+     * clean it up here. This clean-up is only necessary when canceling the
+     * editing of a property after having attempted to save at least once.
+     */
+    _cleanUp: function() {
+      // Get rid of the Drupal.ajax instance that would be called when saving
+      // the form.
+      // No need to unbind; the DOM element on which an event was bound will be
+      // deleted below.
+      var $submit = jQuery('#edit_backstage form .edit-form-submit');
+      delete Drupal.ajax[$submit.attr('id')];
+      jQuery('#edit_backstage form').remove();
     }
   });
 })(jQuery);

@@ -326,6 +326,9 @@
       if (editorWidgetName === 'drupalFormWidget') {
         editorSpecificOptions.$formContainer = Drupal.edit.form.get($editorElement);
       }
+      else {
+        editorSpecificOptions.$editorElement = $editorElement;
+      }
 
       var that = this;
       // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
