@@ -2,6 +2,8 @@
   // # Drupal form-based editing widget for Create.js
   $.widget('Drupal.drupalFormWidget', $.Create.editWidget, {
 
+    $formContainer: null,
+
     /**
      * Implements jQuery UI widget factory's _init() method.
      *
@@ -56,60 +58,51 @@
      * Enables the widget.
      */
     enable: function () {
-      // $editable is the DOM element of the editable widget
-      var $editable = $(this.options.widget.element);
-      // $fied is the DOM element of the field/editingWidget
-      var $field = $(this.element);
+      var $editorElement = $(this.options.widget.element);
+      var propertyID = this.options.entity.getSubjectUri() + '/' + this.options.property;
+      var formContainerID = this._formContainerID(propertyID);
 
       // Render form container.
       this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
-        id: Drupal.edit.form._id(this.element),
+        id: formContainerID,
         loadingMsg: Drupal.t('Loading…')}
       ));
-
       this.$formContainer
         .find('.edit-form')
         .addClass('edit-editable edit-highlighted edit-editing')
-        .css('background-color', $editable.css('background-color'));
+        .css('background-color', $editorElement.css('background-color'));
 
-      // @todo: this should not be necessary anymore because we should have cleaned up the form on deactivating the widget.
-      // We only create a placeholder-div/form for the form-based instances.
-      if (Drupal.edit.form.get($editable).length > 0) {
-        console.log('Drupal.edit.form.create - Drupal.edit.form.get($editable).length > 0', Drupal.edit.form.get($editable).length, Drupal.edit.form.get($editable));
-        return cb(false);
-      }
+      // Insert form container in DOM.
+      if ($editorElement.css('display') == 'inline') {
+        // @todo: this is untested in Drupal 8, because in Drupal 8 we don't yet
+        // have the ability to edit the node title/author/date, because they
+        // haven't been converted into Entity Properties yet, and they're the
+        // only examples in core of "display: inline" properties.
+        this.$formContainer.prependTo($editorElement.offsetParent());
 
-      // Append  & insert in DOM.
-      if ($editable.css('display') == 'inline') {
-        this.$formContainer.prependTo($editable.offsetParent());
-
-        var pos = $editable.position();
+        var pos = $editorElement.position();
         this.$formContainer.css('left', pos.left).css('top', pos.top);
-
-        // @todo: do something to toolbar - we should not touch the toolbar here!
-        // Reset the toolbar's positioning because it'll be moved inside the
-        // form container.
-        // Drupal.edit.toolbar.get($editable).css('left', '').css('top', '');
-        // this.getToolbarElement().css('left', '').css('top', '');
       }
       else {
-        this.$formContainer.insertBefore($editable);
+        this.$formContainer.insertBefore($editorElement);
       }
 
-      // @todo: do something to toolbar - we should not touch the toolbar here!
-      // Move  toolbar inside .edit-form-container, to let it snap to the width
-      // of the form instead of the field formatter.
-      // Drupal.edit.toolbar.get($editable).detach().prependTo('.edit-form');
-      // this.getToolbarElement().detach().prependTo('.edit-form');
-
-
-      // Create the form asynchronously.
+      // Load form, insert it into the form container and attach event handlers.
       var widget = this;
-      Drupal.edit.form.create($editable, function($editable, $field) {
-        // Sets the state to 'activated'.
-        widget.options.activated();
-        Drupal.edit.log('Drupal.drupalFormWidget.activated', $editable, $field);
-        Drupal.edit.form.get($editable)
+      var formOptions = {
+        propertyID: propertyID,
+        $editorElement: $editorElement,
+        nocssjs: false
+      };
+      Drupal.edit.form.load(formOptions, function(form, ajax) {
+        Drupal.ajax.prototype.commands.insert(ajax, {
+          data: form,
+          selector: '#' + formContainerID + ' .placeholder'
+        });
+
+        var $submit = widget.$formContainer.find('.edit-form-submit');
+        Drupal.edit.form.ajaxifySaving(formOptions, $submit);
+        widget.$formContainer
           .delegate(':input', 'formUpdated.edit', function () {
             // Sets the state to 'changed'.
             widget.options.changed();
@@ -119,6 +112,9 @@
               return false;
             }
           });
+
+        // Sets the state to 'activated'.
+        widget.options.activated();
       });
     },
 
@@ -126,22 +122,26 @@
      * Disables the widget.
      */
     disable: function () {
-      Drupal.edit.log('Drupal.drupalFormWidget.disable');
+      if (this.$formContainer === null) {
+        return;
+      }
 
-      // Get rid of the Drupal.ajax instance that would be called when saving
-      // the form.
-      // No need to unbind; the DOM element on which an event was bound will be
-      // deleted below.
-      var $submit = Drupal.edit.form.get(this.element).find('.edit-form-submit');
-      delete Drupal.ajax[$submit.attr('id')];
-
-      // @todo: handle this better on the basis of the editable type.
-      // Currently we stuff forms into two places ...
-      Drupal.edit.form.get(this.element).remove();
-
-      Drupal.edit.form.get(this.element)
+      Drupal.edit.form.unajaxifySaving(this.$formContainer.find('.edit-form-submit'));
+      this.$formContainer
         .undelegate(':input', 'change.edit')
-        .undelegate('input', 'keypress.edit');
+        .undelegate('input', 'keypress.edit')
+        .remove();
+      this.$formContainer = null;
+    },
+
+    /**
+     * Generates a unique form container ID based on a property ID.
+     *
+     * @param string propertyID
+     *   A property ID.
+     */
+    _formContainerID: function(propertyID) {
+      return 'edit-form-for-' + propertyID.split('/').join('_');
     }
   });
 })(jQuery);

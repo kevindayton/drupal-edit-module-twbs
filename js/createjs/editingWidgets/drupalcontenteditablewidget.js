@@ -91,12 +91,7 @@
      * editing of a property after having attempted to save at least once.
      */
     _cleanUp: function() {
-      // Get rid of the Drupal.ajax instance that would be called when saving
-      // the form.
-      // No need to unbind; the DOM element on which an event was bound will be
-      // deleted below.
-      var $submit = jQuery('#edit_backstage form .edit-form-submit');
-      delete Drupal.ajax[$submit.attr('id')];
+      Drupal.edit.form.unajaxifySaving(jQuery('#edit_backstage form .edit-form-submit'));
       jQuery('#edit_backstage form').remove();
     }
   });

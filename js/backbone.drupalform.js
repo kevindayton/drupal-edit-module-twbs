@@ -14,7 +14,7 @@ Backbone.sync = function(method, model, options) {
  * Implemented on top of Form API and the AJAX commands framework. Sets up
  * scoped AJAX command closures specifically for a given PredicateEditor widget
  * (which contains a pre-existing form). By submitting the form through
- * Drupal.ajax and leveraging Drupal.ajax' ability to have scoped (per-intance)
+ * Drupal.ajax and leveraging Drupal.ajax' ability to have scoped (per-instance)
  * command implementations, we are able to update the VIE model, re-render the
  * form when there are validation errors and ensure no Drupal.ajax memory leaks.
  *
@@ -32,9 +32,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 
     // Successfully saved.
     Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
-      // Get rid of the Drupal.ajax instance that saved the form.
-      delete Drupal.ajax[ajax.selector.substring(1)];
-      jQuery(ajax.element).unbind(ajax.event);
+      Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
 
       // Call Backbone.sync's success callback with the rerendered field.
       var changedAttributes = {};
@@ -55,6 +53,8 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
     // the existing form, unbind the existing Drupal.ajax instance and create a
     // new Drupal.ajax instance.
     Drupal.ajax[base].commands.edit_field_form = function(ajax, response, status) {
+      Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
+
       Drupal.ajax.prototype.commands.insert(ajax, {
         data: response.data,
         selector: '#' + $formContainer.attr('id') + ' form'
@@ -62,12 +62,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 
       // Create a Drupa.ajax instance for the re-rendered ("new") form.
       var $newSubmit = $formContainer.find('.edit-form-submit');
-      Drupal.edit.form._setupAjaxForm(ajax.$editable, ajax.$field, $newSubmit);
-
-      // Get rid of the Drupal.ajax instance that saved the form.
-      // No need to unbind; the DOM element on which an event was bound was
-      // deleted by the above AJAX insert command.
-      delete Drupal.ajax[ajax.selector.substring(1)];
+      Drupal.edit.form.ajaxifySaving({ nocssjs: false }, $newSubmit);
     };
 
     // Click the form's submit button; the scoped AJAX commands above will
@@ -95,16 +90,27 @@ Backbone.syncDirect = function(method, model, options) {
     };
     var value = model.get(options.predicate);
 
-    // If form doesn't already exist, create it and then submit.
+    // If form doesn't already exist, load it and then submit.
     if (jQuery('#edit_backstage form').length === 0) {
-      Drupal.edit.form.create(options.editorSpecific.$editorElement, function ($editable) {
-        var base = jQuery('#edit_backstage form .edit-form-submit').attr('id');
+      var formOptions = {
+        propertyID: options.propertyID,
+        $editorElement: options.editorSpecific.$editorElement,
+        nocssjs: true
+      };
+      Drupal.edit.form.load(formOptions, function(form, ajax) {
+        // Direct forms are stuffed into #edit_backstage, apparently.
+        jQuery('#edit_backstage').append(form);
+        // Disable the browser's HTML5 validation; we only care about server-
+        // side validation. (Not disabling this will actually cause problems
+        // because browsers don't like to set HTML5 validation errors on hidden
+        // forms.)
+        jQuery('#edit_backstage form').attr('novalidate', true);
+        var $submit = jQuery('#edit_backstage form .edit-form-submit');
+        var base = Drupal.edit.form.ajaxifySaving(formOptions, $submit);
 
         // Successfully saved.
         Drupal.ajax[base].commands.edit_field_form_saved = function (ajax, response, status) {
-          // Get rid of the Drupal.ajax instance that saved the form, and of the
-          // form itself.
-          delete Drupal.ajax[base];
+          Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
           jQuery('#edit_backstage form').remove();
 
           options.success();

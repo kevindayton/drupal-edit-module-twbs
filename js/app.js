@@ -307,14 +307,14 @@
       })
       // custom events for initiating saving / cancelling
       .bind('editsave.edit', function(event, data) {
-        appView.saveProperty(editable, $editorElement, entity, predicate);
+        appView.saveProperty(editor, editable, $editorElement, entity, predicate);
       })
       .bind('editcancel.edit', function(event, data) {
         editable.setState('candidate', predicate, { reason: 'cancel' });
       });
     },
 
-    saveProperty: function(editableEntity, $editorElement, entity, predicate) {
+    saveProperty: function(editor, editableEntity, $editorElement, entity, predicate) {
       editableEntity.setState('saving', predicate);
 
       var editorWidgetName = $editorElement.data('createWidgetName');
@@ -324,7 +324,7 @@
       var editorSpecificOptions = {};
       var renderValidationErrors = null;
       if (editorWidgetName === 'drupalFormWidget') {
-        editorSpecificOptions.$formContainer = Drupal.edit.form.get($editorElement);
+        editorSpecificOptions.$formContainer = editor.$formContainer;
       }
       else {
         editorSpecificOptions.$editorElement = $editorElement;
@@ -372,6 +372,7 @@
           }
         },
         predicate: predicate,
+        propertyID: entity.getSubjectUri() + '/' + predicate,
         editorWidgetName: editorWidgetName,
         editorSpecific: editorSpecificOptions
       });

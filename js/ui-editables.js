@@ -1,121 +1,80 @@
 (function($) {
 
-/**
- * @file ui-editables.js
- *
- * UI components for editables: form.
- */
-
 Drupal.edit = Drupal.edit || {};
-
 Drupal.edit.form = {
-  create: function($editable, cb) {
-    console.log('Drupal.edit.form.create', $editable);
-    // @todo: this needs to be refactored, we should have access to the view
-    // rather than the $editable/$el of the view.
-    var entity = Drupal.edit.vie.entities.get(Drupal.edit.util.getElementSubject($editable));
-    var predicate = Drupal.edit.util.getElementPredicate($editable);
-    var $field = Drupal.edit.util.findFieldForEditable($editable);
-    var edit_id = Drupal.edit.util.getID($field);
-
-    // TRICKY: for type=direct fields, this gets called when SAVING (load form,
-    //fill it, submit it), instead of LOADING.
-    var onLoadCallback = function(status, form, ajax) {
-      // @todo: re-factor
-      var $submit;
-      if ($field.hasClass('edit-type-form')) {
-        var formWrapperId = Drupal.edit.form._id($editable);
-        Drupal.ajax.prototype.commands.insert(ajax, {
-          data: form,
-          selector: '#' + formWrapperId + ' .placeholder'
-        });
-
-        $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
-      }
-      else {
-        // Direct forms are stuffed into #edit_backstage, apparently.
-        $('#edit_backstage').append(form);
-        // Disable the browser's HTML5 validation; we only care about server-
-        // side validation. (Not disabling this will actually cause problems
-        // because browsers don't like to set HTML5 validation errors on hidden
-        // forms.)
-        $('#edit_backstage form').attr('novalidate', true);
-        $submit = $('#edit_backstage form .edit-form-submit');
-      }
-
-      // Time to get rid of the Drupal.ajax instance that loaded the form.
-      delete Drupal.ajax[ajax.selector.substring(1)];
-      ajax.element.unbind(ajax.event);
-
-      Drupal.edit.form._setupAjaxForm($editable, $field, $submit);
-
-      // Trigger that the form has loaded.
-      $editable.trigger('edit-form-loaded.edit');
-
-      // callback to be able to decorate / continue with the editable...
-      cb($editable, $field);
+  /**
+   * Loads a form, calls a callback to inserts.
+   *
+   * Leverages Drupal.ajax' ability to have scoped (per-instance) command
+   * implementations to be able to call a callback.
+   *
+   * @param options
+   *   An object with the following keys:
+   *    - $editorElement (required): the PredicateEditor DOM element.
+   *    - propertyID (required): the property ID that uniquely identifies the
+   *      property for which this form will be loaded.
+   *    - nocssjs (required): boolean indicating whether no CSS and JS should be
+   *      returned (necessary when the form is invisible to the user).
+   * @param callback
+   *   A callback function that will receive the form to be inserted, as well as
+   *   the ajax object, necessary if the callback wants to perform other AJAX
+   *   commands.
+   */
+  load: function(options, callback) {
+    // Create a Drupal.ajax instance to load the form.
+    Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
+      url: Drupal.edit.util.calcFormURLForField(options.propertyID),
+      event: 'edit-internal.edit',
+      submit: { nocssjs : options.nocssjs },
+      progress: { type : null } // No progress indicator.
+    });
+    // Implement a scoped edit_field_form AJAX command: calls the callback.
+    Drupal.ajax[options.propertyID].commands.edit_field_form = function(ajax, response, status) {
+      callback(response.data, ajax);
+      // Delete the Drupal.ajax instance that called this very function.
+      delete Drupal.ajax[options.propertyID];
+      options.$editorElement.unbind('edit-internal.edit');
     };
-
-    this.loadForm(entity, predicate, onLoadCallback);
+    // This will ensure our scoped edit_field_form AJAX command gets called.
+    options.$editorElement.trigger('edit-internal.edit');
   },
-  // @todo: complete refactoring.
-  _setupAjaxForm: function($editable, $field, $submit) {
+
+  /**
+   * Creates a Drupal.ajax instance that is used to save a form.
+   *
+   * @param options
+   *   An object with the following keys:
+   *    - nocssjs (required): boolean indicating whether no CSS and JS should be
+   *      returned (necessary when the form is invisible to the user).
+   *
+   * @return
+   *   The key of the Drupal.ajax instance.
+   */
+  ajaxifySaving: function(options, $submit) {
     // Re-wire the form to handle submit.
     var element_settings = {
       url: $submit.closest('form').attr('action'),
       setClick: true,
       event: 'click.edit',
-      progress: {type:'throbber'},
-      // IPE-specific settings.
-      $editable: $editable,
-      $field: $field,
-      submit: { nocssjs : ($field.hasClass('edit-type-direct')) }
+      progress: { type:'throbber' },
+      submit: { nocssjs : options.nocssjs }
     };
     var base = $submit.attr('id');
 
     Drupal.ajax[base] = new Drupal.ajax(base, $submit[0], element_settings);
-  },
-  get: function($editable) {
-    return ($editable.length === 0)
-      ? $([])
-      : $('#' + this._id($editable));
-  },
 
-  _id: function($editable) {
-    var edit_id = Drupal.edit.util.getID($editable);
-    return 'edit-form-for-' + edit_id.split(':').join('_');
+    return base;
   },
 
   /**
-   * Loads a drupal form for a given vieEntity
+   * Cleans up the Drupal.ajax instance that is used to save the form.
    *
-   * @todo: we need to use this for non-form-based FieldView-instances as well.
-   * @todo: error handling etc.
-   *
-   * @param vieEntity object vieEntity
-   * @param predicate string predicate ("field name")
-   * @param callback callback callback once form is loaded callback(status, $form)
+   * @param $submit
+   *   The jQuery-wrapped submit DOM element that should be unajaxified.
    */
-  loadForm: function (vieEntity, predicate, callback) {
-    var edit_id = vieEntity.getSubjectUri() + '/' + predicate;
-    var $field = Drupal.edit.util.findFieldForID(edit_id);
-    var $editable = Drupal.edit.util.findEditablesForFields($field);
-    var element_settings = {
-      url      : Drupal.edit.util.calcFormURLForField(edit_id),
-      event    : 'edit-internal.edit',
-      $field   : $field,
-      $editable: $editable,
-      submit   : { nocssjs : ($field.hasClass('edit-type-direct')) },
-      progress : { type : null } // No progress indicator.
-    };
-    Drupal.ajax[edit_id] = new Drupal.ajax(edit_id, $editable, element_settings);
-    // Some form of closure.
-    Drupal.ajax[edit_id].commands.edit_field_form = function(ajax, response, status) {
-      // @todo only call the callback if response.id matches edit_id. If that's
-      // not the case, we're preloading forms.
-      callback(status, response.data, ajax);
-    };
-    $editable.trigger('edit-internal.edit');
+  unajaxifySaving: function($submit) {
+    delete Drupal.ajax[$submit.attr('id')];
+    $submit.unbind('click.edit');
   }
 };
 
