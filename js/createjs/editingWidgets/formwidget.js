@@ -32,6 +32,7 @@
         case 'candidate':
           if (from !== 'inactive') {
             this.disable();
+            Drupal.edit.state.set('formLoadedFor', null);
           }
           break;
         case 'highlighted':
