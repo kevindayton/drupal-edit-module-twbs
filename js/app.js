@@ -162,6 +162,11 @@
           else if (from === 'saved' && to === 'candidate') {
             accept = true;
           }
+          // Allow: invalid -> saving.
+          // Necessary to be able to save a corrected, invalid property.
+          else if (from === 'invalid' && to === 'saving') {
+            accept = true;
+          }
         }
 
         // If it's not against the general principle, then here are more
