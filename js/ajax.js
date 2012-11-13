@@ -8,11 +8,6 @@
 
 // Hide these in a ready to ensure that Drupal.ajax is set up first.
 $(function() {
-  // these function should never be called as they are overridden by setting the
-  // respective Drupal.ajax[{base}].commands.edit_field_form|_saved methods in
-  // create/loadForm/saveForm  in ui-editables.
-  Drupal.ajax.prototype.commands.edit_field_form = function(ajax, response, status) {};
-  Drupal.ajax.prototype.commands.edit_field_form_saved = function(ajax, response, status) {};
   // @todo: refactor this in a similar fashion & figure out where this is
   // needed - probably direct editables.
   // NOTE FROM WIM: this is needed when doing type=direct-with-wysiwyg editing,
@@ -35,33 +30,6 @@ $(function() {
       ajax.$editable.html(response.data);
       // @todo: this object doesn't exist anymore.
       Drupal.edit.editables._wysiwygify(ajax.$editable);
-    }
-  };
-  Drupal.ajax.prototype.commands.edit_field_form_validation_errors = function(ajax, response, status) {
-    console.log('edit_field_form_validation_errors', ajax, response, status);
-
-    if (response.data) {
-      var $field = $('.edit-field[data-edit-id="' + response.id  + '"]');
-      if ($field.hasClass('edit-type-form')) {
-        Drupal.edit.form.get($field)
-          .find('.edit-form')
-          .addClass('edit-validation-error')
-          .find('form')
-          .prepend(response.data);
-      }
-      else {
-        var $editable = Drupal.edit.findEditablesForFields($field);
-
-        if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
-          Drupal.edit.editables._wysiwygify($editable);
-        }
-
-        var $errors = $('<div class="edit-validation-errors"></div>')
-          .append(response.data);
-        $editable
-          .addClass('edit-validation-error')
-          .after($errors);
-      }
     }
   };
 });
