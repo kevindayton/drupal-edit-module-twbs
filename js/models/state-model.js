@@ -10,7 +10,6 @@ Drupal.edit.models.StateModel = Backbone.Model.extend({
     fieldBeingEdited: [],
     highlightedEditable: null,
     editedEditable: null,
-    editedFieldView: null,
-    formLoadedFor: null
+    editedFieldView: null
   }
 });

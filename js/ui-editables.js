@@ -27,11 +27,8 @@ Drupal.edit.form = {
         var formWrapperId = Drupal.edit.form._id($editable);
         Drupal.ajax.prototype.commands.insert(ajax, {
           data: form,
-          selector: (Drupal.edit.state.get('formLoadedFor') == edit_id)
-            ? '#' + formWrapperId + ' form'
-            : '#' + formWrapperId + ' .placeholder'
+          selector: '#' + formWrapperId + ' .placeholder'
         });
-        Drupal.edit.state.set('formLoadedFor', edit_id);
 
         $submit = Drupal.edit.form.get($editable).find('.edit-form-submit');
       }
