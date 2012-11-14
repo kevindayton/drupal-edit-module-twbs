@@ -16,7 +16,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   $editorElement: null,
 
   events: {
-    // @todo: verify if we want the {EVENT}.edit namespace here.
     'click a.label': 'onClickInfoLabel',
     'mouseleave': 'onMouseLeave',
     'click a.field-save': 'onClickSave',
@@ -42,12 +41,12 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *
    * @param event
    */
-  onMouseLeave: function(e) {
+  onMouseLeave: function(event) {
     var el = this.$editorElement[0];
-    if (e.relatedTarget != el && !jQuery.contains(el, e.relatedTarget)) {
+    if (event.relatedTarget != el && !jQuery.contains(el, event.relatedTarget)) {
       this.$editorElement.trigger('mouseleave.edit');
     }
-    e.stopPropagation();
+    event.stopPropagation();
   },
 
   /**
