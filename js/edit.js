@@ -32,9 +32,11 @@ Drupal.edit.log = function() {
 };
 
 Drupal.edit.init = function() {
-  // Instantiate EditAppView, which is the controller of it all.
+  // Instantiate EditAppView, which is the controller of it all. StateModel
+  // instance tracks global state (viewing/editing inline).
   var appView = new Drupal.edit.EditAppView({
-    el: $('body')
+    el: $('body'),
+    model: new Drupal.edit.models.StateModel()
   });
 
   // Instantiate EditRouter.

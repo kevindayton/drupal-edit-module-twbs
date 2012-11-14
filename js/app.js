@@ -32,9 +32,6 @@
       this.activeEditorStates = ['activating', 'active'];
       this.singleEditorStates = _.union(['highlighted'], this.activeEditorStates);
 
-      // Instantiate StateModel
-      this.state = new Drupal.edit.models.StateModel();
-
       // Use Create's Storage widget.
       this.$el.createStorage({
         vie: this.vie,
@@ -70,7 +67,7 @@
       // Instantiate OverlayView
       var overlayView = new Drupal.edit.views.OverlayView({
         appView: this,
-        model: this.state
+        model: this.model
       });
 
       // The OverlayView triggers the escapedEditor event if is clicked
@@ -83,7 +80,7 @@
       // Instantiate MenuView
       var editMenuView = new Drupal.edit.views.MenuView({
         el: this.el,
-        model: this.state
+        model: this.model
       });
     },
 
@@ -124,7 +121,7 @@
 
       // If the app is in view mode, then reject all state changes except for
       // those to 'inactive'.
-      if (this.state.get('isViewing')) {
+      if (this.model.get('isViewing')) {
         if (to !== 'inactive') {
           accept = false;
         }
@@ -373,8 +370,8 @@
     },
     bindAppStateChanges: function() {
       var that = this;
-      this.state.on('change:isViewing', function() {
-        var newEditableEntityState = (that.state.get('isViewing'))
+      this.model.on('change:isViewing', function() {
+        var newEditableEntityState = (that.model.get('isViewing'))
           ? 'inactive'
           : 'candidate';
         that.$entityElements.each(function() {

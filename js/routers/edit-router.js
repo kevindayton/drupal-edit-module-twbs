@@ -11,7 +11,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
     this.appView = options.appView;
   },
   edit: function() {
-    this.appView.state.set('isViewing', false);
+    this.appView.model.set('isViewing', false);
   },
   view: function(query, page) {
     var that = this;
@@ -19,7 +19,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
     // will prompt user for confirmation if changes may be lost in that process.
     that.appView.revertActiveEditorToCandidate(function(accept) {
       if (accept) {
-        that.appView.state.set('isViewing', true);
+        that.appView.model.set('isViewing', true);
       } else {
         that.navigate('#quick-edit');
       }
