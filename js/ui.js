@@ -3,18 +3,10 @@
 /**
  * @file ui.js
  *
- * "Global" UI components: toggle, modal.
+ * "Global" UI components: modal.
  */
 
 Drupal.edit = Drupal.edit || {};
-
-
-Drupal.edit.toggle = {
-  render: function() {
-    // TODO: fancy, "physical toggle" to switch from view to edit mode and back.
-  }
-};
-
 
 Drupal.edit.modal = {
   create: function(message, actions, $editable) {
