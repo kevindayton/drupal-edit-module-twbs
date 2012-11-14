@@ -9,11 +9,12 @@ Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
-  id: null,
   entity: null,
   predicate : null,
   editorName: null,
   $editorElement: null,
+
+  _id: null,
 
   events: {
     'click a.label': 'onClickInfoLabel',
@@ -86,10 +87,11 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.predicate = options.predicate;
     this.editorName = options.editorName;
     this.$editorElement = options.$editorElement;
+
     var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
 
     // Generate a DOM-compatible ID for the toolbar DOM element.
-    this.id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
+    this._id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
 
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
     this.stateChange('inactive', 'candidate');
@@ -327,7 +329,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *   A string that can be used as the ID for this toolbar container.
    */
   getId: function() {
-    return this.id;
+    return this._id;
   },
 
   /**

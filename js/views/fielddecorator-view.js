@@ -15,7 +15,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   predicate : null,
   editorName: null,
 
-  widthAttributeIsEmpty: null,
+  _widthAttributeIsEmpty: null,
 
   /**
    * Implements Backbone View's initialize() function.
@@ -134,7 +134,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     // the outside".
     // 1) Freeze the width (if it's not already set); don't use animations.
     if (this.$el[0].style.width === "") {
-      this.widthAttributeIsEmpty = true;
+      this._widthAttributeIsEmpty = true;
       this.$el
         .addClass('edit-animate-disable-width')
         .css('width', this.$el.width());
@@ -165,7 +165,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     var self = this;
 
     // 1) Set the empty width again.
-    if (this.widthAttributeIsEmpty) {
+    if (this._widthAttributeIsEmpty) {
       this.$el
         .addClass('edit-animate-disable-width')
         .css('width', '');
