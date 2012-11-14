@@ -8,10 +8,13 @@
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
+
+  id: null,
   entity: null,
   predicate : null,
   $editableElementForStateChanges: null,
   $editorElement: null,
+
   events: {
     // @todo: verify if we want the {EVENT}.edit namespace here.
     'click a.label': 'onClickInfoLabel',
@@ -19,7 +22,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     'click a.field-save': 'onClickSave',
     'click a.field-close': 'onClickClose'
   },
-  // Event handlers
+
   /**
    * When the user clicks the info label, nothing should happen.
    * @note currently redirects the click.edit-event to the $editorElement.
@@ -32,6 +35,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     // Redirects the event to the $editorElement itself.
     this.$editorElement.trigger('click.edit');
   },
+
   /**
    * A mouseleave to the editor doesn't matter; a mouseleave to something else
    * counts as a mouseleave on the editor itself.
@@ -45,6 +49,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     }
     e.stopPropagation();
   },
+
   /**
    * Upon clicking "Save", trigger a custom event to save this property.
    *
@@ -55,6 +60,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     event.preventDefault();
     this.$editorElement.trigger('editsave.edit', { originalEvent: event });
   },
+
   /**
    * Upon clicking "Cancel", trigger a custom event to cancel editing.
    *
@@ -71,9 +77,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.entity = options.entity;
     this.$editableElementForStateChanges = options.$editableElementForStateChanges;
     this.$editorElement = options.$editorElement;
-    // Generate a DOM-compatible ID for the toolbar DOM-element.
-    var propertyId = this.entity.getSubjectUri() + '-' + this.predicate;
-    this.id = 'edit-toolbar-for-' + propertyId.replace(/\//g, '-');
+    var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
+
+    // Generate a DOM-compatible ID for the toolbar DOM element.
+    this.id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
 
     var that = this;
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved

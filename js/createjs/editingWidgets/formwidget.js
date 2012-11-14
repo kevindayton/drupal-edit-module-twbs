@@ -2,6 +2,7 @@
   // # Drupal form-based editing widget for Create.js
   $.widget('Drupal.drupalFormWidget', $.Create.editWidget, {
 
+    id: null,
     $formContainer: null,
 
     /**
@@ -59,12 +60,14 @@
      */
     enable: function () {
       var $editorElement = $(this.options.widget.element);
-      var propertyID = this.options.entity.getSubjectUri() + '/' + this.options.property;
-      var formContainerID = this._formContainerID(propertyID);
+      var propertyID = Drupal.edit.util.calcPropertyID(this.options.entity, this.options.property);
+
+      // Generate a DOM-compatible ID for the form container DOM element.
+      this.id = 'edit-form-for-' + propertyID.replace(/\//g, '_');
 
       // Render form container.
       this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
-        id: formContainerID,
+        id: this.id,
         loadingMsg: Drupal.t('Loading…')}
       ));
       this.$formContainer
@@ -97,7 +100,7 @@
       Drupal.edit.util.form.load(formOptions, function(form, ajax) {
         Drupal.ajax.prototype.commands.insert(ajax, {
           data: form,
-          selector: '#' + formContainerID + ' .placeholder'
+          selector: '#' + widget.id + ' .placeholder'
         });
 
         var $submit = widget.$formContainer.find('.edit-form-submit');
@@ -132,16 +135,6 @@
         .undelegate('input', 'keypress.edit')
         .remove();
       this.$formContainer = null;
-    },
-
-    /**
-     * Generates a unique form container ID based on a property ID.
-     *
-     * @param string propertyID
-     *   A property ID.
-     */
-    _formContainerID: function(propertyID) {
-      return 'edit-form-for-' + propertyID.split('/').join('_');
     }
   });
 })(jQuery);

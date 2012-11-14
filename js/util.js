@@ -20,6 +20,10 @@ Drupal.edit.util.log = function() {
   }
 };
 
+Drupal.edit.util.calcPropertyID = function(entity, predicate) {
+  return entity.getSubjectUri() + '/' + predicate;
+};
+
 Drupal.edit.util.calcFormURLForField = function(id) {
   var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
