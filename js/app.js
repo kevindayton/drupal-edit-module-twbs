@@ -200,7 +200,7 @@
         }
       }
 
-      Drupal.edit.log("accept state:", accept ? 'A' : 'R', from, to, predicate, (context) ? context.reason : undefined);
+      Drupal.edit.util.log("accept state:", accept ? 'A' : 'R', from, to, predicate, (context) ? context.reason : undefined);
       callback(accept);
     },
 
@@ -237,7 +237,7 @@
       // propertyEditor, so we can get rid of this filth.
       if (editor) {
         var editorWidgetType = editor.element.data('createWidgetName');
-        Drupal.edit.log('editor state:', from, to, predicate, editorWidgetType, editor);
+        Drupal.edit.util.log('editor state:', from, to, predicate, editorWidgetType, editor);
         // editor.decorationView.createEditableStateChange({}, data);
         // editor.toolbarView.createEditableStateChange({}, data);
         editor.stateChange(from, to);

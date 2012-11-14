@@ -1,11 +1,7 @@
 (function ($, VIE) {
 
 Drupal.edit = Drupal.edit || {};
-Drupal.edit.wysiwyg = Drupal.edit.wysiwyg || {};
 
-/**
- * Attach toggling behavior and in-place editing.
- */
 Drupal.behaviors.editDiscoverEditables = {
   attach: function(context) {
     // @todo: we need to separate the discovery of editables if we want updated
@@ -14,17 +10,13 @@ Drupal.behaviors.editDiscoverEditables = {
     // calls to Drupal.edit.domService.findSubjectElements() :)
   }
 };
+
+/**
+ * Attach toggling behavior and in-place editing.
+ */
 Drupal.behaviors.edit = {
   attach: function(context) {
     $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
-  }
-};
-
-// Temporary helper function: logging.
-Drupal.edit.debug = false;
-Drupal.edit.log = function() {
-  if (Drupal.edit.debug && window.console) {
-    console.log(Array.prototype.slice.call(arguments));
   }
 };
 

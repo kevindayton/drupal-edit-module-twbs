@@ -12,6 +12,14 @@ Drupal.edit.util = Drupal.edit.util || {};
 Drupal.edit.util.constants = {};
 Drupal.edit.util.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
 
+// Temporary helper function: logging.
+Drupal.edit.debug = false;
+Drupal.edit.util.log = function() {
+  if (Drupal.edit.debug && window.console) {
+    console.log(Array.prototype.slice.call(arguments));
+  }
+};
+
 Drupal.edit.util.calcFormURLForField = function(id) {
   var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
