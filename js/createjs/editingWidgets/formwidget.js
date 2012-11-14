@@ -94,14 +94,14 @@
         $editorElement: $editorElement,
         nocssjs: false
       };
-      Drupal.edit.form.load(formOptions, function(form, ajax) {
+      Drupal.edit.util.form.load(formOptions, function(form, ajax) {
         Drupal.ajax.prototype.commands.insert(ajax, {
           data: form,
           selector: '#' + formContainerID + ' .placeholder'
         });
 
         var $submit = widget.$formContainer.find('.edit-form-submit');
-        Drupal.edit.form.ajaxifySaving(formOptions, $submit);
+        Drupal.edit.util.form.ajaxifySaving(formOptions, $submit);
         widget.$formContainer
           .delegate(':input', 'formUpdated.edit', function () {
             // Sets the state to 'changed'.
@@ -126,7 +126,7 @@
         return;
       }
 
-      Drupal.edit.form.unajaxifySaving(this.$formContainer.find('.edit-form-submit'));
+      Drupal.edit.util.form.unajaxifySaving(this.$formContainer.find('.edit-form-submit'));
       this.$formContainer
         .undelegate(':input', 'change.edit')
         .undelegate('input', 'keypress.edit')

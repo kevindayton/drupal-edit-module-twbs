@@ -91,7 +91,7 @@
      * editing of a property after having attempted to save at least once.
      */
     _cleanUp: function() {
-      Drupal.edit.form.unajaxifySaving(jQuery('#edit_backstage form .edit-form-submit'));
+      Drupal.edit.util.form.unajaxifySaving(jQuery('#edit_backstage form .edit-form-submit'));
       jQuery('#edit_backstage form').remove();
     }
   });

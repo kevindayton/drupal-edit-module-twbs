@@ -18,7 +18,7 @@ Backbone.sync = function(method, model, options) {
  * command implementations, we are able to update the VIE model, re-render the
  * form when there are validation errors and ensure no Drupal.ajax memory leaks.
  *
- * @see Drupal.edit.form()
+ * @see Drupal.edit.util.form
  *
  * @todo: HTTP status handling.
  */
@@ -32,7 +32,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 
     // Successfully saved.
     Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
-      Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
+      Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
 
       // Call Backbone.sync's success callback with the rerendered field.
       var changedAttributes = {};
@@ -53,7 +53,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
     // the existing form, unbind the existing Drupal.ajax instance and create a
     // new Drupal.ajax instance.
     Drupal.ajax[base].commands.edit_field_form = function(ajax, response, status) {
-      Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
+      Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
 
       Drupal.ajax.prototype.commands.insert(ajax, {
         data: response.data,
@@ -62,7 +62,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 
       // Create a Drupa.ajax instance for the re-rendered ("new") form.
       var $newSubmit = $formContainer.find('.edit-form-submit');
-      Drupal.edit.form.ajaxifySaving({ nocssjs: false }, $newSubmit);
+      Drupal.edit.util.form.ajaxifySaving({ nocssjs: false }, $newSubmit);
     };
 
     // Click the form's submit button; the scoped AJAX commands above will
@@ -75,7 +75,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 * Performs syncing for type=direct PredicateEditor widgets.
  *
  * @see Backbone.syncDrupalFormWidget()
- * @see Drupal.edit.form()
+ * @see Drupal.edit.util.form
  *
  * @todo: HTTP status handling.
  */
@@ -97,7 +97,7 @@ Backbone.syncDirect = function(method, model, options) {
         $editorElement: options.editorSpecific.$editorElement,
         nocssjs: true
       };
-      Drupal.edit.form.load(formOptions, function(form, ajax) {
+      Drupal.edit.util.form.load(formOptions, function(form, ajax) {
         // Create a backstage area for storing forms that are hidden from view
         // (hence "backstage" — since the editing doesn't happen in the form, it
         // happens "directly" in the content, the form is only used for saving).
@@ -110,11 +110,11 @@ Backbone.syncDirect = function(method, model, options) {
         // forms.)
         jQuery('#edit_backstage form').attr('novalidate', true);
         var $submit = jQuery('#edit_backstage form .edit-form-submit');
-        var base = Drupal.edit.form.ajaxifySaving(formOptions, $submit);
+        var base = Drupal.edit.util.form.ajaxifySaving(formOptions, $submit);
 
         // Successfully saved.
         Drupal.ajax[base].commands.edit_field_form_saved = function (ajax, response, status) {
-          Drupal.edit.form.unajaxifySaving(jQuery(ajax.element));
+          Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
           jQuery('#edit_backstage form').remove();
 
           options.success();
