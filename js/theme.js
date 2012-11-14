@@ -114,7 +114,6 @@ Drupal.theme.editButtons = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-// @todo: remove, no usages found.
 Drupal.theme.editFormContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-form-container">';

@@ -1,6 +1,4 @@
 (function ($, undefined) {
-  // @todo: clarify whether we should move this to Drupal.edit.views namespace
-  // and views/ directory?
   Drupal.edit = Drupal.edit || {};
   Drupal.edit.EditAppView = Backbone.View.extend({
     vie: null,

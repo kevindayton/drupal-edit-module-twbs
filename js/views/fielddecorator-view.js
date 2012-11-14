@@ -66,13 +66,10 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
         break;
       case 'changed':
         break;
-      // @todo: set this state in EditAppView.
       case 'saving':
         break;
-      // @todo: set this state in EditAppView.
       case 'saved':
         break;
-      // @todo: set this state in EditAppView.
       case 'invalid':
         break;
     }

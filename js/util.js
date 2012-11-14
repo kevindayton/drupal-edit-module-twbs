@@ -33,7 +33,6 @@ Drupal.edit.util.calcFormURLForField = function(id) {
 
 };
 
-// @todo: remove, no usage found.
 Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
   var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
