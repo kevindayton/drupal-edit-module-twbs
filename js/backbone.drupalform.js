@@ -1,6 +1,6 @@
 Backbone.defaultSync = Backbone.sync;
 Backbone.sync = function(method, model, options) {
-  if (options.editorWidgetName === 'drupalFormWidget') {
+  if (options.editorName === 'form') {
     return Backbone.syncDrupalFormWidget(method, model, options);
   }
   else {
@@ -9,7 +9,7 @@ Backbone.sync = function(method, model, options) {
 };
 
 /**
- * Performs syncing for drupalFormWidget (type=form) PredicateEditor widgets.
+ * Performs syncing for "form" PredicateEditor widgets.
  *
  * Implemented on top of Form API and the AJAX commands framework. Sets up
  * scoped AJAX command closures specifically for a given PredicateEditor widget
@@ -72,7 +72,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 };
 
 /**
-* Performs syncing for type=direct PredicateEditor widgets.
+* Performs syncing for "direct" PredicateEditor widgets.
  *
  * @see Backbone.syncDrupalFormWidget()
  * @see Drupal.edit.util.form
@@ -129,9 +129,9 @@ Backbone.syncDirect = function(method, model, options) {
         // The edit_field_form AJAX command is only called upon loading the form
         // for the first time, and when there are validation errors in the form;
         // Form API then marks which form items have errors. This is useful for
-        // type=form, but pointless for type=direct: the form itself won't be
-        // visible at all anyway! Therefor, we ignore the new form and we
-        // continue to use the existing form.
+        // "form" editors, but pointless for "direct" editors: the form itself
+        // won't be visible at all anyway! Therefor, we ignore the new form and
+        // we continue to use the existing form.
         Drupal.ajax[base].commands.edit_field_form = function(ajax, response, status) {
           // no-op
         };

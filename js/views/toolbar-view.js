@@ -12,7 +12,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   id: null,
   entity: null,
   predicate : null,
-  $editableElementForStateChanges: null,
+  editorName: null,
   $editorElement: null,
 
   events: {
@@ -71,10 +71,20 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.$editorElement.trigger('editcancel.edit', { originalEvent: event });
   },
 
-  initialize:function (options) {
-    this.predicate = options.predicate;
+  /**
+   * Implements Backbone View's initialize() function.
+   *
+   * @param options
+   *   An object with the following keys:
+   *   - entity: the VIE entity for the property.
+   *   - predicate: the predicate of the property.
+   *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
+   *   - $editorElement: the corresponding PropertyEditor widget.
+   */
+  initialize: function(options) {
     this.entity = options.entity;
-    this.$editableElementForStateChanges = options.$editableElementForStateChanges;
+    this.predicate = options.predicate;
+    this.editorName = options.editorName;
     this.$editorElement = options.$editorElement;
     var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
 
@@ -90,16 +100,14 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   stateChange: function(from, to) {
-    // @todo: get rid of this; rely on editor info instead.
-    var type = this.$editableElementForStateChanges.hasClass('edit-type-form') ? 'form' : (this.$editableElementForStateChanges.hasClass('edit-type-direct-with-wysiwyg') ? 'direct-with-wysiwyg' : 'direct');
     switch (to) {
       case 'inactive':
         // Nothing happens in this stage.
         break;
       case 'candidate':
         if (from !== 'inactive') {
-          if (from !== 'highlighted' && type !== 'form') {
-            this._unpad(type);
+          if (from !== 'highlighted' && this.editorName !== 'form') {
+            this._unpad(this.editorName);
           }
           this.remove();
         }
@@ -110,17 +118,17 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         this.startHighlight();
         break;
       case 'activating':
-        if (type === 'form') {
+        if (this.editorName === 'form') {
           this.setLoadingIndicator(true);
         }
         break;
       case 'active':
-        this.startEdit(type);
+        this.startEdit(this.editorName);
         this.setLoadingIndicator(false);
-        if (type !== 'form') {
-          this._pad(type);
+        if (this.editorName !== 'form') {
+          this._pad(this.editorName);
         }
-        if (type === 'direct-with-wysiwyg') {
+        if (this.editorName === 'direct-with-wysiwyg') {
           this.insertWYSIWYGToolGroups();
         }
         break;
@@ -207,7 +215,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *
    * @see FieldDecorationView._pad().
    */
-  _pad: function(type) {
+  _pad: function(editorName) {
       // The whole toolbar must move to the top when the property's DOM element
       // is displayed inline.
       if (this.$editorElement.css('display') == 'inline') {
@@ -219,7 +227,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       $hf.css({ bottom: '6px', left: '-5px' });
       // When using a WYSIWYG editor, the width of the toolbar must match the
       // width of the editable.
-      if (type === 'direct-with-wysiwyg') {
+      if (editorName === 'direct-with-wysiwyg') {
         $hf.css({ width: this.$editorElement.width() + 10 });
       }
   },
@@ -229,12 +237,12 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *
    * @see FieldDecorationView._unpad().
    */
-  _unpad: function(type) {
+  _unpad: function(editorName) {
       // Move the toolbar back to its original position.
       var $hf = this.$el.find('.edit-toolbar-heightfaker');
       $hf.css({ bottom: '1px', left: '' });
       // When using a WYSIWYG editor, restore the width of the toolbar.
-      if (type === 'direct-with-wysiwyg') {
+      if (editorName === 'direct-with-wysiwyg') {
         $hf.css({ width: '' });
       }
   },

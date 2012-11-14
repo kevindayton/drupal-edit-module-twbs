@@ -13,14 +13,24 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
   entity: null,
   predicate : null,
-  $editableElementForStateChanges: null,
+  editorName: null,
 
   widthAttributeIsEmpty: null,
 
+  /**
+   * Implements Backbone View's initialize() function.
+   *
+   * @param options
+   *   An object with the following keys:
+   *   - entity: the VIE entity for the property.
+   *   - predicate: the predicate of the property.
+   *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
+   *   - $editorElement: the corresponding PropertyEditor widget.
+   */
   initialize: function(options) {
-    this.predicate = options.predicate;
     this.entity = options.entity;
-    this.$editableElementForStateChanges = options.$editableElementForStateChanges;
+    this.predicate = options.predicate;
+    this.editorName = options.editorName;
 
     this.$el.css('background-color', this._getBgColor(this.$el));
 
@@ -33,8 +43,6 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   },
 
   stateChange: function(from, to) {
-    // @todo: get rid of this; rely on editor info instead.
-    var type = this.$editableElementForStateChanges.hasClass('edit-type-form') ? 'form' : (this.$editableElementForStateChanges.hasClass('edit-type-direct-with-wysiwyg') ? 'direct-with-wysiwyg' : 'direct');
     switch (to) {
       case 'inactive':
         if (from !== null) {
@@ -46,7 +54,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
         if (from !== 'inactive') {
           this.stopHighlight();
           if (from !== 'highlighted') {
-            this.stopEdit(type);
+            this.stopEdit(this.editorName);
           }
         }
         break;
@@ -54,15 +62,16 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
         this.startHighlight();
         break;
       case 'activating':
-        // NOTE: this step only exists for type=form! It is skipped by
-        // type=direct, because no loading is necessary.
-        this.prepareEdit(type);
+        // NOTE: this step only exists for the 'form' editor! It is skipped by
+        // the 'direct' and 'direct-with-wysiwyg' editors, because no loading is
+        // necessary.
+        this.prepareEdit(this.editorName);
         break;
       case 'active':
-        if (type !== 'form') {
-          this.prepareEdit(type);
+        if (this.editorName !== 'form') {
+          this.prepareEdit(this.editorName);
         }
-        this.startEdit(type);
+        this.startEdit(this.editorName);
         break;
       case 'changed':
         break;
@@ -97,23 +106,23 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       .removeClass('edit-highlighted');
   },
 
-  prepareEdit: function(type) {
+  prepareEdit: function(editorName) {
     this.$el.addClass('edit-editing');
-    if (type === 'form') {
+    if (editorName === 'form') {
       this.$el.addClass('edit-belowoverlay');
     }
   },
 
-  startEdit: function(type) {
-    if (type !== 'form') {
+  startEdit: function(editorName) {
+    if (editorName !== 'form') {
       this._pad();
     }
   },
 
-  stopEdit: function(type) {
+  stopEdit: function(editorName) {
     this.$el.removeClass('edit-highlighted edit-editing');
 
-    if (type === 'form') {
+    if (editorName === 'form') {
       this.$el.removeClass('edit-belowoverlay');
     }
     else {

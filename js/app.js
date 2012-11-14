@@ -256,26 +256,15 @@
         el: $editorElement,
         entity: entity,
         predicate: predicate,
-        // TRICKY: the Editable element instead of the editing (editor)
-        // widget element, because events are triggered on the Editable
-        // element, not on the editor element. This is mostly because in
-        // our implementation, editable == field wrapper (formerly $field)
-        // and editor == actual part that's being edited (formerly
-        // $editable). For type=form field wrapper == part that's being
-        // edited, for type=direct, this is different.
-        // @todo: We should pass data.element instead, and pass
-        // data.editable.element separately, just for it to be able to
-        // listen to state changes.
-        $editableElementForStateChanges: $editableElement
+        editorName: editor.options.editorName
       });
       // Toolbars are rendered "on-demand" (highlighting or activating).
       // They are a sibling element before the $editorElement.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
         entity: entity,
         predicate: predicate,
-        $editorElement: $editorElement,
-        // @todo: get rid of this.
-        $editableElementForStateChanges: $editableElement
+        editorName: editor.options.editorName,
+        $editorElement: $editorElement
       });
 
       // Editor-specific event handling.
@@ -306,13 +295,13 @@
     saveProperty: function(editor, editableEntity, $editorElement, entity, predicate) {
       editableEntity.setState('saving', predicate);
 
-      var editorWidgetName = $editorElement.data('createWidgetName');
+      var editorName = editor.options.editorName;
 
-      // We need to pass on the editorWidgetName to the Backbone.sync, as well
-      // as some editor widget name-specific options.
+      // We need to pass on the editorName to the Backbone.sync, as well as some
+      // editor-specific options.
       var editorSpecificOptions = {};
       var renderValidationErrors = null;
-      if (editorWidgetName === 'drupalFormWidget') {
+      if (editorName === 'form') {
         editorSpecificOptions.$formContainer = editor.$formContainer;
       }
       else {
@@ -345,7 +334,7 @@
         error: function (validationErrorMessages) {
           editableEntity.setState('invalid', predicate);
 
-          if (editorWidgetName === 'drupalFormWidget') {
+          if (editorName === 'form') {
             editorSpecificOptions.$formContainer
               .find('.edit-form')
               .addClass('edit-validation-error')
@@ -362,7 +351,7 @@
         },
         predicate: predicate,
         propertyID: entity.getSubjectUri() + '/' + predicate,
-        editorWidgetName: editorWidgetName,
+        editorName: editorName,
         editorSpecific: editorSpecificOptions
       });
     },
