@@ -112,9 +112,6 @@ function edit_library_info() {
       $path . '/js/ui.js' => array(
         'defer' => TRUE,
       ),
-      $path . '/js/ui-editables.js' => array(
-        'defer' => TRUE,
-      ),
       $path . '/js/theme.js' => array(
         'defer' => TRUE,
       ),
