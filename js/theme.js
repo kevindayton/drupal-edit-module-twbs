@@ -35,7 +35,7 @@ Drupal.theme.editBackstage = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  * @return
  *   The corresponding HTML.
  */
@@ -54,7 +54,7 @@ Drupal.theme.editToolbarContainer = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - classes: the class of the toolgroup
+ *   - classes: the class of the toolgroup.
  *   - buttons: @see Drupal.theme.prototype.editButtons().
  * @return
  *   The corresponding HTML.
@@ -76,11 +76,11 @@ Drupal.theme.editToolgroup = function(settings) {
  * @param settings
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
- *     - url: the URL the button should point to
- *     - classes: the classes of the button
- *     - label: the label of the button
+ *     - url: the URL the button should point to.
+ *     - classes: the classes of the button.
+ *     - label: the label of the button.
  *     - hasButtonRole: whether this button should have its "role" attribute set
- *       to "button"
+ *       to "button".
  * @return
  *   The corresponding HTML.
  */
@@ -109,7 +109,7 @@ Drupal.theme.editButtons = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  *   - loadingMsg: The message to show while loading.
  * @return
  *   The corresponding HTML.
