@@ -15,9 +15,7 @@
         widget: 'drupalContentEditableWidget',
         options: {}
       };
-      // @todo: it *is* possible to make 'alohaWidget' a setting that is passed
-      // in from Drupal.settings (e.g. Drupal.settings.edit.wysiwyg), right?
-      this.options.editors.directWysiwyg = {
+      this.options.editors['direct-with-wysiwyg'] = {
         widget: 'drupalAlohaWidget',
         options: {}
       };
@@ -32,7 +30,7 @@
     _propertyEditorName: function (data) {
       if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct')) {
         if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
-          return 'directWysiwyg';
+          return 'direct-with-wysiwyg';
         }
         return 'direct';
       }
