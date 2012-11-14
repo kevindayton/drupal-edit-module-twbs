@@ -157,7 +157,7 @@ function edit_library_info() {
       $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
       $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
       $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
-      $path . '/js/models/state-model.js' => array('defer' => TRUE),
+      $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
       $path . '/js/backbone.drupalform.js' => array('defer' => TRUE),
       $path . '/js/app.js' => array('defer' => TRUE),
     ),

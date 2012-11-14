@@ -1,7 +1,6 @@
-// The state of Spark Edit is handled in a Backbone model
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.models = Drupal.edit.models || {};
-Drupal.edit.models.StateModel = Backbone.Model.extend({
+Drupal.edit.models.EditAppModel = Backbone.Model.extend({
   defaults: {
     // We always begin in view mode.
     isViewing: true
