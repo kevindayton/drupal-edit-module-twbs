@@ -20,13 +20,13 @@ Drupal.theme.editOverlay = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - None.
+ *   - id: the id to apply to the backstage.
  * @return
  *   The corresponding HTML.
  */
 Drupal.theme.editBackstage = function(settings) {
   var html = '';
-  html += '<div id="edit_backstage" />';
+  html += '<div id="' + settings.id + '" />';
   return html;
 };
 

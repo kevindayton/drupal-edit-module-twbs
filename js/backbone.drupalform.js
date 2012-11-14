@@ -98,6 +98,10 @@ Backbone.syncDirect = function(method, model, options) {
         nocssjs: true
       };
       Drupal.edit.form.load(formOptions, function(form, ajax) {
+        // Create a backstage area for storing forms that are hidden from view
+        // (hence "backstage" — since the editing doesn't happen in the form, it
+        // happens "directly" in the content, the form is only used for saving).
+        jQuery(Drupal.theme('editBackstage', { id: 'edit_backstage' })).appendTo('body');
         // Direct forms are stuffed into #edit_backstage, apparently.
         jQuery('#edit_backstage').append(form);
         // Disable the browser's HTML5 validation; we only care about server-

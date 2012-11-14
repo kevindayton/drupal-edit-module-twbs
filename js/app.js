@@ -41,12 +41,6 @@
         editableNs: 'createeditable'
       });
 
-      // Create a backstage area. This is where we store the form when editing a
-      // type=direct field, so that it's hidden from view (hence "backstage").
-      // @todo: this belongs in formwidget.js; don't Create.js' editWidgets have
-      // an initialization phase, e.g. to prefetch CSS/JS?
-      $(Drupal.theme('editBackstage', {})).appendTo(this.$el);
-
       var appView = this;
 
       // Instantiate EditableEntity widgets.
