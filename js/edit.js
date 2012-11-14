@@ -31,32 +31,19 @@ Drupal.edit.log = function() {
   }
 };
 
-// Temporary helper function: (async) confirm dialog.
-Drupal.edit.confirm = function(message, options, cb) {
-  // @todo: use whatever confirm-dialog implementation we need.
-  if (window.confirm(message)) {
-    cb(true);
-  } else {
-    cb(false);
-  }
-};
-
 Drupal.edit.init = function() {
+  // Instantiate EditAppView, which is the controller of it all.
   var appView = new Drupal.edit.EditAppView({
     el: $('body')
   });
-  // @todo refactor these globals, if possible (should go away once FieldView and FieldViewModel) dies.
-  Drupal.edit.vie = appView.vie;
-  Drupal.edit.state = appView.state;
 
-  // Instantiate EditRouter
+  // Instantiate EditRouter.
   var editRouter = new Drupal.edit.routers.EditRouter({
     appView: appView
   });
 
-  // Start Backbone's history/route handling
+  // Start Backbone's history/route handling.
   Backbone.history.start();
 };
 
 })(jQuery, VIE);
-
