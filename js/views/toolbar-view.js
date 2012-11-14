@@ -91,12 +91,8 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     // Generate a DOM-compatible ID for the toolbar DOM element.
     this.id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
 
-    var that = this;
-    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
-    // bind to the editable state changes.
-    this.$editableElementForStateChanges.bind('createeditablestatechange', function(event, data) {
-      that.stateChange(data.previous, data.current);
-    });
+    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+    this.stateChange('inactive', 'candidate');
   },
 
   stateChange: function(from, to) {

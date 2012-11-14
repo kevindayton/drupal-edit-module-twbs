@@ -51,7 +51,7 @@
           state: 'inactive',
           acceptStateChange: _.bind(appView.acceptStateChange, appView),
           statechange: function(event, data) {
-            appView.stateChange(data.previous, data.current, data.predicate, data.context, data);
+            appView.stateChange(data.previous, data.current, data.propertyEditor);
           },
           decoratePropertyEditor: function(data) {
             appView.decorateEditor(data.entityElement, data.propertyElement, data.editableEntity, data.propertyEditor, data.entity, data.predicate);
@@ -203,16 +203,23 @@
     },
 
     /**
-     * Track global state and pass on the events to the editor widgets.
+     * Reacts to PropertyEditor state changes; tracks global state.
+     *
+     * @param from
+     *   The previous state.
+     * @param to
+     *   The new state.
+     * @param editor
+     *   The PropertyEeditor widget object.
      */
-    stateChange: function(from, to, predicate, context, data) {
-      // Only in the initialization phase the predicate is not yet available; we
-      // don't care about those state changes.
-      if (!predicate) {
+    stateChange: function(from, to, editor) {
+      // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+      if (!editor) {
         return;
       }
-
-      var editor = data.propertyEditor;
+      else {
+        editor.stateChange(from, to);
+      }
 
       // Keep track of the highlighted editor in the global state.
       if (_.indexOf(this.singleEditorStates, to) !== -1 && this.highlightedEditor !== editor) {
@@ -230,16 +237,9 @@
         this.activeEditor = null;
       }
 
-      // @todo Propagate the state change to the predicate editors.
-      // @todo Ensure Create.js sets the widgetType as a property on
-      // propertyEditor, so we can get rid of this filth.
-      if (editor) {
-        var editorWidgetType = editor.element.data('createWidgetName');
-        Drupal.edit.util.log('editor state:', from, to, predicate, editorWidgetType, editor);
-        // editor.decorationView.createEditableStateChange({}, data);
-        // editor.toolbarView.createEditableStateChange({}, data);
-        editor.stateChange(from, to);
-      }
+      // Propagate the state change to the decoration and toolbar views.
+      editor.decorationView.stateChange(from, to);
+      editor.toolbarView.stateChange(from, to);
     },
 
     /**

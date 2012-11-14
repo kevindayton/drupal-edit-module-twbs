@@ -34,12 +34,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
     this.$el.css('background-color', this._getBgColor(this.$el));
 
-    var that = this;
-    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved
-    // bind to the editable state changes.
-    this.$editableElementForStateChanges.bind('createeditablestatechange', function(event, data) {
-      that.stateChange(data.previous, data.current);
-    });
+    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+    this.stateChange('inactive', 'candidate');
   },
 
   stateChange: function(from, to) {
