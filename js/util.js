@@ -9,6 +9,9 @@
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.util = Drupal.edit.util || {};
 
+Drupal.edit.util.constants = {};
+Drupal.edit.util.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
+
 Drupal.edit.util.calcFormURLForField = function(id) {
   var parts = id.split('/');
   var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);

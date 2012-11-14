@@ -54,7 +54,7 @@ Drupal.edit.modal = {
     // Remove after animation.
     $modal
     .addClass('edit-animate-invisible')
-    .bind(Drupal.edit.constants.transitionEnd, function(e) {
+    .bind(Drupal.edit.util.constants.transitionEnd, function(e) {
       $modal.remove();
 
       // The modal's HTML was removed, hence no need to undelegate it.

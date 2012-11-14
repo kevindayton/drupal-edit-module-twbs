@@ -20,9 +20,6 @@ Drupal.behaviors.edit = {
   }
 };
 
-Drupal.edit.constants = {};
-Drupal.edit.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
-
 // Temporary helper function: logging.
 Drupal.edit.debug = false;
 Drupal.edit.log = function() {
