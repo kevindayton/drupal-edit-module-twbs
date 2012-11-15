@@ -46,9 +46,8 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.$editorElement = options.$editorElement;
     this.actionCallbacks = options.actionCallbacks;
 
-    var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
-
     // Generate a DOM-compatible ID for the toolbar DOM element.
+    var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
     this._id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
   },
 
