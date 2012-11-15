@@ -24,56 +24,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   /**
-   * When the user clicks the info label, nothing should happen.
-   * @note currently redirects the click.edit-event to the $editorElement.
-   *
-   * @param event
-   */
-  onClickInfoLabel: function(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    // Redirects the event to the $editorElement itself.
-    this.$editorElement.trigger('click.edit');
-  },
-
-  /**
-   * A mouseleave to the editor doesn't matter; a mouseleave to something else
-   * counts as a mouseleave on the editor itself.
-   *
-   * @param event
-   */
-  onMouseLeave: function(event) {
-    var el = this.$editorElement[0];
-    if (event.relatedTarget != el && !jQuery.contains(el, event.relatedTarget)) {
-      this.$editorElement.trigger('mouseleave.edit');
-    }
-    event.stopPropagation();
-  },
-
-  /**
-   * Upon clicking "Save", trigger a custom event to save this property.
-   *
-   * @param event
-   */
-  onClickSave: function(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    this.$editorElement.trigger('editsave.edit', { originalEvent: event });
-  },
-
-  /**
-   * Upon clicking "Cancel", trigger a custom event to cancel editing.
-   *
-   * @param event
-   */
-  onClickClose: function(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    this.$editorElement.trigger('editcancel.edit', { originalEvent: event });
-  },
-
-  /**
-   * Implements Backbone View's initialize() function.
+   * Implements Backbone Views' initialize() function.
    *
    * @param options
    *   An object with the following keys:
@@ -146,6 +97,55 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         this.setLoadingIndicator(false);
         break;
     }
+  },
+
+  /**
+   * When the user clicks the info label, nothing should happen.
+   * @note currently redirects the click.edit-event to the $editorElement.
+   *
+   * @param event
+   */
+  onClickInfoLabel: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    // Redirects the event to the $editorElement itself.
+    this.$editorElement.trigger('click.edit');
+  },
+
+  /**
+   * A mouseleave to the editor doesn't matter; a mouseleave to something else
+   * counts as a mouseleave on the editor itself.
+   *
+   * @param event
+   */
+  onMouseLeave: function(event) {
+    var el = this.$editorElement[0];
+    if (event.relatedTarget != el && !jQuery.contains(el, event.relatedTarget)) {
+      this.$editorElement.trigger('mouseleave.edit');
+    }
+    event.stopPropagation();
+  },
+
+  /**
+   * Upon clicking "Save", trigger a custom event to save this property.
+   *
+   * @param event
+   */
+  onClickSave: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.$editorElement.trigger('editsave.edit', { originalEvent: event });
+  },
+
+  /**
+   * Upon clicking "Cancel", trigger a custom event to cancel editing.
+   *
+   * @param event
+   */
+  onClickClose: function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.$editorElement.trigger('editcancel.edit', { originalEvent: event });
   },
 
   /**
