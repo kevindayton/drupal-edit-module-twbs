@@ -250,24 +250,13 @@
      *   The predicate of the property.
      */
     decorateEditor: function($editableElement, $editorElement, editableEntity, editor, entity, predicate) {
-      var that = this;
-
       // Toolbars are rendered "on-demand" (highlighting or activating).
       // They are a sibling element before the $editorElement.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
-        entity: entity,
-        predicate: predicate,
-        editorName: editor.options.editorName,
-        $editorElement: $editorElement,
-        actionCallbacks: {
-          save: function() {
-            that.saveProperty($editorElement, editableEntity, editor, entity, predicate);
-          },
-          close: function() {
-            editableEntity.setState('candidate', predicate, { reason: 'cancel' });
-          }
-        }
+        editor: editor,
+        $storageWidgetEl: this.$el
       });
+
       // The $editorElement will be decorated differently depending on state.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
         el: $editorElement,
@@ -284,90 +273,6 @@
       $editableElement.bind('createeditablestatechange', function(event, data) {
         editor.decorationView.stateChange(data.previous, data.current);
         editor.toolbarView.stateChange(data.previous, data.current);
-      });
-    },
-
-    /**
-     * Saves a property.
-     *
-     * This method deals with the complexity of passing in additional metadata
-     * that is necessary depending on which syncing/saving will be used (which
-     * depends on the editor being used) by Backbone.sync. It also deals with
-     * the different ways of showing validation error messages depending on the
-     * editor being used.
-     *
-     * @param $editorElement
-     *   The DOM element that corresponds to the PropertyEditor.
-     * @param editableEntity
-     *   The EditableEntity widget object.
-     * @param editor
-     *   The PropertyEditor widget object.
-     * @param entity
-     *   The VIE entity for the property.
-     * @param predicate
-     *   The predicate of the property.
-     */
-    saveProperty: function($editorElement, editableEntity, editor, entity, predicate) {
-      editableEntity.setState('saving', predicate);
-
-      var editorName = editor.options.editorName;
-
-      // We need to pass on the editorName to the Backbone.sync, as well as some
-      // editor-specific options.
-      var editorSpecificOptions = {};
-      var renderValidationErrors = null;
-      if (editorName === 'form') {
-        editorSpecificOptions.$formContainer = editor.$formContainer;
-      }
-      else {
-        editorSpecificOptions.$editorElement = $editorElement;
-      }
-
-      var that = this;
-      // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
-      this.$el.createStorage('saveRemote', entity, {
-        // Successfully saved without validation errors.
-        success: function (model) {
-          editableEntity.setState('saved', predicate);
-
-          // Replace the old content with the new content.
-          var updatedField = entity.get(predicate + '/rendered');
-          var $inner = jQuery(updatedField).html();
-          $editorElement.html($inner);
-
-          // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
-          // overwrite an existing field, that VIE refuses to find the same
-          // predicate again for the same entity?
-          // self.$el.replaceWith(updatedField);
-          // debugger;
-          // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
-          // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
-
-          editableEntity.setState('candidate', predicate);
-        },
-        // Save attempted but failed due to validation errors.
-        error: function (validationErrorMessages) {
-          editableEntity.setState('invalid', predicate);
-
-          if (editorName === 'form') {
-            editorSpecificOptions.$formContainer
-              .find('.edit-form')
-              .addClass('edit-validation-error')
-              .find('form')
-              .prepend(validationErrorMessages);
-          }
-          else {
-            var $errors = $('<div class="edit-validation-errors"></div>')
-              .append(validationErrorMessages);
-            $editorElement
-              .addClass('edit-validation-error')
-              .after($errors);
-          }
-        },
-        predicate: predicate,
-        propertyID: entity.getSubjectUri() + '/' + predicate,
-        editorName: editorName,
-        editorSpecific: editorSpecificOptions
       });
     }
   });

@@ -2,18 +2,20 @@
  * @file toolbar-view.js
  *
  * A Backbone View that provides an interactive toolbar (1 per property editor).
- * It listens to state changes of the property editor.
+ * It listens to state changes of the property editor. It also triggers state
+ * changes in response to user interactions with the toolbar, including saving.
  */
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
+  editor: null,
+  $storageWidgetEl: null,
+
   entity: null,
   predicate : null,
   editorName: null,
-  $editorElement: null,
-  actionCallbacks: null,
 
   _id: null,
 
@@ -29,22 +31,21 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *
    * @param options
    *   An object with the following keys:
-   *   - entity: the VIE entity for the property.
-   *   - predicate: the predicate of the property.
-   *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
-   *   - $editorElement: the corresponding PropertyEditor widget.
-   *   - actionCallbacks: an object with the following keys:
-   *     * save: a callback that should be called when this toolbar's "save"
-   *       button is clicked
-   *     * close: a callback that should be called when this toolbar's "close"
-   *       button is clicked
+   *   - editor: the editor object with an 'options' object that has these keys:
+   *      - entity: the VIE entity for the property
+   *      - property: the predicate of the property
+   *      - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'
+   *      - element: the jQuery-wrapped editor DOM element
+   *   - $storageWidgetEl: the DOM element on which the Create Storage widget is
+   *     initialized.
    */
   initialize: function(options) {
-    this.entity = options.entity;
-    this.predicate = options.predicate;
-    this.editorName = options.editorName;
-    this.$editorElement = options.$editorElement;
-    this.actionCallbacks = options.actionCallbacks;
+    this.editor = options.editor;
+    this.$storageWidgetEl = options.$storageWidgetEl;
+
+    this.entity = this.editor.options.entity;
+    this.predicate = this.editor.options.property;
+    this.editorName = this.editor.options.editorName;
 
     // Generate a DOM-compatible ID for the toolbar DOM element.
     var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
@@ -95,6 +96,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         break;
       case 'saving':
         this.setLoadingIndicator(true);
+        this.save();
         break;
       case 'saved':
         this.setLoadingIndicator(false);
@@ -106,16 +108,80 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   /**
+   * Saves a property.
+   *
+   * This method deals with the complexity of the editor-dependent ways of
+   * inserting updated content and showing validation error messages.
+   *
+   * One might argue that this does not belong in a view. However, there is no
+   * actual "save" logic here, that lives in Backbone.sync. This is just some
+   * glue code, along with the logic for inserting updated content as well as
+   * showing validation error messages, the latter of which is certainly okay.
+   */
+  save: function() {
+    var that = this;
+    var editor = this.editor;
+    var editableEntity = editor.options.widget;
+    var entity = editor.options.entity;
+    var predicate = editor.options.property;
+
+    // Use Create.js' Storage widget to handle saving. (Uses Backbone.sync.)
+    this.$storageWidgetEl.createStorage('saveRemote', entity, {
+      editor: editor,
+
+      // Successfully saved without validation errors.
+      success: function (model) {
+        editableEntity.setState('saved', predicate);
+
+        // Replace the old content with the new content.
+        var updatedField = entity.get(predicate + '/rendered');
+        var $inner = jQuery(updatedField).html();
+        editor.element.html($inner);
+
+        // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
+        // overwrite an existing field, that VIE refuses to find the same
+        // predicate again for the same entity?
+        // self.$el.replaceWith(updatedField);
+        // debugger;
+        // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
+        // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
+
+        editableEntity.setState('candidate', predicate);
+      },
+
+      // Save attempted but failed due to validation errors.
+      error: function (validationErrorMessages) {
+        editableEntity.setState('invalid', predicate);
+
+        if (that.editorName === 'form') {
+          editor.$formContainer
+            .find('.edit-form')
+            .addClass('edit-validation-error')
+            .find('form')
+            .prepend(validationErrorMessages);
+        }
+        else {
+          var $errors = jQuery('<div class="edit-validation-errors"></div>')
+            .append(validationErrorMessages);
+          editor.element
+            .addClass('edit-validation-error')
+            .after($errors);
+        }
+      }
+    });
+  },
+
+  /**
    * When the user clicks the info label, nothing should happen.
-   * @note currently redirects the click.edit-event to the $editorElement.
+   * @note currently redirects the click.edit-event to the editor DOM element.
    *
    * @param event
    */
   onClickInfoLabel: function(event) {
     event.stopPropagation();
     event.preventDefault();
-    // Redirects the event to the $editorElement itself.
-    this.$editorElement.trigger('click.edit');
+    // Redirects the event to the editor DOM element.
+    this.editor.element.trigger('click.edit');
   },
 
   /**
@@ -125,9 +191,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    * @param event
    */
   onMouseLeave: function(event) {
-    var el = this.$editorElement[0];
+    var el = this.editor.element[0];
     if (event.relatedTarget != el && !jQuery.contains(el, event.relatedTarget)) {
-      this.$editorElement.trigger('mouseleave.edit');
+      this.editor.element.trigger('mouseleave.edit');
     }
     event.stopPropagation();
   },
@@ -140,7 +206,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   onClickSave: function(event) {
     event.stopPropagation();
     event.preventDefault();
-    this.actionCallbacks.save();
+    this.editor.options.widget.setState('saving', this.predicate);
   },
 
   /**
@@ -151,7 +217,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   onClickClose: function(event) {
     event.stopPropagation();
     event.preventDefault();
-    this.actionCallbacks.close();
+    this.editor.options.widget.setState('candidate', this.predicate, { reason: 'cancel' });
   },
 
   /**
@@ -222,7 +288,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   _pad: function(editorName) {
       // The whole toolbar must move to the top when the property's DOM element
       // is displayed inline.
-      if (this.$editorElement.css('display') == 'inline') {
+      if (this.editor.element.css('display') == 'inline') {
         this.$el.css('top', parseFloat(this.$el.css('top')) - 5 + 'px');
       }
 
@@ -232,7 +298,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       // When using a WYSIWYG editor, the width of the toolbar must match the
       // width of the editable.
       if (editorName === 'direct-with-wysiwyg') {
-        $hf.css({ width: this.$editorElement.width() + 10 });
+        $hf.css({ width: this.editor.element.width() + 10 });
       }
   },
 
@@ -287,12 +353,12 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
     // Insert in DOM.
     if (this.$el.css('display') == 'inline') {
-      this.$el.prependTo(this.$editorElement.offsetParent());
-      var pos = this.$editorElement.position();
+      this.$el.prependTo(this.editor.element.offsetParent());
+      var pos = this.editor.element.position();
       this.$el.css('left', pos.left).css('top', pos.top);
     }
     else {
-      this.$el.insertBefore(this.$editorElement);
+      this.$el.insertBefore(this.editor.element);
     }
 
     var that = this;

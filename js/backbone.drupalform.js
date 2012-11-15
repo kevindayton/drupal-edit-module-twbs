@@ -1,6 +1,6 @@
 Backbone.defaultSync = Backbone.sync;
 Backbone.sync = function(method, model, options) {
-  if (options.editorName === 'form') {
+  if (options.editor.options.editorName === 'form') {
     return Backbone.syncDrupalFormWidget(method, model, options);
   }
   else {
@@ -24,9 +24,9 @@ Backbone.sync = function(method, model, options) {
  */
 Backbone.syncDrupalFormWidget = function(method, model, options) {
   if (method === 'update') {
-    var predicate = options.predicate;
+    var predicate = options.editor.options.property;
 
-    var $formContainer = options.editorSpecific.$formContainer;
+    var $formContainer = options.editor.$formContainer;
     var $submit = $formContainer.find('.edit-form-submit');
     var base = $submit.attr('id');
 
@@ -88,13 +88,15 @@ Backbone.syncDirect = function(method, model, options) {
         // Submit the form.
         .find('.edit-form-submit').trigger('click.edit');
     };
-    var value = model.get(options.predicate);
+    var entity = options.editor.options.entity;
+    var predicate = options.editor.options.property;
+    var value = model.get(predicate);
 
     // If form doesn't already exist, load it and then submit.
     if (jQuery('#edit_backstage form').length === 0) {
       var formOptions = {
-        propertyID: options.propertyID,
-        $editorElement: options.editorSpecific.$editorElement,
+        propertyID: Drupal.edit.util.calcPropertyID(entity, predicate),
+        $editorElement: options.editor.element,
         nocssjs: true
       };
       Drupal.edit.util.form.load(formOptions, function(form, ajax) {
