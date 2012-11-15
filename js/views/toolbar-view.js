@@ -20,10 +20,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   _id: null,
 
   events: {
-    'click a.label': 'onClickInfoLabel',
-    'mouseleave': 'onMouseLeave',
-    'click a.field-save': 'onClickSave',
-    'click a.field-close': 'onClickClose'
+    'click.edit a.label': 'onClickInfoLabel',
+    'mouseleave.edit': 'onMouseLeave',
+    'click.edit a.field-save': 'onClickSave',
+    'click.edit a.field-close': 'onClickClose'
   },
 
   /**
