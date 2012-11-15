@@ -1,30 +1,41 @@
-// Define Drupal.edit.routers.EditRouter.
+/**
+ * @file edit-router.js
+ *
+ * A Backbone Router enabling URLs to make the user enter edit mode directly.
+ */
+
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.routers = {};
 Drupal.edit.routers.EditRouter = Backbone.Router.extend({
+
+  appModel: null,
+
   routes: {
     "quick-edit": "edit",
     "view": "view",
     "": "view"
   },
+
   initialize: function(options) {
-    this.appView = options.appView;
+    this.appModel = options.appModel;
   },
+
   edit: function() {
-    this.appView.model.set('isViewing', false);
+    this.appModel.set('isViewing', false);
   },
+
   view: function(query, page) {
     var that = this;
 
     // If there's an active editor, attempt to set its state to 'candidate', and
     // then act according to the user's choice.
-    var activeEditor = this.appView.model.get('activeEditor');
+    var activeEditor = this.appModel.get('activeEditor');
     if (activeEditor) {
       var editableEntity = activeEditor.options.widget;
       var predicate = activeEditor.options.property;
       editableEntity.setState('candidate', predicate, { reason: 'menu' }, function(accepted) {
         if (accepted) {
-          that.appView.model.set('isViewing', true);
+          that.appModel.set('isViewing', true);
         }
         else {
           that.navigate('#quick-edit');
@@ -33,7 +44,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
     }
     // Otherwise, we can switch to view mode directly.
     else {
-      that.appView.model.set('isViewing', true);
+      that.appModel.set('isViewing', true);
     }
   }
 });

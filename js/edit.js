@@ -23,14 +23,15 @@ Drupal.behaviors.edit = {
 Drupal.edit.init = function() {
   // Instantiate EditAppView, which is the controller of it all. EditAppModel
   // instance tracks global state (viewing/editing in-place).
+  var appModel = new Drupal.edit.models.EditAppModel();
   var app = new Drupal.edit.EditAppView({
     el: $('body'),
-    model: new Drupal.edit.models.EditAppModel()
+    model: appModel
   });
 
   // Instantiate EditRouter.
   var editRouter = new Drupal.edit.routers.EditRouter({
-    appView: appView
+    appModel: appModel
   });
 
   // Start Backbone's history/route handling.
