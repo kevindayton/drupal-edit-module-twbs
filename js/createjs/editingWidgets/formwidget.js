@@ -13,7 +13,12 @@
      */
     _init: function() {
       // Sets the state to 'activating'.
-      this.element.bind("click", this.options.activating);
+      var that = this;
+      this.element.bind("click.edit", function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        that.options.activating();
+      });
     },
 
     /**

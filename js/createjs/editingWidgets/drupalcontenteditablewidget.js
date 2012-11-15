@@ -1,6 +1,7 @@
 (function (jQuery, undefined) {
   // Consistent namespace.
   jQuery.widget('Drupal.drupalContentEditableWidget', jQuery.Create.editWidget, {
+
     /**
      * Implements jQuery UI widget factory's _init() method.
      *
@@ -9,7 +10,12 @@
      */
     _init: function () {
       // Sets the state to 'activated'.
-      this.element.bind("click", this.options.activated);
+      var that = this;
+      this.element.bind("click.edit", function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        that.options.activated();
+      });
     },
 
     /**
