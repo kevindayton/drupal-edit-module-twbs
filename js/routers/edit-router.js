@@ -15,14 +15,25 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
   },
   view: function(query, page) {
     var that = this;
-    // If there is an active editor, try to revert it to candidate first; this
-    // will prompt user for confirmation if changes may be lost in that process.
-    that.appView.revertActiveEditorToCandidate(function(accept) {
-      if (accept) {
-        that.appView.model.set('isViewing', true);
-      } else {
-        that.navigate('#quick-edit');
-      }
-    });
+
+    // If there's an active editor, attempt to set its state to 'candidate', and
+    // then act according to the user's choice.
+    var activeEditor = this.appView.model.get('activeEditor');
+    if (activeEditor) {
+      var editableEntity = activeEditor.options.widget;
+      var predicate = activeEditor.options.property;
+      editableEntity.setState('candidate', predicate, { reason: 'menu' }, function(accepted) {
+        if (accepted) {
+          that.appView.model.set('isViewing', true);
+        }
+        else {
+          that.navigate('#quick-edit');
+        }
+      });
+    }
+    // Otherwise, we can switch to view mode directly.
+    else {
+      that.appView.model.set('isViewing', true);
+    }
   }
 });

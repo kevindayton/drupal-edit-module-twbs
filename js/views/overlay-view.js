@@ -11,18 +11,14 @@ Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.OverlayView = Backbone.View.extend({
 
-  appView: null,
-
   events: {
-    'click': 'onEscapeEditor'
+    'click': 'onClick'
   },
 
   /**
    * Implements Backbone Views' initialize() function.
    */
   initialize: function(options) {
-    this.appView = options.appView;
-
     _.bindAll(this, 'stateChange');
     this.model.bind('change:isViewing', this.stateChange);
   },
@@ -39,14 +35,19 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   },
 
   /**
-   * Trigger escapeEditor event on parent appView.
-   * @todo event handling still needs to be implemented.
+   * Equates clicks anywhere on the overlay to clicking the active editor's (if
+   * any) "close" button.
    *
    * @param event
    */
-  onEscapeEditor: function(event) {
+  onClick: function(event) {
     event.preventDefault();
-    this.appView.trigger('escapeEditor');
+    var activeEditor = this.model.get('activeEditor');
+    if (activeEditor) {
+      var editableEntity = activeEditor.options.widget;
+      var predicate = activeEditor.options.property;
+      editableEntity.setState('candidate', predicate, { reason: 'overlay' });
+    }
   },
 
   /**

@@ -61,15 +61,7 @@
 
       // Instantiate OverlayView
       var overlayView = new Drupal.edit.views.OverlayView({
-        appView: this,
         model: this.model
-      });
-
-      // The OverlayView triggers the escapedEditor event if is clicked
-      this.bind('escapeEditor', function() {
-        // Ensure to prompt for confirmation if the active editor has pending
-        // changes.
-        appView.revertActiveEditorToCandidate();
       });
 
       // Instantiate MenuView
@@ -77,33 +69,6 @@
         el: this.el,
         model: this.model
       });
-    },
-
-    /**
-     * If there is an active editor, attempt to revert the active editor back to
-     * candidate. Prompts user to confirm transition, if changes can be lost in
-     * that process.
-     */
-    revertActiveEditorToCandidate: function(cb) {
-      if (this.model.get('activeEditor')) {
-        // Get reference to the EntityEditable from the activeEditor.
-        var editable = this.model.get('activeEditor').options.widget;
-        var predicate = this.model.get('activeEditor').predicate;
-        // Check if this state change is acceptable - this can trigger a modal dialog.
-        this.acceptStateChange(editable.getState(), 'candidate', predicate, {}, function(accept) {
-          if (accept) {
-            // Pass {confirmed: true} to avoid showing the modal again.
-            editable.setState('candidate', predicate, {confirmed: true});
-          }
-          if (_.isFunction(cb)) {
-            cb(accept);
-          }
-        });
-      } else {
-        if (_.isFunction(cb)) {
-          cb(true);
-        }
-      }
     },
 
     /**
