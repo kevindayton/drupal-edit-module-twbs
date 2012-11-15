@@ -10,9 +10,6 @@
     singleEditorStates: [],
 
     // State.
-    state: null,
-    highlightedEditor: null,
-    activeEditor: null,
     $entityElements: [],
 
     initialize: function() {
@@ -88,10 +85,10 @@
      * that process.
      */
     revertActiveEditorToCandidate: function(cb) {
-      if (this.activeEditor) {
+      if (this.model.get('activeEditor')) {
         // Get reference to the EntityEditable from the activeEditor.
-        var editable = this.activeEditor.options.widget;
-        var predicate = this.activeEditor.predicate;
+        var editable = this.model.get('activeEditor').options.widget;
+        var predicate = this.model.get('activeEditor').predicate;
         // Check if this state change is acceptable - this can trigger a modal dialog.
         this.acceptStateChange(editable.getState(), 'candidate', predicate, {}, function(accept) {
           if (accept) {
@@ -163,7 +160,7 @@
         if (accept) {
           // Ensure only one editor (field) at a time may be higlighted or active.
           if (from === 'candidate' && _.indexOf(this.singleEditorStates, to) !== -1) {
-            if (this.highlightedEditor || this.activeEditor) {
+            if (this.model.get('highlightedEditor') || this.model.get('activeEditor')) {
               accept = false;
             }
           }
@@ -222,19 +219,19 @@
       }
 
       // Keep track of the highlighted editor in the global state.
-      if (_.indexOf(this.singleEditorStates, to) !== -1 && this.highlightedEditor !== editor) {
-        this.highlightedEditor = editor;
+      if (_.indexOf(this.singleEditorStates, to) !== -1 && this.model.get('highlightedEditor') !== editor) {
+        this.model.set('highlightedEditor', editor);
       }
-      else if (this.highlightedEditor === editor && to === 'candidate') {
-        this.highlightedEditor = null;
+      else if (this.model.get('highlightedEditor') === editor && to === 'candidate') {
+        this.model.set('highlightedEditor', null);
       }
 
       // Keep track of the active editor in the global state.
-      if (_.indexOf(this.activeEditorStates, to) !== -1 && this.activeEditor !== editor) {
-        this.activeEditor = editor;
+      if (_.indexOf(this.activeEditorStates, to) !== -1 && this.model.get('activeEditor') !== editor) {
+        this.model.set('activeEditor', editor);
       }
-      else if (this.activeEditor === editor && to === 'candidate') {
-        this.activeEditor = null;
+      else if (this.model.get('activeEditor') === editor && to === 'candidate') {
+        this.model.set('activeEditor', null);
       }
 
       // Propagate the state change to the decoration and toolbar views.
