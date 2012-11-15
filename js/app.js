@@ -257,7 +257,15 @@
         entity: entity,
         predicate: predicate,
         editorName: editor.options.editorName,
-        $editorElement: $editorElement
+        $editorElement: $editorElement,
+        actionCallbacks: {
+          save: function() {
+            that.saveProperty($editorElement, editableEntity, editor, entity, predicate);
+          },
+          close: function() {
+            editableEntity.setState('candidate', predicate, { reason: 'cancel' });
+          }
+        }
       });
       // The $editorElement will be decorated differently depending on state.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
@@ -270,18 +278,29 @@
           editableEntity: editableEntity
         }
       });
-
-      // Event handling for app events triggered by the toolbar.
-      $editorElement
-      .bind('editsave.edit', function(event, data) {
-        that.saveProperty(editor, editableEntity, $editorElement, entity, predicate);
-      })
-      .bind('editcancel.edit', function(event, data) {
-        editableEntity.setState('candidate', predicate, { reason: 'cancel' });
-      });
     },
 
-    saveProperty: function(editor, editableEntity, $editorElement, entity, predicate) {
+    /**
+     * Saves a property.
+     *
+     * This method deals with the complexity of passing in additional metadata
+     * that is necessary depending on which syncing/saving will be used (which
+     * depends on the editor being used) by Backbone.sync. It also deals with
+     * the different ways of showing validation error messages depending on the
+     * editor being used.
+     *
+     * @param $editorElement
+     *   The DOM element that corresponds to the PropertyEditor.
+     * @param editableEntity
+     *   The EditableEntity widget object.
+     * @param editor
+     *   The PropertyEditor widget object.
+     * @param entity
+     *   The VIE entity for the property.
+     * @param predicate
+     *   The predicate of the property.
+     */
+    saveProperty: function($editorElement, editableEntity, editor, entity, predicate) {
       editableEntity.setState('saving', predicate);
 
       var editorName = editor.options.editorName;

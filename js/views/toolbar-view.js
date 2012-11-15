@@ -13,6 +13,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   predicate : null,
   editorName: null,
   $editorElement: null,
+  actionCallbacks: null,
 
   _id: null,
 
@@ -32,12 +33,18 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *   - predicate: the predicate of the property.
    *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
    *   - $editorElement: the corresponding PropertyEditor widget.
+   *   - actionCallbacks: an object with the following keys:
+   *     * save: a callback that should be called when this toolbar's "save"
+   *       button is clicked
+   *     * close: a callback that should be called when this toolbar's "close"
+   *       button is clicked
    */
   initialize: function(options) {
     this.entity = options.entity;
     this.predicate = options.predicate;
     this.editorName = options.editorName;
     this.$editorElement = options.$editorElement;
+    this.actionCallbacks = options.actionCallbacks;
 
     var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
 
@@ -137,18 +144,18 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   onClickSave: function(event) {
     event.stopPropagation();
     event.preventDefault();
-    this.$editorElement.trigger('editsave.edit', { originalEvent: event });
+    this.actionCallbacks.save();
   },
 
   /**
-   * Upon clicking "Cancel", trigger a custom event to cancel editing.
+   * Upon clicking "Close", trigger a custom event to stop editing.
    *
    * @param event
    */
   onClickClose: function(event) {
     event.stopPropagation();
     event.preventDefault();
-    this.$editorElement.trigger('editcancel.edit', { originalEvent: event });
+    this.actionCallbacks.close();
   },
 
   /**
