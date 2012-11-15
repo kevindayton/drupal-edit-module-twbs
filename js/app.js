@@ -12,10 +12,15 @@
     // State.
     $entityElements: [],
 
+    /**
+     * Implements Backbone Views' initialize() function.
+     */
     initialize: function() {
-      // VIE instance for Editing
+      _.bindAll(this, 'appStateChange', 'acceptEditorStateChange', 'editorStateChange');
+
+      // VIE instance for Edit.
       this.vie = new VIE();
-      // Use our custom DOM parsing service until RDFa is available
+      // Use our custom DOM parsing service until RDFa is available.
       this.vie.use(new this.vie.SparkEditService());
       this.domService = this.vie.service('edit');
 
@@ -33,31 +38,22 @@
         editableNs: 'createeditable'
       });
 
-      var appView = this;
-
-      // Instantiate EditableEntity widgets.
+      // Instantiate an EditableEntity widget for each property.
+      var that = this;
       this.$entityElements = this.domService.findSubjectElements().each(function() {
-        var subject = appView.domService.getElementSubject(this);
-        var predicate = appView.domService.getElementPredicate(this);
-        var $entityElement = $(this);
-
-        // Create an Editable widget for each predicate (field).
-        $entityElement.createEditable({
-          vie: appView.vie,
+        $(this).createEditable({
+          vie: that.vie,
           disabled: true,
           state: 'inactive',
-          acceptStateChange: _.bind(appView.acceptStateChange, appView),
+          acceptStateChange: that.acceptEditorStateChange,
           statechange: function(event, data) {
-            appView.stateChange(data.previous, data.current, data.propertyEditor);
+            that.editorStateChange(data.previous, data.current, data.propertyEditor);
           },
           decoratePropertyEditor: function(data) {
-            appView.decorateEditor(data.entityElement, data.propertyElement, data.editableEntity, data.propertyEditor, data.entity, data.predicate);
+            that.decorateEditor(data.entityElement, data.propertyElement, data.editableEntity, data.propertyEditor, data.entity, data.predicate);
           }
         });
       });
-
-      // Setup handling of "app" state changes (is viewing/quick edit).
-      this.bindAppStateChanges();
 
       // Instantiate OverlayView
       var overlayView = new Drupal.edit.views.OverlayView({
@@ -69,14 +65,43 @@
         el: this.el,
         model: this.model
       });
+
+      // When view/edit mode is toggled in the menu, update the editor widgets.
+      this.model.on('change:isViewing', this.appStateChange);
     },
 
     /**
-     * Accepts or reject state changes.
+     * Sets the state of PropertyEditor widgets when edit mode begins or ends.
+     *
+     * Should be called whenever EditAppModel's "isViewing" changes.
+     */
+    appStateChange: function() {
+      // @todo: we're currently setting the state on EditableEntity widgets
+      // instead of PropertyEditor widgets, because of
+      // https://github.com/bergie/create/issues/140
+      var newState = (this.model.get('isViewing')) ? 'inactive' : 'candidate';
+      this.$entityElements.each(function() {
+        $(this).createEditable('setState', newState);
+      });
+    },
+
+    /**
+     * Accepts or reject editor (PropertyEditor) state changes.
      *
      * This is what ensures that the app is in control of what happens.
+     *
+     * @param from
+     *   The previous state.
+     * @param to
+     *   The new state.
+     * @param predicate
+     *   The predicate of the property for which the state change is happening.
+     * @param context
+     *   The context that is trying to trigger the state change.
+     * @param callback
+     *   The callback function that should receive the state acceptance result.
      */
-    acceptStateChange: function(from, to, predicate, context, callback) {
+    acceptEditorStateChange: function(from, to, predicate, context, callback) {
       var accept = true;
 
       // If the app is in view mode, then reject all state changes except for
@@ -160,21 +185,20 @@
         }
       }
 
-      Drupal.edit.util.log("accept state:", accept ? 'A' : 'R', from, to, predicate, (context) ? context.reason : undefined);
       callback(accept);
     },
 
     /**
-     * Reacts to PropertyEditor state changes; tracks global state.
+     * Reacts to editor (PropertyEditor) state changes; tracks global state.
      *
      * @param from
      *   The previous state.
      * @param to
      *   The new state.
      * @param editor
-     *   The PropertyEeditor widget object.
+     *   The PropertyEditor widget object.
      */
-    stateChange: function(from, to, editor) {
+    editorStateChange: function(from, to, editor) {
       // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
       if (!editor) {
         return;
@@ -205,21 +229,28 @@
     },
 
     /**
-     * Decorates each editor.
+     * Decorates an editor (PropertyEditor).
      *
      * Upon the page load, all appropriate editors are initialized and decorated
      * (i.e. even before anything of the editing UI becomes visible; even before
      * edit mode is enabled).
+     *
+     * @param $editableElement
+     *   The DOM element that corresponds to the EditableEntity.
+     * @param $editorElement
+     *   The DOM element that corresponds to the PropertyEditor.
+     * @param editableEntity
+     *   The EditableEntity widget object.
+     * @param editor
+     *   The PropertyEditor widget object.
+     * @param entity
+     *   The VIE entity for the property.
+     * @param predicate
+     *   The predicate of the property.
      */
-    decorateEditor: function($editableElement, $editorElement, editable, editor, entity, predicate) {
-      var appView = this;
+    decorateEditor: function($editableElement, $editorElement, editableEntity, editor, entity, predicate) {
+      var that = this;
 
-      editor.decorationView = new Drupal.edit.views.FieldDecorationView({
-        el: $editorElement,
-        entity: entity,
-        predicate: predicate,
-        editorName: editor.options.editorName
-      });
       // Toolbars are rendered "on-demand" (highlighting or activating).
       // They are a sibling element before the $editorElement.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
@@ -228,29 +259,25 @@
         editorName: editor.options.editorName,
         $editorElement: $editorElement
       });
+      // The $editorElement will be decorated differently depending on state.
+      editor.decorationView = new Drupal.edit.views.FieldDecorationView({
+        el: $editorElement,
+        entity: entity,
+        predicate: predicate,
+        editorName: editor.options.editorName,
+        toolbarHovering: {
+          toolbarId: editor.toolbarView.getId(),
+          editableEntity: editableEntity
+        }
+      });
 
-      // Editor-specific event handling.
+      // Event handling for app events triggered by the toolbar.
       $editorElement
-      // Start hover: transition to 'highlight' state.
-      .bind('mouseenter.edit', function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.getId(), function () {
-          editable.setState('highlighted', predicate);
-          event.stopPropagation();
-        });
-      })
-      // Stop hover: back to 'candidate' state.
-      .bind('mouseleave.edit', function(event) {
-        Drupal.edit.util.ignoreHoveringVia(event, '#' + editor.toolbarView.getId(), function () {
-          editable.setState('candidate', predicate, { reason: 'mouseleave' });
-          event.stopPropagation();
-        });
-      })
-      // custom events for initiating saving / cancelling
       .bind('editsave.edit', function(event, data) {
-        appView.saveProperty(editor, editable, $editorElement, entity, predicate);
+        that.saveProperty(editor, editableEntity, $editorElement, entity, predicate);
       })
       .bind('editcancel.edit', function(event, data) {
-        editable.setState('candidate', predicate, { reason: 'cancel' });
+        editableEntity.setState('candidate', predicate, { reason: 'cancel' });
       });
     },
 
@@ -315,17 +342,6 @@
         propertyID: entity.getSubjectUri() + '/' + predicate,
         editorName: editorName,
         editorSpecific: editorSpecificOptions
-      });
-    },
-    bindAppStateChanges: function() {
-      var that = this;
-      this.model.on('change:isViewing', function() {
-        var newEditableEntityState = (that.model.get('isViewing'))
-          ? 'inactive'
-          : 'candidate';
-        that.$entityElements.each(function() {
-          $(this).createEditable('setState', newEditableEntityState);
-        });
       });
     }
   });

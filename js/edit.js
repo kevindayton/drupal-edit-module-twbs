@@ -23,7 +23,7 @@ Drupal.behaviors.edit = {
 Drupal.edit.init = function() {
   // Instantiate EditAppView, which is the controller of it all. EditAppModel
   // instance tracks global state (viewing/editing in-place).
-  var appView = new Drupal.edit.EditAppView({
+  var app = new Drupal.edit.EditAppView({
     el: $('body'),
     model: new Drupal.edit.models.EditAppModel()
   });

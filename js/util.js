@@ -49,19 +49,6 @@ Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
   });
 };
 
-/**
- * Ignore hovering to/from the given closest element, but as soon as a hover
- * occurs to/from *another* element, then call the given callback.
- */
-Drupal.edit.util.ignoreHoveringVia = function(e, closest, callback) {
-  if ($(e.relatedTarget).closest(closest).length > 0) {
-    e.stopPropagation();
-  }
-  else {
-    callback();
-  }
-};
-
 Drupal.edit.util.form = {
   /**
    * Loads a form, calls a callback to inserts.

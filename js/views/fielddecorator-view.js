@@ -25,14 +25,33 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    *   - entity: the VIE entity for the property.
    *   - predicate: the predicate of the property.
    *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
-   *   - $editorElement: the corresponding PropertyEditor widget.
+   *   - toolbarHovering: an object with the following keys:
+   *     * toolbarId: the ID attribute of the toolbar as rendered in the DOM.
+   *     * editableEntity: the EditableEntity widget object for the property
    */
   initialize: function(options) {
     this.entity = options.entity;
     this.predicate = options.predicate;
     this.editorName = options.editorName;
 
-    this.$el.css('background-color', this._getBgColor(this.$el));
+    var hovering = options.toolbarHovering;
+    var that = this;
+    this.$el
+      .css('background-color', this._getBgColor(this.$el))
+      // Start hover: transition to 'highlight' state.
+      .bind('mouseenter.edit', function(event) {
+        that._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
+          hovering.editableEntity.setState('highlighted', that.predicate);
+          event.stopPropagation();
+        });
+      })
+      // Stop hover: back to 'candidate' state.
+      .bind('mouseleave.edit', function(event) {
+        that._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
+          hovering.editableEntity.setState('candidate', that.predicate, { reason: 'mouseleave' });
+          event.stopPropagation();
+        });
+      });
 
     // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
     this.stateChange('inactive', 'candidate');
@@ -254,5 +273,18 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
       pos = '0px';
     }
     return pos;
+  },
+
+  /**
+   * Ignores hovering to/from the given closest element, but as soon as a hover
+   * occurs to/from *another* element, then call the given callback.
+   */
+  _ignoreHoveringVia: function(event, closest, callback) {
+    if (jQuery(event.relatedTarget).closest(closest).length > 0) {
+      event.stopPropagation();
+    }
+    else {
+      callback();
+    }
   }
 });
