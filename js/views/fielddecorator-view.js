@@ -52,9 +52,6 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
           event.stopPropagation();
         });
       });
-
-    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
-    this.stateChange('inactive', 'candidate');
   },
 
   /**

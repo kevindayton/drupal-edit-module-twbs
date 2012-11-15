@@ -50,9 +50,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
     // Generate a DOM-compatible ID for the toolbar DOM element.
     this._id = 'edit-toolbar-for-' + propertyID.replace(/\//g, '_');
-
-    // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
-    this.stateChange('inactive', 'candidate');
   },
 
   /**

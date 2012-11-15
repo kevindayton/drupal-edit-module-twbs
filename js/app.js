@@ -224,8 +224,9 @@
       }
 
       // Propagate the state change to the decoration and toolbar views.
-      editor.decorationView.stateChange(from, to);
-      editor.toolbarView.stateChange(from, to);
+      // @todo enable this once https://github.com/bergie/create/issues/133 is solved.
+      // editor.decorationView.stateChange(from, to);
+      // editor.toolbarView.stateChange(from, to);
     },
 
     /**
@@ -277,6 +278,12 @@
           toolbarId: editor.toolbarView.getId(),
           editableEntity: editableEntity
         }
+      });
+
+      // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+      $editableElement.bind('createeditablestatechange', function(event, data) {
+        editor.decorationView.stateChange(data.previous, data.current);
+        editor.toolbarView.stateChange(data.previous, data.current);
       });
     },
 
