@@ -31,6 +31,25 @@ Drupal.theme.editBackstage = function(settings) {
 };
 
 /**
+ * Theme function for a modal of the Edit module.
+ *
+ * @param settings
+ *   An object with the following keys:
+ *   - None.
+ * @return
+ *   The corresponding HTML.
+ */
+Drupal.theme.editModal = function(settings) {
+  var classes = 'edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
+  var html = '';
+  html += '<div id="edit_modal" class="' + classes + '">';
+  html += '  <div class="main"><p></p></div>';
+  html += '  <div class="actions"></div>';
+  html += '</div>';
+  return html;
+};
+
+/**
  * Theme function for a toolbar container of the Edit module.
  *
  * @param settings

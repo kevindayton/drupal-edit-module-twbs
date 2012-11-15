@@ -118,4 +118,38 @@ Drupal.edit.util.form = {
   }
 };
 
+Drupal.edit.util.modal = function(message, actions, callback) {
+  var $modal = $(Drupal.theme('editModal', {})).appendTo('body');
+
+  var stopEventAndRemove = function() {
+    event.stopPropagation();
+    event.preventDefault();
+
+    // Remove after animation.
+    $modal
+    .addClass('edit-animate-invisible')
+    .bind(Drupal.edit.util.constants.transitionEnd, function(e) {
+      $modal.remove();
+
+      // The modal's HTML was removed, hence no need to undelegate it.
+    });
+  };
+
+  $modal
+    .find('.main p').text(message).end()
+    .find('.actions').append($(actions))
+    .delegate('a.discard', 'click.edit', function(event) {
+      stopEventAndRemove();
+      callback('discard');
+    })
+    .delegate('a.save', 'click.edit', function() {
+      stopEventAndRemove();
+      callback('save');
+    });
+
+  setTimeout(function() {
+    $modal.removeClass('edit-animate-invisible');
+  }, 0);
+};
+
 })(jQuery);
