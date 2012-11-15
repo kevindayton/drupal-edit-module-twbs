@@ -14,7 +14,7 @@ $(function() {
   // but only when the processed text already present in the DOM was processed
   // *with* transformation filters. I.e.: it depends on the text format.
   Drupal.ajax.prototype.commands.edit_field_rendered_without_transformation_filters = function(ajax, response, status) {
-    console.log('edit_field_rendered_without_transformation_filters', ajax, response, status);
+    // console.log('edit_field_rendered_without_transformation_filters', ajax, response, status);
     if (Drupal.edit.state.get('editedEditable') == response.id
         && ajax.$field.hasClass('edit-type-direct')
         && ajax.$field.hasClass('edit-text-with-transformation-filters')

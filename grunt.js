@@ -65,9 +65,7 @@ module.exports = function(grunt) {
         Backbone: true,
         Drupal: true,
         VIE: true,
-        _: true,
-        // we should remove this later on.
-        console: true
+        _: true
       }
     }
   });
