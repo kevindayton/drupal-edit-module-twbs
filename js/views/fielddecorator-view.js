@@ -14,8 +14,14 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   entity: null,
   predicate : null,
   editorName: null,
+  toolbarHovering: null,
 
   _widthAttributeIsEmpty: null,
+
+  events: {
+    'mouseenter.edit' : 'onMouseEnter',
+    'mouseleave.edit' : 'onMouseLeave'
+  },
 
   /**
    * Implements Backbone Views' initialize() function.
@@ -33,25 +39,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.entity = options.entity;
     this.predicate = options.predicate;
     this.editorName = options.editorName;
-
-    var hovering = options.toolbarHovering;
-    var that = this;
-    this.$el
-      .css('background-color', this._getBgColor(this.$el))
-      // Start hover: transition to 'highlight' state.
-      .bind('mouseenter.edit', function(event) {
-        that._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
-          hovering.editableEntity.setState('highlighted', that.predicate);
-          event.stopPropagation();
-        });
-      })
-      // Stop hover: back to 'candidate' state.
-      .bind('mouseleave.edit', function(event) {
-        that._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
-          hovering.editableEntity.setState('candidate', that.predicate, { reason: 'mouseleave' });
-          event.stopPropagation();
-        });
-      });
+    this.toolbarHovering = options.toolbarHovering;
+    this.$el.css('background-color', this._getBgColor(this.$el));
   },
 
   /**
@@ -98,7 +87,35 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
         break;
     }
   },
-  // refactored from field-view.js:
+
+  /**
+   * Starts hover: transition to 'highlight' state.
+   *
+   * @param event
+   */
+  onMouseEnter: function(event) {
+    var that = this;
+    var hovering = this.toolbarHovering;
+    this._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
+      hovering.editableEntity.setState('highlighted', that.predicate);
+      event.stopPropagation();
+    });
+  },
+
+  /**
+   * Stops hover: back to 'candidate' state.
+   *
+   * @param event
+   */
+  onMouseLeave: function(event) {
+    var that = this;
+    var hovering = this.toolbarHovering;
+    this._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
+      hovering.editableEntity.setState('candidate', that.predicate, { reason: 'mouseleave' });
+      event.stopPropagation();
+    });
+  },
+
   decorate: function () {
     this.$el.addClass('edit-animate-fast edit-candidate edit-editable');
   },
