@@ -200,14 +200,14 @@
     _confirmStopEditing: function(acceptCallback) {
       // Step 1: move certain UI elements below the overlay.
       var editor = this.model.get('activeEditor');
-      editor.element.addClass('edit-belowoverlay');
-      editor.toolbarView.$el.addClass('edit-belowoverlay');
-      if (editor.options.editorName === 'form') {
-        editor.$formContainer.addClass('edit-belowoverlay');
-      }
-      else {
-        editor.element.next('.edit-validation-errors').addClass('edit-belowoverlay');
-      }
+      var $elementsToHide = $([])
+        .add(editor.element)
+        .add(editor.toolbarView.$el)
+        .add((editor.options.editorName === 'form')
+          ? editor.$formContainer
+          : editor.element.next('.edit-validation-errors')
+        );
+      $elementsToHide.addClass('edit-belowoverlay');
 
       // Step 2: the modal. When the user makes a choice, the UI elements that
       // were moved below the overlay will be restored, and the callback will be
@@ -221,7 +221,7 @@
         ]}),
         function(action) {
           // Step 3: move the moved UI elements on top of the overlay again.
-          jQuery('.edit-belowoverlay').removeClass('edit-belowoverlay');
+          $elementsToHide.removeClass('edit-belowoverlay');
 
           // Step 4: call the accept callback with the user's choice.
           if (action === 'discard') {

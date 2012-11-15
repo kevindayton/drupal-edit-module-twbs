@@ -217,7 +217,8 @@
 
 /* Modal active: prevent user from interacting with toolbar & editables. */
 .edit-form-container.edit-belowoverlay,
-.edit-toolbar-container.edit-belowoverlay {
+.edit-toolbar-container.edit-belowoverlay,
+.edit-validation-errors.edit-belowoverlay {
   z-index: 210;
 }
 .edit-editable.edit-belowoverlay {

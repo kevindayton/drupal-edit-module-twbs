@@ -59,6 +59,7 @@
         case 'changed':
           break;
         case 'saving':
+          this._removeValidationErrors();
           break;
         case 'saved':
           break;
