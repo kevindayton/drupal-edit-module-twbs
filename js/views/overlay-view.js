@@ -1,20 +1,26 @@
+/**
+ * @file overlay-view.js
+ *
+ * A Backbone View that provides the app-level overlay.
+ *
+ * The overlay sits on top of the existing content, the properties that are
+ * candidates for editing sit on top of the overlay.
+ */
+
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.OverlayView = Backbone.View.extend({
-  // Reference to a EditAppView instance.
+
   appView: null,
 
-  // Events
   events: {
     'click': 'onEscapeEditor'
   },
 
   /**
-   * Initalize view instance.
-   *
-   * @param options
+   * Implements Backbone Views' initialize() function.
    */
-  initialize: function (options) {
+  initialize: function(options) {
     this.appView = options.appView;
 
     _.bindAll(this, 'stateChange');
@@ -22,20 +28,9 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   },
 
   /**
-   * Trigger escapeEditor event on parent appView.
-   * @todo event handling still needs to be implemented.
-   *
-   * @param event
+   * Listen to app state changes.
    */
-  onEscapeEditor: function (event) {
-    event.preventDefault();
-    this.appView.trigger('escapeEditor');
-  },
-
-  /**
-   * Listen to global state changes (isViewing).
-   */
-  stateChange: function () {
+  stateChange: function() {
     if (this.model.get('isViewing')) {
       this.remove();
       return;
@@ -44,9 +39,20 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   },
 
   /**
+   * Trigger escapeEditor event on parent appView.
+   * @todo event handling still needs to be implemented.
+   *
+   * @param event
+   */
+  onEscapeEditor: function(event) {
+    event.preventDefault();
+    this.appView.trigger('escapeEditor');
+  },
+
+  /**
    * Inserts the overlay element and appends it to the body.
    */
-  render: function () {
+  render: function() {
     this.setElement(
       jQuery(Drupal.theme('editOverlay', {}))
       .appendTo('body')
@@ -60,7 +66,7 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   /**
    * Remove the overlay element.
    */
-  remove: function () {
+  remove: function() {
     var that = this;
     this.$el
     .addClass('edit-animate-invisible')

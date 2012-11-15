@@ -1,25 +1,38 @@
+/**
+ * @file menu-view.js
+ *
+ * A Backbone View that provides the app-level interactive menu.
+ */
+
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.MenuView = Backbone.View.extend({
+
   /**
-   * Initalize view instance.
-   *
-   * @param options
+   * Implements Backbone Views' initialize() function.
    */
-  initialize: function (options) {
+  initialize: function() {
     _.bindAll(this, 'stateChange');
     this.model.bind('change:isViewing', this.stateChange);
-    // we have to call stateChange here, because theme_menu_local_task links
-    // do not take URL-fragments for consideration.
+
+    // We have to call stateChange() here, because URL fragments are not passed
+    // the server, thus the wrong anchor may be marked as active.
     this.stateChange();
   },
 
   /**
-   * Listen to global state changes (isViewing).
+   * Listen to app state changes.
    */
-  stateChange: function () {
-    this.$('a.edit_view-edit-toggle').removeClass('active');
-    this.$('a.edit_view-edit-toggle').parent().removeClass('active');
-    this.$('a.edit_view-edit-toggle.edit-' + (this.model.get('isViewing') ? 'view' : 'edit')).addClass('active').parent().addClass('active');
+  stateChange: function() {
+    // Unmark whichever one is currently marked as active.
+    this.$('a.edit_view-edit-toggle')
+      .removeClass('active')
+      .parent().removeClass('active');
+
+    // Mark the correct one as active.
+    var activeAnchor = this.model.get('isViewing') ? 'view' : 'edit';
+    this.$('a.edit_view-edit-toggle.edit-' + activeAnchor)
+      .addClass('active')
+      .parent().addClass('active');
   }
 });

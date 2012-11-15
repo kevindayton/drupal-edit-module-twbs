@@ -48,6 +48,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.stateChange('inactive', 'candidate');
   },
 
+  /**
+   * Listen to editor state changes.
+   */
   stateChange: function(from, to) {
     switch (to) {
       case 'inactive':

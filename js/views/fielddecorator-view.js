@@ -18,7 +18,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   _widthAttributeIsEmpty: null,
 
   /**
-   * Implements Backbone View's initialize() function.
+   * Implements Backbone Views' initialize() function.
    *
    * @param options
    *   An object with the following keys:
@@ -38,6 +38,9 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.stateChange('inactive', 'candidate');
   },
 
+  /**
+   * Listen to editor state changes.
+   */
   stateChange: function(from, to) {
     switch (to) {
       case 'inactive':
