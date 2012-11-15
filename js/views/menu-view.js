@@ -13,7 +13,7 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
    */
   initialize: function() {
     _.bindAll(this, 'stateChange');
-    this.model.bind('change:isViewing', this.stateChange);
+    this.model.on('change:isViewing', this.stateChange);
 
     // We have to call stateChange() here, because URL fragments are not passed
     // the server, thus the wrong anchor may be marked as active.
@@ -21,7 +21,7 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
   },
 
   /**
-   * Listen to app state changes.
+   * Listens to app state changes.
    */
   stateChange: function() {
     // Unmark whichever one is currently marked as active.

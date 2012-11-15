@@ -20,11 +20,11 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
    */
   initialize: function(options) {
     _.bindAll(this, 'stateChange');
-    this.model.bind('change:isViewing', this.stateChange);
+    this.model.on('change:isViewing', this.stateChange);
   },
 
   /**
-   * Listen to app state changes.
+   * Listens to app state changes.
    */
   stateChange: function() {
     if (this.model.get('isViewing')) {

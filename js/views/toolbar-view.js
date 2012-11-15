@@ -56,7 +56,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   /**
-   * Listen to editor state changes.
+   * Listens to editor state changes.
    */
   stateChange: function(from, to) {
     switch (to) {
