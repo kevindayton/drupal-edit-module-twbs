@@ -188,10 +188,6 @@
       // Direct-type predicates
       var direct = element.filter('.edit-type-direct');
       predicates = predicates.add(direct.find('.field-item'));
-      // Edge case: "title" pseudofield on pages with lists of nodes.
-      predicates = predicates.add(direct.filter('h2').find('a'));
-      // Edge case: "title" pseudofield on node pages.
-      predicates = predicates.add(direct.find('h1'));
 
       if (!predicates.length && !stop) {
         var parentElement = element.parent(this.options.subjectSelector);
