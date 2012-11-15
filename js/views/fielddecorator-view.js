@@ -140,6 +140,11 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
   prepareEdit: function(editorName) {
     this.$el.addClass('edit-editing');
+
+    // While editing, don't show *any* other editors.
+    // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
+    jQuery('.edit-candidate').not('.edit-editing').removeClass('edit-editable');
+
     if (editorName === 'form') {
       this.$el.addClass('edit-belowoverlay');
     }
@@ -153,6 +158,10 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
   stopEdit: function(editorName) {
     this.$el.removeClass('edit-highlighted edit-editing');
+
+    // Make the other editors show up again.
+    // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
+    jQuery('.edit-candidate').addClass('edit-editable');
 
     if (editorName === 'form') {
       this.$el.removeClass('edit-belowoverlay');
