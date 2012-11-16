@@ -16,7 +16,7 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
   $elementsToHide: null,
 
   events: {
-    'click': 'onClick'
+    'click a[role=button]': 'onButtonClick'
   },
 
   /**
@@ -77,7 +77,7 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
    *
    * @param event
    */
-  onClick: function(event) {
+  onButtonClick: function(event) {
     event.stopPropagation();
     event.preventDefault();
 

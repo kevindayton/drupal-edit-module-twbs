@@ -102,7 +102,6 @@
      *   The callback function that should receive the state acceptance result.
      */
     acceptEditorStateChange: function(from, to, predicate, context, callback) {
-      var modalWillCallCallback = false;
       var accept = true;
 
       // If the app is in view mode, then reject all state changes except for
@@ -175,17 +174,16 @@
               }
               // Confirm this transition.
               else {
+                // The callback will be called from the helper function.
                 this._confirmStopEditing(callback);
-                modalWillCallCallback = true;
+                return;
               }
             }
           }
         }
       }
 
-      if (!modalWillCallCallback) {
-        callback(accept);
-      }
+      callback(accept);
     },
 
     /**
@@ -198,25 +196,38 @@
      * @see acceptEditorStateChange()
      */
     _confirmStopEditing: function(acceptCallback) {
-      var editor = this.model.get('activeEditor');
-      var modal = new Drupal.edit.views.ModalView({
-        model: this.model,
-        message: Drupal.t('You have unsaved changes'),
-        buttons: [
-          { action: 'discard', classes: 'gray-button', label: Drupal.t('Discard changes') },
-          { action: 'save', classes: 'blue-button', label: Drupal.t('Save') }
-        ],
-        callback: function(action) {
-          if (action === 'discard') {
-            acceptCallback(true);
+      // Only instantiate if there isn't a modal instance visible yet.
+      if (!this.model.get('activeModal')) {
+        var that = this;
+        var modal = new Drupal.edit.views.ModalView({
+          model: this.model,
+          message: Drupal.t('You have unsaved changes'),
+          buttons: [
+            { action: 'discard', classes: 'gray-button', label: Drupal.t('Discard changes') },
+            { action: 'save', classes: 'blue-button', label: Drupal.t('Save') }
+          ],
+          callback: function(action) {
+            // The active modal has been removed.
+            that.model.set('activeModal', null);
+            if (action === 'discard') {
+              acceptCallback(true);
+            }
+            else {
+              acceptCallback(false);
+              var editor = that.model.get('activeEditor');
+              editor.options.widget.setState('saving', editor.options.property);
+            }
           }
-          else {
-            acceptCallback(false);
-            editor.options.widget.setState('saving', editor.options.property);
-          }
-        }
-      });
-      modal.render();
+        });
+        this.model.set('activeModal', modal);
+        // The modal will set the activeModal property on the model when rendering
+        // to prevent multiple modals from being instantiated.
+        modal.render();
+      }
+      else {
+        // Reject as there is still an open transition waiting for confirmation.
+        acceptCallback(false);
+      }
     },
 
     /**

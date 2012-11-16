@@ -5,6 +5,8 @@ Drupal.edit.models.EditAppModel = Backbone.Model.extend({
     // We always begin in view mode.
     isViewing: true,
     highlightedEditor: null,
-    activeEditor: null
+    activeEditor: null,
+    // Reference to a ModalView-instance if a transition requires confirmation.
+    activeModal: null
   }
 });
