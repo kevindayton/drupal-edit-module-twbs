@@ -84,7 +84,7 @@ Backbone.syncDirect = function(method, model, options) {
     var fillAndSubmitForm = function(value) {
       jQuery('#edit_backstage form')
         // Fill in the value in any <input> that isn't hidden or a submit button.
-        .find(':input[type!="hidden"][type!="submit"]').val(value).end()
+        .find(':input[type!="hidden"][type!="submit"]:not(select)').val(value).end()
         // Submit the form.
         .find('.edit-form-submit').trigger('click.edit');
     };
