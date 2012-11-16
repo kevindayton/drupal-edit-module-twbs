@@ -32,10 +32,11 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    * @param options
    *   An object with the following keys:
    *   - editor: the editor object with an 'options' object that has these keys:
-   *      - entity: the VIE entity for the property
-   *      - property: the predicate of the property
-   *      - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'
-   *      - element: the jQuery-wrapped editor DOM element
+   *      * entity: the VIE entity for the property.
+   *      * property: the predicate of the property.
+   *      * editorName: the editor name: 'form', 'direct' or
+   *        'direct-with-wysiwyg'.
+   *      * element: the jQuery-wrapped editor DOM element
    *   - $storageWidgetEl: the DOM element on which the Create Storage widget is
    *     initialized.
    */

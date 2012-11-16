@@ -11,10 +11,11 @@ Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
+  editor: null,
   entity: null,
   predicate : null,
   editorName: null,
-  toolbarHovering: null,
+  toolbarId: null,
 
   _widthAttributeIsEmpty: null,
 
@@ -28,18 +29,22 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    *
    * @param options
    *   An object with the following keys:
-   *   - entity: the VIE entity for the property.
-   *   - predicate: the predicate of the property.
-   *   - editorName: the editor name: 'form', 'direct' or 'direct-with-wysiwyg'.
-   *   - toolbarHovering: an object with the following keys:
-   *     * toolbarId: the ID attribute of the toolbar as rendered in the DOM.
-   *     * editableEntity: the EditableEntity widget object for the property
+   *   - editor: the editor object with an 'options' object that has these keys:
+   *      * entity: the VIE entity for the property.
+   *      * property: the predicate of the property.
+   *      * editorName: the editor name: 'form', 'direct' or
+   *        'direct-with-wysiwyg'.
+   *      * widget: the parent EditableeEntity widget.
+   *   - toolbarId: the ID attribute of the toolbar as rendered in the DOM.
    */
   initialize: function(options) {
-    this.entity = options.entity;
-    this.predicate = options.predicate;
-    this.editorName = options.editorName;
-    this.toolbarHovering = options.toolbarHovering;
+    this.editor = options.editor;
+    this.toolbarId = options.toolbarId;
+
+    this.entity = this.editor.options.entity;
+    this.predicate = this.editor.options.property;
+    this.editorName = this.editor.options.editorName;
+
     this.$el.css('background-color', this._getBgColor(this.$el));
   },
 
@@ -95,9 +100,9 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    */
   onMouseEnter: function(event) {
     var that = this;
-    var hovering = this.toolbarHovering;
-    this._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
-      hovering.editableEntity.setState('highlighted', that.predicate);
+    this._ignoreHoveringVia(event, '#' + this.toolbarId, function () {
+      var editableEntity = that.editor.options.widget;
+      editableEntity.setState('highlighted', that.predicate);
       event.stopPropagation();
     });
   },
@@ -109,9 +114,9 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    */
   onMouseLeave: function(event) {
     var that = this;
-    var hovering = this.toolbarHovering;
-    this._ignoreHoveringVia(event, '#' + hovering.toolbarId, function () {
-      hovering.editableEntity.setState('candidate', that.predicate, { reason: 'mouseleave' });
+    this._ignoreHoveringVia(event, '#' + this.toolbarId, function () {
+      var editableEntity = that.editor.options.widget;
+      editableEntity.setState('candidate', that.predicate, { reason: 'mouseleave' });
       event.stopPropagation();
     });
   },

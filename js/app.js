@@ -291,13 +291,8 @@
       // The $editorElement will be decorated differently depending on state.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
         el: $editorElement,
-        entity: entity,
-        predicate: predicate,
-        editorName: editor.options.editorName,
-        toolbarHovering: {
-          toolbarId: editor.toolbarView.getId(),
-          editableEntity: editableEntity
-        }
+        editor: editor,
+        toolbarId: editor.toolbarView.getId()
       });
 
       // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
