@@ -2,6 +2,8 @@
  * @file drupalalohawidget.js
  *
  * Override of Create.js' default Aloha Editor widget.
+ *
+ * This does in fact use zero code of jQuery.create.alohaWidget.
  */
 
 (function (jQuery, undefined) {
@@ -28,6 +30,15 @@
         that.options.activated();
       });
 
+      // Sets the state to 'changed' whenever the content has changed.
+      this.element.bind('aloha-content-changed', function(event, $alohaEditable, data) {
+        if (!data.editable.isModified()) {
+          return true;
+        }
+        that.options.changed(data.editable.getContents());
+        data.editable.setUnmodified();
+      });
+
       // Immediately initialize Aloha, this can take some time. By doing it now
       // already, it will most likely already be ready when the user actually
       // wants to use Aloha Editor.
@@ -46,7 +57,7 @@
           break;
         case 'candidate':
           if (from !== 'inactive') {
-            this.disable();
+            Drupal.aloha.detach(this.element);
             this._removeValidationErrors();
             this._cleanUp();
           }
@@ -56,7 +67,11 @@
         case 'activating':
           break;
         case 'active':
-          this.enable();
+          // Attach Aloha Editor with this field's text format.
+          var formatID = this.options.widget.element.attr('data-edit-text-format');
+          var format = Drupal.settings.aloha.formats[formatID];
+          Drupal.aloha.attach(this.element, format);
+          Drupal.aloha.activate(this.element, format);
           break;
         case 'changed':
           break;
