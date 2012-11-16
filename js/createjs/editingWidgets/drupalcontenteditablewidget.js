@@ -1,5 +1,10 @@
+/**
+ * @file drupalcontenteditablewidget.js
+ *
+ * Override of Create.js' default "base" (plain contentEditable) widget.
+ */
+
 (function (jQuery, undefined) {
-  // Consistent namespace.
   jQuery.widget('Drupal.drupalContentEditableWidget', jQuery.Create.editWidget, {
 
     /**
@@ -8,30 +13,31 @@
      * @todo: get rid of this once https://github.com/bergie/create/issues/142
      * is solved.
      */
-    _init: function () {
-      // Sets the state to 'activated'.
-      var that = this;
-      this.element.bind("click.edit", function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-        that.options.activated();
-      });
-    },
+    _init: function() {},
 
     /**
      * Implements Create's _initialize() method.
      */
     _initialize: function() {
-      var self = this;
+      var that = this;
+
+      // Sets the state to 'activated' upon clicking the element.
+      this.element.bind("click.edit", function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        that.options.activated();
+      });
+
+      // Sets the state to 'changed' whenever the content has changed.
       var before = jQuery.trim(this.element.text());
       this.element.bind('keyup paste', function (event) {
-        if (self.options.disabled) {
+        if (that.options.disabled) {
           return;
         }
-        var current = jQuery.trim(self.element.text());
+        var current = jQuery.trim(that.element.text());
         if (before !== current) {
           before = current;
-          self.options.changed(current);
+          that.options.changed(current);
         }
       });
     },

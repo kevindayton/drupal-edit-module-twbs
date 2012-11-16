@@ -1,5 +1,11 @@
+/**
+ * @file drupalformwidget.js
+ *
+ * Form-based Create.js widget for structured content in Drupal.
+ */
+
 (function ($, undefined) {
-  // # Drupal form-based editing widget for Create.js
+  // Drupal form-based editing widget for Create.js
   $.widget('Drupal.drupalFormWidget', $.Create.editWidget, {
 
     id: null,
@@ -11,20 +17,19 @@
      * @todo: get rid of this once https://github.com/bergie/create/issues/142
      * is solved.
      */
-    _init: function() {
-      // Sets the state to 'activating'.
+    _init: function() {},
+
+    /**
+     * Implements Create's _initialize() method.
+     */
+    _initialize: function() {
+      // Sets the state to 'activating' upon clicking the element.
       var that = this;
       this.element.bind("click.edit", function(event) {
         event.stopPropagation();
         event.preventDefault();
         that.options.activating();
       });
-    },
-
-    /**
-     * Implements Create's _initialize() method.
-     */
-    _initialize: function() {
     },
 
     /**
