@@ -46,7 +46,7 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
     // Step 1: move certain UI elements below the overlay.
     var editor = this.model.get('activeEditor');
     this.$elementsToHide = $([])
-      .add(editor.element)
+      .add((editor.element.hasClass('edit-belowoverlay')) ? null : editor.element)
       .add(editor.toolbarView.$el)
       .add((editor.options.editorName === 'form')
         ? editor.$formContainer
