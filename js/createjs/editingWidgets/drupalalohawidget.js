@@ -21,6 +21,21 @@
      * Implements Create's _initialize() method.
      */
     _initialize: function() {
+      this._bindEvents();
+
+      // Immediately initialize Aloha, this can take some time. By doing it now
+      // already, it will most likely already be ready when the user actually
+      // wants to use Aloha Editor.
+      Drupal.aloha.init();
+    },
+
+    /**
+     * Binds to events.
+     *
+     * @todo: get rid of this helper function and move it into _initialize()
+     * once https://github.com/alohaeditor/Aloha-Editor/issues/693 is solved.
+     */
+    _bindEvents: function() {
       var that = this;
 
       // Sets the state to 'activated' upon clicking the element.
@@ -38,11 +53,6 @@
         that.options.changed(data.editable.getContents());
         data.editable.setUnmodified();
       });
-
-      // Immediately initialize Aloha, this can take some time. By doing it now
-      // already, it will most likely already be ready when the user actually
-      // wants to use Aloha Editor.
-      Drupal.aloha.init();
     },
 
     /**
@@ -60,6 +70,12 @@
             Drupal.aloha.detach(this.element);
             this._removeValidationErrors();
             this._cleanUp();
+
+            // TRICKY: work-around for major AE bug. See:
+            //  - http://drupal.org/node/1725032
+            //  - https://github.com/alohaeditor/Aloha-Editor/issues/693.
+            // @todo: get rid of this once https://github.com/alohaeditor/Aloha-Editor/issues/693 is solved.
+            this._bindEvents();
           }
           break;
         case 'highlighted':
