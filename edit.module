@@ -112,9 +112,6 @@ function edit_library_info() {
       $path . '/js/theme.js' => array(
         'defer' => TRUE,
       ),
-      $path . '/js/ajax.js' => array(
-        'defer' => TRUE,
-      ),
       // Basic settings.
       array(
         'data' => array('edit' => array(

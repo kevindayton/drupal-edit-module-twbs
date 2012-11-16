@@ -9,6 +9,10 @@
 (function (jQuery, undefined) {
   jQuery.widget('Drupal.drupalAlohaWidget', jQuery.Create.alohaWidget, {
 
+    // @todo: actually use this when restoring original content, but for that we
+    // first need to know how to restore content in a Create.js context
+    originalTransformedContent: null,
+
     /**
      * Implements jQuery UI widget factory's _init() method.
      *
@@ -42,7 +46,7 @@
       this.element.bind("click.edit", function(event) {
         event.stopPropagation();
         event.preventDefault();
-        that.options.activated();
+        that.options.activating();
       });
 
       // Sets the state to 'changed' whenever the content has changed.
@@ -81,6 +85,27 @@
         case 'highlighted':
           break;
         case 'activating':
+          // When transformation filters have been been applied to the processed
+          // text of this field, then we'll need to load a re-rendered version of
+          // it without the transformation filters.
+          if (this.options.widget.element.hasClass('edit-text-with-transformation-filters')) {
+            this.originalTransformedContent = this.element.html();
+
+            var that = this;
+            Drupal.edit.util.loadRerenderedProcessedText({
+              $editorElement: this.element,
+              propertyID: Drupal.edit.util.calcPropertyID(this.options.entity, this.options.property),
+              callback: function (rerendered) {
+                that.element.html(rerendered);
+                that.options.activated();
+              }
+            });
+          }
+          // When no transformation filters have been applied: start WYSIWYG
+          // editing immediately!
+          else {
+            this.options.activated();
+          }
           break;
         case 'active':
           // Attach Aloha Editor with this field's text format.

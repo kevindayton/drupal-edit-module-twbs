@@ -75,9 +75,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         this.startHighlight();
         break;
       case 'activating':
-        if (this.editorName === 'form') {
-          this.setLoadingIndicator(true);
-        }
+        this.setLoadingIndicator(true);
         break;
       case 'active':
         this.startEdit(this.editorName);
