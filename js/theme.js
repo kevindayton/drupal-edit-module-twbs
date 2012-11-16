@@ -100,6 +100,7 @@ Drupal.theme.editToolgroup = function(settings) {
  *     - label: the label of the button.
  *     - hasButtonRole: whether this button should have its "role" attribute set
  *       to "button".
+ *     - action: sets a data-edit-modal-action attribute.
  * @return
  *   The corresponding HTML.
  */
@@ -115,7 +116,8 @@ Drupal.theme.editButtons = function(settings) {
     }
 
     html += '<a href="' + button.url + '" class="' + button.classes + '"';
-    html += (button.hasButtonRole) ? 'role="button"' : '';
+    html += (button.hasButtonRole) ? ' role="button"' : '';
+    html += (button.action) ? ' data-edit-modal-action="' + button.action + '"' : '';
     html += '>';
     html +=    button.label;
     html += '</a>';

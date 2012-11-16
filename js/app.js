@@ -198,32 +198,15 @@
      * @see acceptEditorStateChange()
      */
     _confirmStopEditing: function(acceptCallback) {
-      // Step 1: move certain UI elements below the overlay.
       var editor = this.model.get('activeEditor');
-      var $elementsToHide = $([])
-        .add(editor.element)
-        .add(editor.toolbarView.$el)
-        .add((editor.options.editorName === 'form')
-          ? editor.$formContainer
-          : editor.element.next('.edit-validation-errors')
-        );
-      $elementsToHide.addClass('edit-belowoverlay');
-
-      // Step 2: the modal. When the user makes a choice, the UI elements that
-      // were moved below the overlay will be restored, and the callback will be
-      // called.
-      var that = this;
-      Drupal.edit.util.modal(
-        Drupal.t('You have unsaved changes'),
-        Drupal.theme('editButtons', { 'buttons' : [
-          { classes: 'gray-button discard', label: Drupal.t('Discard changes') },
-          { classes: 'blue-button save', label: Drupal.t('Save') }
-        ]}),
-        function(action) {
-          // Step 3: move the moved UI elements on top of the overlay again.
-          $elementsToHide.removeClass('edit-belowoverlay');
-
-          // Step 4: call the accept callback with the user's choice.
+      var modal = new Drupal.edit.views.ModalView({
+        model: this.model,
+        message: Drupal.t('You have unsaved changes'),
+        buttons: [
+          { action: 'discard', classes: 'gray-button', label: Drupal.t('Discard changes') },
+          { action: 'save', classes: 'blue-button', label: Drupal.t('Save') }
+        ],
+        callback: function(action) {
           if (action === 'discard') {
             acceptCallback(true);
           }
@@ -232,7 +215,8 @@
             editor.options.widget.setState('saving', editor.options.property);
           }
         }
-      );
+      });
+      modal.render();
     },
 
     /**
