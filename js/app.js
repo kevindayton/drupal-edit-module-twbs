@@ -50,7 +50,7 @@
             that.editorStateChange(data.previous, data.current, data.propertyEditor);
           },
           decoratePropertyEditor: function(data) {
-            that.decorateEditor(data.entityElement, data.propertyElement, data.editableEntity, data.propertyEditor, data.entity, data.predicate);
+            that.decorateEditor(data.propertyEditor);
           }
         });
       });
@@ -267,36 +267,26 @@
      * (i.e. even before anything of the editing UI becomes visible; even before
      * edit mode is enabled).
      *
-     * @param $editableElement
-     *   The DOM element that corresponds to the EditableEntity.
-     * @param $editorElement
-     *   The DOM element that corresponds to the PropertyEditor.
-     * @param editableEntity
-     *   The EditableEntity widget object.
      * @param editor
      *   The PropertyEditor widget object.
-     * @param entity
-     *   The VIE entity for the property.
-     * @param predicate
-     *   The predicate of the property.
      */
-    decorateEditor: function($editableElement, $editorElement, editableEntity, editor, entity, predicate) {
+    decorateEditor: function(editor) {
       // Toolbars are rendered "on-demand" (highlighting or activating).
-      // They are a sibling element before the $editorElement.
+      // They are a sibling element before the editor's DOM element.
       editor.toolbarView = new Drupal.edit.views.ToolbarView({
         editor: editor,
         $storageWidgetEl: this.$el
       });
 
-      // The $editorElement will be decorated differently depending on state.
+      // Decorate the editor's DOM element depending on its state.
       editor.decorationView = new Drupal.edit.views.FieldDecorationView({
-        el: $editorElement,
+        el: editor.element,
         editor: editor,
         toolbarId: editor.toolbarView.getId()
       });
 
       // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
-      $editableElement.bind('createeditablestatechange', function(event, data) {
+      editor.options.widget.element.bind('createeditablestatechange', function(event, data) {
         editor.decorationView.stateChange(data.previous, data.current);
         editor.toolbarView.stateChange(data.previous, data.current);
       });
