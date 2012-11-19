@@ -281,7 +281,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
           'margin-bottom'
         ];
 
-    for (var i = 0; i < props.length; i++) {
+    var propCount = props.length;
+    for (var i = 0; i < propCount; i++) {
       p = props[i];
       r[p] = parseFloat(this._replaceBlankPosition($e.css(p)));
     }
