@@ -16,23 +16,9 @@ Drupal.edit.util.calcPropertyID = function(entity, predicate) {
   return entity.getSubjectUri() + '/' + predicate;
 };
 
-Drupal.edit.util.calcFormURLForField = function(id) {
+Drupal.edit.util.buildUrl = function(id, urlFormat) {
   var parts = id.split('/');
-  var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
-  return Drupal.formatString(urlFormat, {
-    '!entity_type': parts[0],
-    '!id'         : parts[1],
-    '!field_name' : parts[2],
-    '!langcode'   : parts[3],
-    '!view_mode'  : parts[4]
-  });
-
-};
-
-Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
-  var parts = id.split('/');
-  var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
-  return Drupal.formatString(urlFormat, {
+  return Drupal.formatString(decodeURIComponent(urlFormat), {
     '!entity_type': parts[0],
     '!id'         : parts[1],
     '!field_name' : parts[2],
@@ -58,7 +44,7 @@ Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
 Drupal.edit.util.loadRerenderedProcessedText = function(options) {
   // Create a Drupal.ajax instance to load the form.
   Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
-    url: Drupal.edit.util.calcRerenderProcessedTextURL(options.propertyID),
+    url: Drupal.edit.util.buildUrl(options.propertyID, Drupal.settings.edit.rerenderProcessedTextURL),
     event: 'edit-internal.edit',
     submit: { nocssjs : true },
     progress: { type : null } // No progress indicator.
@@ -96,7 +82,7 @@ Drupal.edit.util.form = {
   load: function(options, callback) {
     // Create a Drupal.ajax instance to load the form.
     Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
-      url: Drupal.edit.util.calcFormURLForField(options.propertyID),
+      url: Drupal.edit.util.buildUrl(options.propertyID, Drupal.settings.edit.fieldFormURL),
       event: 'edit-internal.edit',
       submit: { nocssjs : options.nocssjs },
       progress: { type : null } // No progress indicator.
