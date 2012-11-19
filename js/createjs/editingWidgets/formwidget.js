@@ -86,7 +86,7 @@
         .css('background-color', $editorElement.css('background-color'));
 
       // Insert form container in DOM.
-      if ($editorElement.css('display') == 'inline') {
+      if ($editorElement.css('display') === 'inline') {
         // @todo: this is untested in Drupal 8, because in Drupal 8 we don't yet
         // have the ability to edit the node title/author/date, because they
         // haven't been converted into Entity Properties yet, and they're the
@@ -121,7 +121,7 @@
             widget.options.changed();
           })
           .delegate('input', 'keypress.edit', function (event) {
-            if (event.keyCode == 13) {
+            if (event.keyCode === 13) {
               return false;
             }
           });

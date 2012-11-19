@@ -252,14 +252,14 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   _getBgColor: function($e) {
     var c;
 
-    if ($e === null || $e[0].nodeName == 'HTML') {
+    if ($e === null || $e[0].nodeName === 'HTML') {
       // Fallback to white.
       return 'rgb(255, 255, 255)';
     }
     c = $e.css('background-color');
     // TRICKY: edge case for Firefox' "transparent" here; this is a
     // browser bug: https://bugzilla.mozilla.org/show_bug.cgi?id=635724
-    if (c == 'rgba(0, 0, 0, 0)' || c == 'transparent') {
+    if (c === 'rgba(0, 0, 0, 0)' || c === 'transparent') {
       return this._getBgColor($e.parent());
     }
     return c;
@@ -297,7 +297,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
   _replaceBlankPosition: function(pos) {
     // @todo: this was pos == NaN (which always returns false, keeping this
     // comment in case we find a regression.
-    if (pos == 'auto' || !pos) {
+    if (pos === 'auto' || !pos) {
       pos = '0px';
     }
     return pos;
