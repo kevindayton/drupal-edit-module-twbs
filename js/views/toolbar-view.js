@@ -288,7 +288,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       // The whole toolbar must move to the top when the property's DOM element
       // is displayed inline.
       if (this.editor.element.css('display') === 'inline') {
-        this.$el.css('top', parseFloat(this.$el.css('top')) - 5 + 'px');
+        this.$el.css('top', parseInt(this.$el.css('top'), 10) - 5 + 'px');
       }
 
       // The toolbar must move to the top and the left.

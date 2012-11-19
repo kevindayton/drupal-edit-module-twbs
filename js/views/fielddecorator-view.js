@@ -284,7 +284,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     var propCount = props.length;
     for (var i = 0; i < propCount; i++) {
       p = props[i];
-      r[p] = parseFloat(this._replaceBlankPosition($e.css(p)));
+      r[p] = parseInt(this._replaceBlankPosition($e.css(p)), 10);
     }
     return r;
   },
