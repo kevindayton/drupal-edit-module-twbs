@@ -248,7 +248,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     }
 
     this.$el
-      .find('.edit-toolbar:not(:has(.edit-toolgroup.info))')
+      .find('.edit-toolbar')
       // Append the "info" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
         classes: 'info',
@@ -267,7 +267,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   startEdit: function() {
     this.$el
       .addClass('edit-editing')
-      .find('.edit-toolbar:not(:has(.edit-toolgroup.ops))')
+      .find('.edit-toolbar')
       // Append the "ops" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
         classes: 'ops',
@@ -318,13 +318,11 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
   insertWYSIWYGToolGroups: function() {
     this.$el
-      .find('.edit-toolbar:not(:has(.edit-toolbar-wysiwyg-tabs))')
+      .find('.edit-toolbar')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg-tabs',
         buttons: []
       }))
-      .end()
-      .find('.edit-toolbar:not(:has(.edit-toolgroup.wysiwyg))')
       .append(Drupal.theme('editToolgroup', {
         classes: 'wysiwyg',
         buttons: []
