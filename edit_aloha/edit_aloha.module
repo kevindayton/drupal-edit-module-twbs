@@ -28,7 +28,6 @@ function edit_aloha_library_info() {
     'title' => 'Integrate Aloha Editor with the Edit module.',
     'version' => ALOHA_VERSION,
     'js' => array(
-      $module_path . '/js/drupal.aloha.edit.js' => array(),
       // Configure Edit's JS to use aloha as the WYSIWYG.
       array(
         'data' => array(
