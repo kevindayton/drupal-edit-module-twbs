@@ -216,7 +216,9 @@
 }
 
 /* Modal active: prevent user from interacting with toolbar & editables. */
-.edit-toolbar-container.edit-belowoverlay {
+.edit-form-container.edit-belowoverlay,
+.edit-toolbar-container.edit-belowoverlay,
+.edit-validation-errors.edit-belowoverlay {
   z-index: 210;
 }
 .edit-editable.edit-belowoverlay {
@@ -291,6 +293,12 @@
   margin: 0;
   vertical-align: baseline;
   z-index: 310;
+  -webkit-user-select: none;
+   -khtml-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+       -o-user-select: none;
+          user-select: none;
 }
 
 .edit-toolbar-heightfaker {

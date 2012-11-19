@@ -78,6 +78,9 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     $form_state['entity']->save();
 
     $options = array('field_name' => $field_name);
+    // Reload the entity. This is necessary for some fields; otherwise we'd
+    // render the field without the updated values.
+    $entity = entity_load($entity_type, $entity_id, TRUE);
     field_attach_prepare_view($entity->entityType(), array($entity->id() => $entity), $view_mode, $langcode, $options);
     $output = field_attach_view($entity->entityType(), $entity, $view_mode, $langcode, $options);
 

@@ -20,13 +20,13 @@ Drupal.theme.editOverlay = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - None.
+ *   - id: the id to apply to the backstage.
  * @return
  *   The corresponding HTML.
  */
 Drupal.theme.editBackstage = function(settings) {
   var html = '';
-  html += '<div id="edit_backstage" />';
+  html += '<div id="' + settings.id + '" />';
   return html;
 };
 
@@ -54,7 +54,7 @@ Drupal.theme.editModal = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  * @return
  *   The corresponding HTML.
  */
@@ -62,7 +62,7 @@ Drupal.theme.editToolbarContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-toolbar-container edit-animate-invisible edit-animate-only-visibility">';
   html += '  <div class="edit-toolbar-heightfaker edit-animate-fast">';
-  html += '    <div class="edit-toolbar" />';
+  html += '    <div class="edit-toolbar primary" />';
   html += '  </div>';
   html += '</div>';
   return html;
@@ -73,7 +73,7 @@ Drupal.theme.editToolbarContainer = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - classes: the class of the toolgroup
+ *   - classes: the class of the toolgroup.
  *   - buttons: @see Drupal.theme.prototype.editButtons().
  * @return
  *   The corresponding HTML.
@@ -95,12 +95,12 @@ Drupal.theme.editToolgroup = function(settings) {
  * @param settings
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
- *     - url: the URL the button should point to
- *     - classes: the classes of the button (optional)
- *     - label: the label of the button (optional)
- *     - title: the title of the button (optional)
+ *     - url: the URL the button should point to.
+ *     - classes: the classes of the button.
+ *     - label: the label of the button.
  *     - hasButtonRole: whether this button should have its "role" attribute set
- *       to "button"
+ *       to "button".
+ *     - action: sets a data-edit-modal-action attribute.
  * @return
  *   The corresponding HTML.
  */
@@ -108,22 +108,18 @@ Drupal.theme.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
+    if (!button.hasOwnProperty('url')) {
+      button.url = '';
+    }
     if (!button.hasOwnProperty('hasButtonRole')) {
       button.hasButtonRole = true;
     }
 
-    html += '<a href="' + button.url + '"';
-    if (button.classes) {
-      html += ' class="' + button.classes + '"';
-    }
-    if (button.title) {
-      html += ' title="' + button.title + '"';
-    }
-    html += (button.hasButtonRole) ? 'role="button"' : '';
+    html += '<a href="' + button.url + '" class="' + button.classes + '"';
+    html += (button.hasButtonRole) ? ' role="button"' : '';
+    html += (button.action) ? ' data-edit-modal-action="' + button.action + '"' : '';
     html += '>';
-    if (button.label) {
-      html +=    button.label;
-    }
+    html +=    button.label;
     html += '</a>';
   }
   return html;
@@ -134,7 +130,7 @@ Drupal.theme.editButtons = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  *   - loadingMsg: The message to show while loading.
  * @return
  *   The corresponding HTML.

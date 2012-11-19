@@ -65,12 +65,12 @@ function edit_page_alter(&$page) {
       'content' => array(
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('View'), 'href' => current_path(), 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+          '#link' => array('title' => t('View'), 'href' => current_path(), 'localized_options' => array('fragment' => 'view', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
           '#active' => TRUE,
         ),
         array(
           '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('Quick edit'), 'href' => '#', 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          '#link' => array('title' => t('Quick edit'), 'href' => current_path(), 'localized_options' => array('fragment' => 'quick-edit', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
         ),
       ),
       '#attached' => array(
@@ -109,16 +109,7 @@ function edit_library_info() {
       $path . '/js/util.js' => array(
         'defer' => TRUE,
       ),
-      $path . '/js/ui.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/ui-editables.js' => array(
-        'defer' => TRUE,
-      ),
       $path . '/js/theme.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/ajax.js' => array(
         'defer' => TRUE,
       ),
       // Basic settings.
@@ -138,6 +129,49 @@ function edit_library_info() {
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
+      array('system', 'backbone'),
+      array('edit', 'edit.createjs'),
+    ),
+  );
+
+  $libraries['edit.createjs'] = array(
+    'title' => 'CreateJS and deps',
+    'website' => 'http://createjs.org',
+    'version' => NULL,
+    'js' => array(
+      $path . '/js/lib/create.js' => array('defer' => TRUE),
+      $path . '/js/viejs/SparkEditService.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editable.js' => array('defer' => TRUE),
+      $path . '/js/createjs/storage.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/drupalalohawidget.js' => array('defer' => TRUE),
+      $path . '/js/views/menu-view.js' => array('defer' => TRUE),
+      $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
+      $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
+      $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
+      $path . '/js/views/modal-view.js' => array('defer' => TRUE),
+      $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
+      $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
+      $path . '/js/backbone.drupalform.js' => array('defer' => TRUE),
+      $path . '/js/app.js' => array('defer' => TRUE),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery.ui.widget'),
+      array('system', 'backbone'),
+      array('edit', 'edit.vie'),
+    ),
+  );
+
+  $libraries['edit.vie'] = array(
+    'title' => 'Vienna IKS Editables',
+    'website' => 'http://wiki.iks-project.eu/index.php/VIE',
+    'version' => '2.0',
+    'js' => array(
+      $path . '/js/lib/vie.js' => array('defer' => TRUE),
+    ),
+    'dependencies' => array(
+      array('system', 'backbone'),
     ),
   );
 
