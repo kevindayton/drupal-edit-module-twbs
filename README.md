@@ -1,6 +1,5 @@
 # Requirements
 
-- Please apply this core patch: http://drupal.org/files/field_api_single_field-1821906-5.patch
 - Please also apply the included core patch "text.patch". Without it, you wont' be able to use direct editing, with or without WYSIWYG.
 - Optionally, if you also want WYSIWYG editing, install the latest version of Aloha Editor for Drupal 8: http://drupal.org/project/aloha
 
