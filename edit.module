@@ -208,7 +208,7 @@ function edit_preprocess_field(&$variables) {
   $langcode = $variables['element']['#language'];
   $view_mode = $variables['element']['#view_mode'];
   $formatter_type = $variables['element']['#formatter'];
-  $items = $entity->get($field_name, $langcode);
+  $items = $entity->{$field_name}[$langcode];;
   $instance = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
 
   $entity_access = edit_entity_access('update', $entity->entityType(), $entity);
@@ -280,7 +280,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
  * @return string
  *   The editability: 'disabled', 'form', 'direct' or 'direct-with-wysiwyg'.
  */
-function _edit_analyze_field_editability($field, FieldInstance $instance, $formatter_type) {
+function _edit_analyze_field_editability($items, FieldInstance $instance, $formatter_type) {
   $field_name = $instance['field_name'];
 
   // If the formatter doesn't contain the edit property, default it to 'form'
@@ -317,7 +317,7 @@ function _edit_analyze_field_editability($field, FieldInstance $instance, $forma
     // must check whether 'direct-with-wysiwyg' or 'form' editability should be
     // used.
     if (!empty($instance['settings']['text_processing'])) {
-      $format_id = $field[0]['format'];
+      $format_id = $items[0]['format'];
       $editability = _edit_wysiwyg_analyze_field_editability($format_id);
     }
   }
