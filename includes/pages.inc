@@ -34,12 +34,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     throw new NotFoundHttpException();
   }
 
-  $entities = entity_load_multiple($entity_type, array($entity_id));
-  if (!$entities) {
-    throw new NotFoundHttpException();
-  }
-
-  $entity = reset($entities);
+  $entity = entity_load($entity_type, $entity_id);
   if (!$entity) {
     throw new NotFoundHttpException();
   }
@@ -146,12 +141,7 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
     throw new NotFoundHttpException();
   }
 
-  $entities = entity_load_multiple($entity_type, array($entity_id));
-  if (!$entities) {
-    throw new NotFoundHttpException();
-  }
-
-  $entity = reset($entities);
+  $entity = entity_load($entity_type, $entity_id);
   if (!$entity) {
     throw new NotFoundHttpException();
   }

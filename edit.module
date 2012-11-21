@@ -188,13 +188,13 @@ function edit_field_attach_view_alter(&$output, $context) {
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
     $children = element_children($output);
-    $field = reset($children);
-    $langcode = $output[$field]['#language'];
-    foreach (array_keys($output[$field]['#items']) as $item) {
-      $text      = $output[$field]['#items'][$item]['value'];
-      $format_id = $output[$field]['#items'][$item]['format'];
+    $field_name = reset($children);
+    $langcode = $output[$field_name]['#language'];
+    foreach (array_keys($output[$field_name]['#items']) as $item) {
+      $text      = $output[$field_name]['#items'][$item]['value'];
+      $format_id = $output[$field_name]['#items'][$item]['format'];
       $untransformed = check_markup($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE));
-      $output[$field][$item]['#markup'] = $untransformed;
+      $output[$field_name][$item]['#markup'] = $untransformed;
     }
   }
 }
@@ -204,29 +204,29 @@ function edit_field_attach_view_alter(&$output, $context) {
  */
 function edit_preprocess_field(&$variables) {
   $entity = $variables['element']['#object'];
-  $name = $variables['element']['#field_name'];
+  $field_name = $variables['element']['#field_name'];
   $langcode = $variables['element']['#language'];
   $view_mode = $variables['element']['#view_mode'];
   $formatter_type = $variables['element']['#formatter'];
-  $field = $entity->{$name}[$langcode];
-  $instance_info = field_info_instance($entity->entityType(), $name, $entity->bundle());
+  $items = $entity->get($field_name, $langcode);
+  $instance = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
 
   $entity_access = edit_entity_access('update', $entity->entityType(), $entity);
-  $field_access = field_access('edit', $name, $entity->entityType(), $entity);
-  $editability = _edit_analyze_field_editability($field, $instance_info, $formatter_type);
+  $field_access = field_access('edit', $field_name, $entity->entityType(), $entity);
+  $editability = _edit_analyze_field_editability($items, $instance, $formatter_type);
   if ($entity_access && $field_access && $editability != 'disabled') {
     global $editbar;
     $editbar = TRUE;
 
     // Mark this field as editable and provide metadata through data- attributes.
-    $variables['attributes']['data-edit-field-label'] = $instance_info->definition['label'];
-    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $name . ':' . $langcode . ':' . $view_mode;
+    $variables['attributes']['data-edit-field-label'] = $instance->definition['label'];
+    $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $field_name . ':' . $langcode . ':' . $view_mode;
     $variables['attributes']['class'][] = 'edit-field';
     $variables['attributes']['class'][] = 'edit-allowed';
     $variables['attributes']['class'][] = 'edit-type-' . $editability;
     if ($editability == 'direct-with-wysiwyg') {
       $variables['attributes']['class'][] = 'edit-type-direct';
-      $format_id = $entity->{$name}[$langcode][0]['format'];
+      $format_id = $entity->{$field_name}[$langcode][0]['format'];
       _edit_preprocess_field_wysiwyg($variables, $format_id);
     }
   }
@@ -272,7 +272,7 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
  *
  * @param array $field
  *   The field's field array.
- * @param FieldInstance $instance_info
+ * @param FieldInstance $instance
  *   The field's instance info.
  * @param string $formatter_type
  *   The field's formatter type name.
@@ -280,8 +280,8 @@ function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
  * @return string
  *   The editability: 'disabled', 'form', 'direct' or 'direct-with-wysiwyg'.
  */
-function _edit_analyze_field_editability($field, FieldInstance $instance_info, $formatter_type) {
-  $name = $instance_info->definition['field_name'];
+function _edit_analyze_field_editability($field, FieldInstance $instance, $formatter_type) {
+  $field_name = $instance['field_name'];
 
   // If the formatter doesn't contain the edit property, default it to 'form'
   // editability, which should always work.
@@ -301,8 +301,8 @@ function _edit_analyze_field_editability($field, FieldInstance $instance_info, $
   // If directly editable, check the cardinality. If the cardinality is greater
   // than 1, use a form to edit the field.
   if ($editability == 'direct') {
-    $info = field_info_field($name);
-    if ($info['cardinality'] != 1) {
+    $field = field_info_field($field_name);
+    if ($field['cardinality'] != 1) {
       $editability = 'form';
     }
   }
@@ -316,7 +316,7 @@ function _edit_analyze_field_editability($field, FieldInstance $instance_info, $
     // On the other hand, if it is configured to use text processing; then we
     // must check whether 'direct-with-wysiwyg' or 'form' editability should be
     // used.
-    if (!empty($instance_info->definition['settings']['text_processing'])) {
+    if (!empty($instance['settings']['text_processing'])) {
       $format_id = $field[0]['format'];
       $editability = _edit_wysiwyg_analyze_field_editability($format_id);
     }
