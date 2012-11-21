@@ -1,11 +1,11 @@
 /**
- * @file drupalformwidget.js
- *
+ * @file
  * Form-based Create.js widget for structured content in Drupal.
  */
+(function ($, Drupal) {
 
-(function ($, undefined) {
-  // Drupal form-based editing widget for Create.js
+"use strict";
+
   $.widget('Drupal.drupalFormWidget', $.Create.editWidget, {
 
     id: null,
@@ -76,7 +76,7 @@
       this.id = 'edit-form-for-' + propertyID.replace(/\//g, '_');
 
       // Render form container.
-      this.$formContainer = jQuery(Drupal.theme('editFormContainer', {
+      this.$formContainer = $(Drupal.theme('editFormContainer', {
         id: this.id,
         loadingMsg: Drupal.t('Loading…')}
       ));
@@ -147,4 +147,5 @@
       this.$formContainer = null;
     }
   });
-})(jQuery);
+
+})(jQuery, Drupal);

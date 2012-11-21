@@ -1,10 +1,13 @@
 /**
- * @file toolbar-view.js
- *
+ * @file
  * A Backbone View that provides an interactive toolbar (1 per property editor).
+ *
  * It listens to state changes of the property editor. It also triggers state
  * changes in response to user interactions with the toolbar, including saving.
  */
+(function ($, _, Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
@@ -134,7 +137,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
 
         // Replace the old content with the new content.
         var updatedField = entity.get(predicate + '/rendered');
-        var $inner = jQuery(updatedField).html();
+        var $inner = $(updatedField).html();
         editor.element.html($inner);
 
         // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
@@ -160,7 +163,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
             .prepend(validationErrorMessages);
         }
         else {
-          var $errors = jQuery('<div class="edit-validation-errors"></div>')
+          var $errors = $('<div class="edit-validation-errors"></div>')
             .append(validationErrorMessages);
           editor.element
             .addClass('edit-validation-error')
@@ -191,7 +194,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    */
   onMouseLeave: function(event) {
     var el = this.editor.element[0];
-    if (event.relatedTarget != el && !jQuery.contains(el, event.relatedTarget)) {
+    if (event.relatedTarget != el && !$.contains(el, event.relatedTarget)) {
       this.editor.element.trigger('mouseleave.edit');
     }
     event.stopPropagation();
@@ -344,7 +347,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    */
   render: function () {
     // Render toolbar.
-    this.setElement(jQuery(Drupal.theme('editToolbarContainer', {
+    this.setElement($(Drupal.theme('editToolbarContainer', {
       id: this.getId()
     })));
 
@@ -441,3 +444,5 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     return this.$el.find('.edit-toolbar .edit-toolgroup.' + toolgroup);
   }
 });
+
+})(jQuery, _, Backbone, Drupal);

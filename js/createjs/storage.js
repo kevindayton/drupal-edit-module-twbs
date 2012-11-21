@@ -1,4 +1,11 @@
-(function (jQuery, undefined) {
-  // Subclass jQuery.Midgard.midgardStorage just to have consistent namespaces.
+/**
+ * @file
+ * Subclasses jQuery.Midgard.midgardStorage to have consistent namespaces.
+ */
+(function(jQuery) {
+
+"use strict";
+
   jQuery.widget('Drupal.createStorage', jQuery.Midgard.midgardStorage, {});
+
 })(jQuery);

@@ -1,9 +1,11 @@
-(function (jQuery, undefined) {
-  // # Create.js editing widget for Spark
-  //
-  // This widget inherits from the Create.js editable widget to accommodate
-  // for the fact that Spark is using custom data attributes and not RDFa
-  // to communicate editable fields.
+/**
+ * @file
+ * Determines which editor to use based on a class attribute.
+ */
+(function (jQuery, Drupal) {
+
+"use strict";
+
   jQuery.widget('Drupal.createEditable', jQuery.Midgard.midgardEditable, {
     _create: function () {
       this.vie = this.options.vie;
@@ -37,4 +39,5 @@
       return 'form';
     }
   });
-})(jQuery);
+
+})(jQuery, Drupal);

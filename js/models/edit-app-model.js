@@ -1,3 +1,11 @@
+/**
+ * @file
+ * A Backbone Model that models the current Edit application state.
+ */
+(function(Backbone, Drupal) {
+
+"use strict";
+
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.models = Drupal.edit.models || {};
 Drupal.edit.models.EditAppModel = Backbone.Model.extend({
@@ -10,3 +18,5 @@ Drupal.edit.models.EditAppModel = Backbone.Model.extend({
     activeModal: null
   }
 });
+
+})(Backbone, Drupal);

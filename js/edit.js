@@ -1,4 +1,10 @@
-(function ($, VIE) {
+/**
+ * @file
+ * Behaviors for Edit, including the one that initializes Edit's EditAppView.
+ */
+(function ($, Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 
@@ -38,4 +44,4 @@ Drupal.edit.init = function() {
   Backbone.history.start();
 };
 
-})(jQuery, VIE);
+})(jQuery, Backbone, Drupal);

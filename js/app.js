@@ -1,4 +1,11 @@
-(function ($, undefined) {
+/**
+ * @file
+ * A Backbone View that is the central app controller.
+ */
+(function ($, _, Backbone, Drupal, VIE) {
+
+"use strict";
+
   Drupal.edit = Drupal.edit || {};
   Drupal.edit.EditAppView = Backbone.View.extend({
     vie: null,
@@ -303,4 +310,5 @@
       });
     }
   });
-})(jQuery);
+
+})(jQuery, _, Backbone, Drupal, VIE);

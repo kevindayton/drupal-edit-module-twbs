@@ -1,11 +1,13 @@
 /**
- * @file overlay-view.js
- *
+ * @file
  * A Backbone View that provides the app-level overlay.
  *
  * The overlay sits on top of the existing content, the properties that are
  * candidates for editing sit on top of the overlay.
  */
+(function ($, _, Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
@@ -55,12 +57,12 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
    */
   render: function() {
     this.setElement(
-      jQuery(Drupal.theme('editOverlay', {}))
+      $(Drupal.theme('editOverlay', {}))
       .appendTo('body')
       .addClass('edit-animate-slow edit-animate-invisible')
     );
     // Animations
-    this.$el.css('top', jQuery('#navbar').outerHeight());
+    this.$el.css('top', $('#navbar').outerHeight());
     this.$el.removeClass('edit-animate-invisible');
   },
 
@@ -74,7 +76,9 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
     .bind(Drupal.edit.util.constants.transitionEnd, function (event) {
       that.$el.remove();
       // @todo - should the overlay really do this?
-      jQuery('.edit-form-container, .edit-toolbar-container, #edit_modal, .edit-curtain, .edit-validation-errors').remove();
+      $('.edit-form-container, .edit-toolbar-container, #edit_modal, .edit-curtain, .edit-validation-errors').remove();
     });
   }
 });
+
+})(jQuery, _, Backbone, Drupal);

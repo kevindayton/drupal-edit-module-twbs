@@ -1,10 +1,10 @@
 /**
- * @file modal-view.js
- *
+ * @file
  * A Backbone View that provides an interactive modal.
  */
+(function($, Backbone, Drupal) {
 
-(function($) {
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
@@ -105,4 +105,4 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
   }
 });
 
-})(jQuery);
+})(jQuery, Backbone, Drupal);

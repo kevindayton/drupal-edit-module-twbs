@@ -1,11 +1,14 @@
 /**
- * @file fielddecorator-view.js
- *
+ * @file
  * A Backbone View that decorates properties.
+ *
  * It listens to state changes of the property editor.
  *
  * @todo  rename to propertydecorator-view.js + PropertyDecorationView.
  */
+(function($, Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
@@ -148,7 +151,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
     // While editing, don't show *any* other editors.
     // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
-    jQuery('.edit-candidate').not('.edit-editing').removeClass('edit-editable');
+    $('.edit-candidate').not('.edit-editing').removeClass('edit-editable');
 
     if (editorName === 'form') {
       this.$el.addClass('edit-belowoverlay');
@@ -166,7 +169,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
 
     // Make the other editors show up again.
     // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
-    jQuery('.edit-candidate').addClass('edit-editable');
+    $('.edit-candidate').addClass('edit-editable');
 
     if (editorName === 'form') {
       this.$el.removeClass('edit-belowoverlay');
@@ -309,7 +312,7 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    * occurs to/from *another* element, then call the given callback.
    */
   _ignoreHoveringVia: function(event, closest, callback) {
-    if (jQuery(event.relatedTarget).closest(closest).length > 0) {
+    if ($(event.relatedTarget).closest(closest).length > 0) {
       event.stopPropagation();
     }
     else {
@@ -317,3 +320,5 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     }
   }
 });
+
+})(jQuery, Backbone, Drupal);

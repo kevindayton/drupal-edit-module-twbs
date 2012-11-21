@@ -1,12 +1,13 @@
 /**
- * @file drupalalohawidget.js
- *
+ * @file
  * Override of Create.js' default Aloha Editor widget.
  *
- * This does in fact use zero code of jQuery.create.alohaWidget.
+ * NOTE: This does in fact use zero code of jQuery.create.alohaWidget.
  */
+(function (jQuery, Drupal) {
 
-(function (jQuery, undefined) {
+"use strict";
+
   jQuery.widget('Drupal.drupalAlohaWidget', jQuery.Create.alohaWidget, {
 
     // @todo: actually use this when restoring original content, but for that we
@@ -154,4 +155,5 @@
       jQuery('#edit_backstage form').remove();
     }
   });
-})(jQuery);
+
+})(jQuery, Drupal);

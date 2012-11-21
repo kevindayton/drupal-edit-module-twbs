@@ -1,10 +1,11 @@
 /**
- * @file drupalcontenteditablewidget.js
- *
+ * @file
  * Override of Create.js' default "base" (plain contentEditable) widget.
  */
+(function (jQuery, Drupal) {
 
-(function (jQuery, undefined) {
+"use strict";
+
   jQuery.widget('Drupal.drupalContentEditableWidget', jQuery.Create.editWidget, {
 
     /**
@@ -108,4 +109,5 @@
       jQuery('#edit_backstage form').remove();
     }
   });
-})(jQuery);
+
+})(jQuery, Drupal);

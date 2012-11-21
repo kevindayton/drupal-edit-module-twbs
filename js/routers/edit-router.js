@@ -1,8 +1,10 @@
 /**
- * @file edit-router.js
- *
+ * @file
  * A Backbone Router enabling URLs to make the user enter edit mode directly.
  */
+(function(Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.routers = {};
@@ -48,3 +50,5 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
     }
   }
 });
+
+})(Backbone, Drupal);

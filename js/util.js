@@ -1,10 +1,10 @@
-(function($) {
-
 /**
- * @file util.js
- *
- * Utilities for Edit module.
+ * @file
+ * Provides utility functions for Edit.
  */
+(function($, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.util = Drupal.edit.util || {};
@@ -137,4 +137,4 @@ Drupal.edit.util.form = {
   }
 };
 
-})(jQuery);
+})(jQuery, Drupal);

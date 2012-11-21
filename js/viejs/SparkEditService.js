@@ -1,5 +1,10 @@
-//    VIE DOM parsing service for Spark Edit
-(function () {
+/**
+ * @file
+ * VIE DOM parsing service for Edit.
+ */
+(function(jQuery, _, Drupal, VIE) {
+
+"use strict";
 
   VIE.prototype.SparkEditService = function (options) {
     var defaults = {
@@ -199,4 +204,5 @@
       return predicates;
     }
   };
-})();
+
+})(jQuery, _, Drupal, VIE);

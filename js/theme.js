@@ -1,4 +1,10 @@
+/**
+ * @file
+ * Provides overridable theme functions for all of Edit's client-side HTML.
+ */
 (function($) {
+
+"use strict";
 
 /**
  * Theme function for the overlay of the Edit module.

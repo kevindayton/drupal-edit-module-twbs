@@ -1,8 +1,10 @@
 /**
- * @file menu-view.js
- *
+ * @file
  * A Backbone View that provides the app-level interactive menu.
  */
+(function($, _, Backbone, Drupal) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
@@ -36,3 +38,5 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
       .parent().addClass('active');
   }
 });
+
+})(jQuery, _, Backbone, Drupal);

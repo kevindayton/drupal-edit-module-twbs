@@ -1,3 +1,11 @@
+/**
+ * @file
+ * Backbone.sync implementation for Edit. This is the beating heart.
+ */
+(function (jQuery, Backbone, Drupal) {
+
+"use strict";
+
 Backbone.defaultSync = Backbone.sync;
 Backbone.sync = function(method, model, options) {
   if (options.editor.options.editorName === 'form') {
@@ -146,3 +154,5 @@ Backbone.syncDirect = function(method, model, options) {
     }
   }
 };
+
+})(jQuery, Backbone, Drupal);
