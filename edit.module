@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Provides inline content editing functionality for fields and entities.
+ * Provides in-place content editing functionality for fields.
  *
- * The Edit module makes content editable inline. Rather than having to visit a
- * separate page to edit content, it may be edited in-place.
+ * The Edit module makes content editable in-place. Rather than having to visit
+ * a separate page to edit content, it may be edited in-place.
  *
  * Technically, this module adds classes and data- attributes to fields and
  * entities, enabling them for in-place editing.

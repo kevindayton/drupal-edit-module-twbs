@@ -107,12 +107,6 @@ function _simplify_edit_field_edit_form(&$form) {
         }
       }
     }
-
-    // Handle pseudo-fields that are language-independent, such as title,
-    // author, and creation date.
-    elseif (empty($form[$element]['#language'])) {
-      $form[$element]['#title_display'] = 'invisible';
-    }
   }
 
   // Make it easy for the JavaScript to identify the submit button.
@@ -121,6 +115,8 @@ function _simplify_edit_field_edit_form(&$form) {
 
 /**
  * Validate field editing form.
+ *
+ * @todo: clean up once http://drupal.org/node/1846648 is solved.
  */
 function edit_field_form_validate($form, &$form_state) {
   $entity = $form_state['entity'];
