@@ -13,7 +13,6 @@ module.exports = function(grunt) {
     },
     concat: {
       dist: {
-        // @todo: do we want to concat VIE and createjs, too?
         src: [
           'js/createjs/*.js',
           'js/viejs/*.js',
@@ -22,7 +21,6 @@ module.exports = function(grunt) {
           'js/routers/*.js',
           'js/*.js'
         ],
-        // @todo: shouldn't we keep source and build/ more separate?
         dest: 'js/build/edit.js'
       },
       'dist-all': {

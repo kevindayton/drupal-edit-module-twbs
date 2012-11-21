@@ -405,11 +405,6 @@
   background: url('../images/close.png') no-repeat 2px 2px;
 }
 
-.edit-toolbar a span.close:hover {
-  /* TODO: use a different "close" image */
-}
-
-
 .edit-toolbar a.blank-button {
   color: black;
 }
