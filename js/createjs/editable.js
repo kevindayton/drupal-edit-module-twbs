@@ -30,8 +30,8 @@
     },
 
     _propertyEditorName: function (data) {
-      if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct')) {
-        if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
+      if (jQuery(this.element).hasClass('edit-type-direct')) {
+        if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
           return 'direct-with-wysiwyg';
         }
         return 'direct';
