@@ -249,6 +249,8 @@
   margin: 0;
   vertical-align: baseline;
   z-index: 310;
+}
+.edit-toolbar-container {
   -webkit-user-select: none;
    -khtml-user-select: none;
      -moz-user-select: none;
