@@ -2,7 +2,7 @@
  * @file
  * Provides overridable theme functions for all of Edit's client-side HTML.
  */
-(function($) {
+(function($, Drupal) {
 
 "use strict";
 
@@ -153,4 +153,4 @@ Drupal.theme.editFormContainer = function(settings) {
   return html;
 };
 
-})(jQuery);
+})(jQuery, Drupal);
