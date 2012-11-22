@@ -1,5 +1,4 @@
 module.exports = function(grunt) {
-  // Project configuration.
   grunt.initConfig({
     lint: {
       all: [
@@ -22,18 +21,6 @@ module.exports = function(grunt) {
           'js/*.js'
         ],
         dest: 'js/build/edit.js'
-      },
-      'dist-all': {
-        src: [
-          'js/lib/*',
-          'js/createjs/*.js',
-          'js/viejs/*.js',
-          'js/models/*.js',
-          'js/views/*.js',
-          'js/routers/*.js',
-          'js/*.js'
-        ],
-        dest: 'js/build/edit-all.js'
       }
     },
     watch: {
@@ -44,11 +31,7 @@ module.exports = function(grunt) {
       dist: {
         src: ['js/build/edit.js'],
         dest: 'js/build/edit.min.js'
-      },
-      'dist-all':{
-        src: ['js/build/edit-all.js'],
-        dest: 'js/build/edit-all.min.js'
-      },
+      }
     },
     jshint: {
       options: {
@@ -68,10 +51,5 @@ module.exports = function(grunt) {
     }
   });
 
-  // Load local tasks; we should add local tasks later.
-  // grunt.loadTasks("tasks");
-
-  // Set default
   grunt.registerTask('default', 'lint concat min');
-
 };
