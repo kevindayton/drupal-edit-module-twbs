@@ -140,7 +140,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         var $inner = $(updatedField).html();
         editor.element.html($inner);
 
-        // @todo: VIE doesn't seem to like this? :) It seems that if I delete/
+        // @todo BLOCKED_ON(VIE.js, how to let VIE know that some content was removed and how to scan new content for VIE entities, to make them editable?)
+        // Also see Drupal.behaviors.editDiscoverEditables.
+        // VIE doesn't seem to like this? :) It seems that if I delete/
         // overwrite an existing field, that VIE refuses to find the same
         // predicate again for the same entity?
         // self.$el.replaceWith(updatedField);

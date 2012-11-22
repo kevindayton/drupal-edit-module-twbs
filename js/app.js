@@ -83,9 +83,10 @@
      * Should be called whenever EditAppModel's "isViewing" changes.
      */
     appStateChange: function() {
-      // @todo: we're currently setting the state on EditableEntity widgets
-      // instead of PropertyEditor widgets, because of
-      // https://github.com/bergie/create/issues/140
+      // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133, https://github.com/bergie/create/issues/140)
+      // We're currently setting the state on EditableEntity widgets instead of
+      // PropertyEditor widgets, because of
+      // https://github.com/bergie/create/issues/133.
       var newState = (this.model.get('isViewing')) ? 'inactive' : 'candidate';
       this.$entityElements.each(function() {
         $(this).createEditable('setState', newState);
@@ -248,7 +249,8 @@
      *   The PropertyEditor widget object.
      */
     editorStateChange: function(from, to, editor) {
-      // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+      // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
+      // Get rid of this once that issue is solved.
       if (!editor) {
         return;
       }
@@ -273,7 +275,8 @@
       }
 
       // Propagate the state change to the decoration and toolbar views.
-      // @todo enable this once https://github.com/bergie/create/issues/133 is solved.
+      // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
+      // Uncomment this once that issue is solved.
       // editor.decorationView.stateChange(from, to);
       // editor.toolbarView.stateChange(from, to);
     },
@@ -303,7 +306,8 @@
         toolbarId: editor.toolbarView.getId()
       });
 
-      // @todo get rid of this once https://github.com/bergie/create/issues/133 is solved.
+      // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
+      // Get rid of this once that issue is solved.
       editor.options.widget.element.bind('createeditablestatechange', function(event, data) {
         editor.decorationView.stateChange(data.previous, data.current);
         editor.toolbarView.stateChange(data.previous, data.current);

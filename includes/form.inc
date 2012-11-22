@@ -88,8 +88,8 @@ function _simplify_edit_field_edit_form(array &$form) {
  *
  * @see  edit_field_form()
  *
- * @todo: BLOCKED_ON(Drupal core): clean up once http://drupal.org/node/1846648
- * is solved.
+ * @todo: BLOCKED_ON(Drupal core, http://drupal.org/node/1846648)
+ * Clean up once that issue is solved.
  */
 function edit_field_form_validate(array $form, array &$form_state) {
   $entity = $form_state['entity'];

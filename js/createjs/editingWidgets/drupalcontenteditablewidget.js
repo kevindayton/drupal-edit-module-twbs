@@ -11,8 +11,8 @@
     /**
      * Implements jQuery UI widget factory's _init() method.
      *
-     * @todo: get rid of this once https://github.com/bergie/create/issues/142
-     * is solved.
+     * @todo: POSTPONED_ON(Create.js, https://github.com/bergie/create/issues/142)
+     * Get rid of this once that issue is solved.
      */
     _init: function() {},
 
@@ -45,9 +45,6 @@
 
     /**
      * Makes this PropertyEditor widget react to state changes.
-     *
-     * @todo revisit this once https://github.com/bergie/create/issues/133 is
-     * solved.
      */
     stateChange: function(from, to) {
       switch (to) {

@@ -27,8 +27,6 @@ Backbone.sync = function(method, model, options) {
  * form when there are validation errors and ensure no Drupal.ajax memory leaks.
  *
  * @see Drupal.edit.util.form
- *
- * @todo: HTTP status handling.
  */
 Backbone.syncDrupalFormWidget = function(method, model, options) {
   if (method === 'update') {
@@ -44,7 +42,10 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
 
       // Call Backbone.sync's success callback with the rerendered field.
       var changedAttributes = {};
-      changedAttributes[predicate] = '@todo: JSON-LD representation N/A yet.';
+      // @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1784216)
+      // Once full JSON-LD support in Drupal core lands, we can ensure that the
+      // models that VIE maintains are properly updated.
+      changedAttributes[predicate] = 'JSON-LD representation N/A yet.';
       changedAttributes[predicate + '/rendered'] = response.data;
       options.success(changedAttributes);
     };
@@ -84,8 +85,6 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
  *
  * @see Backbone.syncDrupalFormWidget()
  * @see Drupal.edit.util.form
- *
- * @todo: HTTP status handling.
  */
 Backbone.syncDirect = function(method, model, options) {
   if (method === 'update') {

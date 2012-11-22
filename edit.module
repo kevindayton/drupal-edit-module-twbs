@@ -14,7 +14,8 @@
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
 
-// @todo: BLOCKED_ON(Drupal core) Remove this when Entity Access API is ready.
+// @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1839516)
+// Remove this when Entity Access API is ready.
 // Edit needs the Entity Access API. Sadly, http://drupal.org/node/1696660 is
 // just the framework, it still needs to be used; currently it will simply
 // always return FALSE (i.e. "no access").
@@ -74,10 +75,10 @@ function edit_toolbar() {
       'attributes' => array(
         'class' => array('icon', 'icon-edit'),
       ),
-      // @todo: Blocked on http://drupal.org/node/1847198. This #post_render
-      // callback does not yet get called, which means that even if zero fields
-      // on the current page are editable for the current user, the "Edit" tab
-      // will still show up.
+      // @todo: BLOCKED_ON(Drupal core, http://drupal.org/node/1847198)
+      // This #post_render callback does not yet get called, which means that
+      // even if zero fields on the current page are editable for the current
+      // user, the "Edit" tab will still show up.
       '#post_render' => array(
         'edit_toolbar_post_render',
       ),

@@ -150,7 +150,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.$el.addClass('edit-editing');
 
     // While editing, don't show *any* other editors.
-    // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
+    // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
+    // Revisit this.
     $('.edit-candidate').not('.edit-editing').removeClass('edit-editable');
 
     if (editorName === 'form') {
@@ -168,7 +169,8 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
     this.$el.removeClass('edit-highlighted edit-editing');
 
     // Make the other editors show up again.
-    // @todo: revisit this once https://github.com/bergie/create/issues/133 is solved.
+    // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
+    // Revisit this.
     $('.edit-candidate').addClass('edit-editable');
 
     if (editorName === 'form') {
@@ -299,8 +301,6 @@ Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
    *   The value for a CSS position declaration.
    */
   _replaceBlankPosition: function(pos) {
-    // @todo: this was pos == NaN (which always returns false, keeping this
-    // comment in case we find a regression.
     if (pos === 'auto' || !pos) {
       pos = '0px';
     }

@@ -10,15 +10,16 @@
 
   jQuery.widget('Drupal.drupalAlohaWidget', jQuery.Create.alohaWidget, {
 
-    // @todo: actually use this when restoring original content, but for that we
+    // @todo BLOCKED_ON(Create.js/VIE.js, how to restore original content when canceling editing)
+    // Actually use this when restoring original content, but for that we
     // first need to know how to restore content in a Create.js context
     originalTransformedContent: null,
 
     /**
      * Implements jQuery UI widget factory's _init() method.
      *
-     * @todo: get rid of this once https://github.com/bergie/create/issues/142
-     * is solved.
+     * @todo: POSTPONED_ON(Create.js, https://github.com/bergie/create/issues/142)
+     * Get rid of this once that issue is solved.
      */
     _init: function() {},
 
@@ -37,8 +38,9 @@
     /**
      * Binds to events.
      *
-     * @todo: get rid of this helper function and move it into _initialize()
-     * once https://github.com/alohaeditor/Aloha-Editor/issues/693 is solved.
+     * @todo: POSTPONED_ON(Aloha Editor, https://github.com/alohaeditor/Aloha-Editor/issues/693)
+     * Get rid of this helper function and move it into _initialize() once that
+     * issue is solved. Also see http://drupal.org/node/1725032.
      */
     _bindEvents: function() {
       var that = this;
@@ -62,9 +64,6 @@
 
     /**
      * Makes this PropertyEditor widget react to state changes.
-     *
-     * @todo revisit this once https://github.com/bergie/create/issues/133 is
-     * solved.
      */
     stateChange: function(from, to) {
       switch (to) {
@@ -75,11 +74,6 @@
             Drupal.aloha.detach(this.element);
             this._removeValidationErrors();
             this._cleanUp();
-
-            // TRICKY: work-around for major AE bug. See:
-            //  - http://drupal.org/node/1725032
-            //  - https://github.com/alohaeditor/Aloha-Editor/issues/693.
-            // @todo: get rid of this once https://github.com/alohaeditor/Aloha-Editor/issues/693 is solved.
             this._bindEvents();
           }
           break;

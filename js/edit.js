@@ -10,7 +10,9 @@ Drupal.edit = Drupal.edit || {};
 
 Drupal.behaviors.editDiscoverEditables = {
   attach: function(context) {
-    // @todo: we need to separate the discovery of editables if we want updated
+    // @todo BLOCKED_ON(VIE.js, how to let VIE know that some content was removed and how to scan new content for VIE entities, to make them editable?)
+    // Also see ToolbarView.save().
+    // We need to separate the discovery of editables if we want updated
     // or new content (added by code other than Edit) to be detected
     // automatically. Once we implement this, we'll be able to get rid of all
     // calls to Drupal.edit.domService.findSubjectElements() :)
