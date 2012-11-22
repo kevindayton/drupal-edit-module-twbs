@@ -22,38 +22,6 @@ function edit_field_form($form, &$form_state) {
   // @todo Verify that this is indeed not necessary anymore, see edit_field_form_validate().
   // $form['#submit'][] = '';
 
-  // Add revisions form items if necessary.
-  // @todo We may be able to get rid of this when http://drupal.org/node/1678002 is solved.
-  list($use_revisions, $control_revisions) = edit_entity_allows_revisions($entity->entityType(), $entity->bundle(), $entity);
-  if ($use_revisions) {
-    $form_state['use revisions'] = TRUE;
-    $form['revision_information'] = array(
-      '#weight' => 11,
-    );
-
-    $form['revision_information']['revision'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Create new revision'),
-      '#default_value' => $entity->revision,
-      '#id' => 'edit-revision',
-      '#access' => $control_revisions,
-    );
-
-    if ($control_revisions || $entity->revision) {
-      $form['revision_information']['log'] = array(
-        '#type' => 'textarea',
-        '#title' => t('Log message'),
-        '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
-        '#default_value' => $entity->log,
-      );
-
-      if ($control_revisions) {
-        $form['revision_information']['log']['#dependency'] = array('edit-revision' => array(1));
-      }
-    }
-    $form['#submit'][] = 'edit_field_form_revision_submit';
-  }
-
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -129,15 +97,4 @@ function edit_field_form_validate($form, &$form_state) {
 
   // Validation.
   field_attach_form_validate($entity->entityType(), $entity, $form, $form_state, $options);
-}
-
-/**
- * Submit callback that handles entity revisioning.
- */
-function edit_field_form_revision_submit($form, &$form_state) {
-  $entity = $form_state['entity'];
-  if (!empty($form_state['use revisions'])) {
-    $entity->revision = $form_state['values']['revision'];
-    $entity->log = $form_state['values']['log'];
-  }
 }
