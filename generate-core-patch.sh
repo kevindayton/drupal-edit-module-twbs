@@ -19,12 +19,16 @@ mkdir $DRUPAL_DIR/core/modules/edit
 
 # Generate the patch for the Edit module.
 cp -R edit.info edit.module css images includes js $DRUPAL_DIR/core/modules/edit/
-rm $DRUPAL_DIR/core/modules/edit/includes/text.inc
+rm -rf $DRUPAL_DIR/core/modules/edit/js/build
 cp text.patch $DRUPAL_DIR/
+cp vie-and-create.patch $DRUPAL_DIR/
 cd $DRUPAL_DIR
 git apply text.patch
+git apply vie-and-create.patch
 git add core/modules/edit
 git add core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter
+git add core/misc/create
+git add core/misc/vie
 git diff --staged --binary --patch-with-stat > $EDIT_DIR/$FILENAME-$COMMENTNR.patch
 git commit -m "edit module"
 cd $EDIT_DIR

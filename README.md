@@ -1,18 +1,14 @@
 # Requirements
 
+- Please apply the included core patch "vie-and-create.patch".
 - Please also apply the included core patch "text.patch". Without it, you wont' be able to use direct editing, with or without WYSIWYG.
 - Optionally, if you also want WYSIWYG editing, install the latest version of Aloha Editor for Drupal 8: http://drupal.org/project/aloha
 
 
 # D8 port notes
 
-* D8 has no Entity Access API yet, so I implemented a node-only stub in includes/missing-api.inc.
+* D8 has no Entity Access API yet, so I implemented a node-only stub.
 * Node title/author/date are not yet proper Entity Properties, and thus they are not yet editable.
-
-
-# TODO
-
-Search the code base for "@todo"
 
 
 # Want to see it?
