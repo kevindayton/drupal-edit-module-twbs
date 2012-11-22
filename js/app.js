@@ -28,7 +28,7 @@
       // VIE instance for Edit.
       this.vie = new VIE();
       // Use our custom DOM parsing service until RDFa is available.
-      this.vie.use(new this.vie.SparkEditService());
+      this.vie.use(new this.vie.EditService());
       this.domService = this.vie.service('edit');
 
       // Instantiate configuration for state handling.

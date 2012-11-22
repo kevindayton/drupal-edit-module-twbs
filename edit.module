@@ -123,15 +123,32 @@ function edit_library_info() {
     'website' => 'http://drupal.org/project/edit',
     'version' => VERSION,
     'js' => array(
-      $path . '/js/edit.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/util.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/theme.js' => array(
-        'defer' => TRUE,
-      ),
+      // Core.
+      $path . '/js/edit.js' => array('defer' => TRUE),
+      $path . '/js/app.js' => array('defer' => TRUE),
+      // Routers.
+      $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
+      // Models.
+      $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
+      // Views.
+      $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
+      $path . '/js/views/menu-view.js' => array('defer' => TRUE),
+      $path . '/js/views/modal-view.js' => array('defer' => TRUE),
+      $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
+      $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
+      // Backbone.sync implementation on top of Drupal forms.
+      $path . '/js/backbone.drupalform.js' => array('defer' => TRUE),
+      // VIE service.
+      $path . '/js/viejs/EditService.js' => array('defer' => TRUE),
+      // Create.js subclasses.
+      $path . '/js/createjs/editable.js' => array('defer' => TRUE),
+      $path . '/js/createjs/storage.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editingWidgets/drupalalohawidget.js' => array('defer' => TRUE),
+      // Other.
+      $path . '/js/util.js' => array('defer' => TRUE),
+      $path . '/js/theme.js' => array('defer' => TRUE),
       // Basic settings.
       array(
         'data' => array('edit' => array(
@@ -146,52 +163,14 @@ function edit_library_info() {
       $path . '/css/edit.css',
     ),
     'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'underscore'),
+      array('system', 'backbone'),
+      array('system', 'vie.core'),
+      array('system', 'create.editonly'),
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
-      array('system', 'backbone'),
-      array('edit', 'edit.createjs'),
-    ),
-  );
-
-  $libraries['edit.createjs'] = array(
-    'title' => 'CreateJS and deps',
-    'website' => 'http://createjs.org',
-    'version' => NULL,
-    'js' => array(
-      $path . '/js/lib/create.js' => array('defer' => TRUE),
-      $path . '/js/viejs/SparkEditService.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editable.js' => array('defer' => TRUE),
-      $path . '/js/createjs/storage.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/drupalalohawidget.js' => array('defer' => TRUE),
-      $path . '/js/views/menu-view.js' => array('defer' => TRUE),
-      $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
-      $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
-      $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
-      $path . '/js/views/modal-view.js' => array('defer' => TRUE),
-      $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
-      $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
-      $path . '/js/backbone.drupalform.js' => array('defer' => TRUE),
-      $path . '/js/app.js' => array('defer' => TRUE),
-    ),
-    'dependencies' => array(
-      array('system', 'jquery.ui.widget'),
-      array('system', 'backbone'),
-      array('edit', 'edit.vie'),
-    ),
-  );
-
-  $libraries['edit.vie'] = array(
-    'title' => 'Vienna IKS Editables',
-    'website' => 'http://wiki.iks-project.eu/index.php/VIE',
-    'version' => '2.0',
-    'js' => array(
-      $path . '/js/lib/vie.js' => array('defer' => TRUE),
-    ),
-    'dependencies' => array(
-      array('system', 'backbone'),
     ),
   );
 

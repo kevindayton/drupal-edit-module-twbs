@@ -6,7 +6,7 @@
 
 "use strict";
 
-  VIE.prototype.SparkEditService = function (options) {
+  VIE.prototype.EditService = function (options) {
     var defaults = {
       name: 'edit',
       subjectSelector: '.edit-field.edit-allowed'
@@ -18,7 +18,7 @@
     this.name = this.options.name;
   };
 
-  VIE.prototype.SparkEditService.prototype = {
+  VIE.prototype.EditService.prototype = {
     load: function (loadable) {
       var correct = loadable instanceof this.vie.Loadable;
       if (!correct) {
