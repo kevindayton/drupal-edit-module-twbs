@@ -75,8 +75,6 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
     .addClass('edit-animate-invisible')
     .bind(Drupal.edit.util.constants.transitionEnd, function (event) {
       that.$el.remove();
-      // @todo - should the overlay really do this?
-      $('.edit-form-container, .edit-toolbar-container, #edit_modal, .edit-curtain, .edit-validation-errors').remove();
     });
   }
 });
