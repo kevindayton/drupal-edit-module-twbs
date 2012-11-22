@@ -300,7 +300,7 @@
       });
 
       // Decorate the editor's DOM element depending on its state.
-      editor.decorationView = new Drupal.edit.views.FieldDecorationView({
+      editor.decorationView = new Drupal.edit.views.PropertyEditorDecorationView({
         el: editor.element,
         editor: editor,
         toolbarId: editor.toolbarView.getId()

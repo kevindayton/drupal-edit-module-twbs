@@ -287,7 +287,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   /**
    * Adjusts the toolbar to accomodate padding on the PropertyEditor widget.
    *
-   * @see FieldDecorationView._pad().
+   * @see PropertyEditorDecorationView._pad().
    */
   _pad: function(editorName) {
       // The whole toolbar must move to the top when the property's DOM element
@@ -309,7 +309,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   /**
    * Undoes the changes made by _pad().
    *
-   * @see FieldDecorationView._unpad().
+   * @see PropertyEditorDecorationView._unpad().
    */
   _unpad: function(editorName) {
       // Move the toolbar back to its original position.

@@ -142,7 +142,7 @@ function edit_library_info() {
       // Models.
       $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
       // Views.
-      $path . '/js/views/fielddecorator-view.js' => array('defer' => TRUE),
+      $path . '/js/views/propertyeditordecoration-view.js' => array('defer' => TRUE),
       $path . '/js/views/menu-view.js' => array('defer' => TRUE),
       $path . '/js/views/modal-view.js' => array('defer' => TRUE),
       $path . '/js/views/overlay-view.js' => array('defer' => TRUE),

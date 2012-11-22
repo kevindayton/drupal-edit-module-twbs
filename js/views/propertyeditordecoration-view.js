@@ -1,10 +1,8 @@
 /**
  * @file
- * A Backbone View that decorates properties.
+ * A Backbone View that decorates a Property Editor widget.
  *
  * It listens to state changes of the property editor.
- *
- * @todo  rename to propertydecorator-view.js + PropertyDecorationView.
  */
 (function($, Backbone, Drupal) {
 
@@ -12,7 +10,7 @@
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
-Drupal.edit.views.FieldDecorationView = Backbone.View.extend({
+Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
 
   editor: null,
   entity: null,
