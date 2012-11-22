@@ -74,7 +74,6 @@
     // Reads all editable entities (currently each Drupal field is considered an
     // entity, in the future Drupal entities should be mapped to VIE entities)
     // from DOM and returns the VIE enties it found.
-    // @todo: check the above.
     readEntities: function (element) {
       var service = this;
       var entities = [];
@@ -168,8 +167,7 @@
     },
 
     // Subject elements are the DOM elements containing a single or multiple
-    // editable fields. In Spark Edit these elements are called _Fields_,
-    // and the actual DOM elements which are edited are called _Editables_.
+    // editable fields.
     findSubjectElements: function (element) {
       if (!element) {
         element = Drupal.settings.edit.context;
@@ -178,12 +176,7 @@
     },
 
     // Predicate Elements are the actual DOM elements that users will be able
-    // to edit. In regular Spark Edit they are called _Editables_.
-    //
-    // They are contained within Entity elements, which in Spark Edit are called
-    // _Fields_.
-    // @todo: clarify and document what the Best Way to do this is? Should VIE's
-    // entities map to Drupal's entities etc? Also see higher comments.
+    // to edit.
     findPredicateElements: function (subject, element, allowNestedPredicates, stop) {
       var predicates = jQuery();
 
