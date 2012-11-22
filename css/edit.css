@@ -2,13 +2,13 @@
  * Animations.
  */
 .edit-animate-invisible {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 .edit-animate-fast {
 -webkit-transition: all .2s ease;
    -moz-transition: all .2s ease;
-    -ie-transition: all .2s ease;
+    -ms-transition: all .2s ease;
      -o-transition: all .2s ease;
         transition: all .2s ease;
 }
@@ -16,7 +16,7 @@
 .edit-animate-default {
   -webkit-transition: all .4s ease;
      -moz-transition: all .4s ease;
-      -ie-transition: all .4s ease;
+      -ms-transition: all .4s ease;
        -o-transition: all .4s ease;
           transition: all .4s ease;
 }
@@ -24,38 +24,41 @@
 .edit-animate-slow {
 -webkit-transition: all .6s ease;
    -moz-transition: all .6s ease;
-    -ie-transition: all .6s ease;
+    -ms-transition: all .6s ease;
      -o-transition: all .6s ease;
         transition: all .6s ease;
 }
 
 .edit-animate-delay-veryfast {
   -webkit-transition-delay: .05s;
+     -moz-transition-delay: .05s;
+      -ms-transition-delay: .05s;
+       -o-transition-delay: .05s;
+          transition-delay: .05s;
 }
 
 .edit-animate-delay-fast {
   -webkit-transition-delay: .2s;
-}
-
-.edit-animate-delay-default {
-  -webkit-transition-delay: .4s;
-}
-
-.edit-animate-delay-slow {
-  -webkit-transition-delay: .6s;
+     -moz-transition-delay: .2s;
+      -ms-transition-delay: .2s;
+       -o-transition-delay: .2s;
+          transition-delay: .2s;
 }
 
 .edit-animate-disable-width {
   -webkit-transition: width 0s;
+     -moz-transition: width 0s;
+      -ms-transition: width 0s;
+       -o-transition: width 0s;
+          transition: width 0s;
 }
 
 .edit-animate-only-visibility {
   -webkit-transition: opacity .2s ease;
      -moz-transition: opacity .2s ease;
-      -ie-transition: opacity .2s ease;
+      -ms-transition: opacity .2s ease;
        -o-transition: opacity .2s ease;
           transition: opacity .2s ease;
-  -webkit-transition-delay: 0s;
 }
 
 
@@ -90,9 +93,10 @@
   z-index: 250;
   width: 100%;
   height: 100%;
+  background-color: #fff;
   background-color: rgba(255,255,255,.5);
-  top: 0px; /* offset for navbar, modified later */
-  left: 0px;
+  top: 0;
+  left: 0;
 }
 
 /* Editable. */
@@ -105,22 +109,22 @@
 }
 .edit-field.edit-editable,
 .edit-field.edit-type-direct .edit-editable {
-  box-shadow: 0px 0px 1px 1px #4D9DE9;
+  box-shadow: 0 0 1px 1px #4D9DE9;
 }
 
 /* Highlighted (hovered) editable. */
 .edit-editable.edit-highlighted {
-  min-width: 200px; /* TODO: we even need them to be at least fairly wide! */
+  min-width: 200px;
 }
 .edit-field.edit-editable.edit-highlighted,
 .edit-form.edit-editable.edit-highlighted,
 .edit-field.edit-type-direct .edit-editable.edit-highlighted {
-  box-shadow: 0px 0px 1px 1px #0199FF, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  box-shadow: 0 0 1px 1px #0199FF, 0 0 3px 3px rgba(153, 153, 153, .5);
 }
 .edit-field.edit-editable.edit-highlighted.edit-validation-error,
 .edit-form.edit-editable.edit-highlighted.edit-validation-error,
 .edit-field.edit-type-direct .edit-editable.edit-highlighted.edit-validation-error {
-  box-shadow: 0px 0px 1px 1px red, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  box-shadow: 0 0 1px 1px red, 0 0 3px 3px rgba(153, 153, 153, .5);
 }
 .edit-form.edit-editable .form-item .error {
   border: 1px solid #eea0a0;
@@ -131,7 +135,9 @@
 .edit-form.edit-editable.edit-editing,
 .edit-field.edit-type-direct .edit-editable.edit-editing {
   /* In the latest design, there's no special styling when editing as opposed to
-     just hovering. */
+   * just hovering.
+   * This will be necessary again for http://drupal.org/node/1844220.
+   */
 }
 
 
@@ -192,7 +198,7 @@
   left: -5px;
   margin: 0;
   border: none;
-  box-shadow: 0px 0px 1px 1px red, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  box-shadow: 0 0 1 1px red, 0 0 3px 3px rgba(153, 153, 153, .5);
   background-color: white;
 }
 
@@ -255,7 +261,7 @@
   height: auto;
   position: absolute;
   bottom: 1px;
-  box-shadow: 0px 0px 1px 1px #0199FF, 0px 0px 3px 3px rgba(153, 153, 153, .5);
+  box-shadow: 0 0 1px 1px #0199FF, 0 0 3px 3px rgba(153, 153, 153, .5);
   background: #FFF;
 }
 
@@ -305,7 +311,7 @@
 .edit-toolgroup.wysiwyg {
   clear: left;
   width: 100%;
-  padding-left: none;
+  padding-left: 0;
 }
 
 
@@ -363,6 +369,7 @@
 .edit-toolbar a.blue-button {
   color: white;
   background-image: -webkit-linear-gradient(top, #6fc2f2 0%, #4e97c0 100%);
+  background-image: -moz-linear-gradient(top, #6fc2f2 0%, #4e97c0 100%);
   background-image: linear-gradient(top, #6fc2f2 0%, #4e97c0 100%);
   border-radius: 5px;
 }
@@ -371,18 +378,9 @@
 .edit-toolbar a.gray-button {
   color: #666;
   background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #ccc 100%);
+  background-image: -moz-linear-gradient(top, #f5f5f5 0%, #ccc 100%);
   background-image: linear-gradient(top, #f5f5f5 0%, #ccc 100%);
   border-radius: 5px;
-}
-
-#edit_modal a img.gray-button.close img, .gray-button.save img, .blue-button.save img,
-.edit-toolbar a img.gray-button.close img, .gray-button.save img, .blue-button.save img {
-  padding: 0;
-}
-
-.gray-button img, .blue-button img,
-.gray-button img, .blue-button img {
-  padding-right: 5px;
 }
 
 #edit_modal a.blue-button:hover,
@@ -390,7 +388,7 @@
 #edit_modal a.blue-button:active,
 .edit-toolbar a.blue-button:active {
   border: 1px solid #55a5d3;
-  box-shadow: 0px 2px 1px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 1px rgba(0,0,0,0.2);
 }
 
 #edit_modal a.gray-button:hover,
@@ -398,5 +396,5 @@
 #edit_modal a.gray-button:active,
 .edit-toolbar a.gray-button:active {
   border: 1px solid #cdcdcd;
-  box-shadow: 0px 2px 1px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 1px rgba(0,0,0,0.1);
 }

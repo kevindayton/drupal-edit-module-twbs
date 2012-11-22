@@ -48,8 +48,21 @@ module.exports = function(grunt) {
         VIE: true,
         _: true
       }
+    },
+    csslint: {
+      all: {
+        src: 'css/edit.css',
+        rules: {
+          'adjoining-classes': false,
+          'ids': false,
+          'outline-none': false,
+          'box-model': false,
+          'overqualified-elements': false
+        }
+      }
     }
   });
 
-  grunt.registerTask('default', 'lint concat min');
+  grunt.loadNpmTasks('grunt-css');
+  grunt.registerTask('default', 'lint concat min csslint');
 };
