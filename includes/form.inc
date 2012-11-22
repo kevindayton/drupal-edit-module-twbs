@@ -2,15 +2,16 @@
 
 /**
  * @file
- * Form callbacks for the Edit module.
+ * Form handlers for the Edit module.
  */
 
 /**
- * Field editing form. (For editing a field instance.)
+ * Form constructor for the field editing form.
  *
- * Proudly found elsewhere: FAPE module's fape_field_edit_form() and friends.
+ * @see edit_field_form_validate()
+ * @ingroup forms
  */
-function edit_field_form($form, &$form_state) {
+function edit_field_form(array $form, array &$form_state) {
   $entity = $form_state['entity'];
   $langcode = $form_state['langcode'];
 
@@ -19,8 +20,6 @@ function edit_field_form($form, &$form_state) {
   field_attach_form($entity->entityType(), $entity, $form, $form_state, $langcode, $options);
 
   $form['#validate'][] = 'edit_field_form_validate';
-  // @todo Verify that this is indeed not necessary anymore, see edit_field_form_validate().
-  // $form['#submit'][] = '';
 
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
@@ -35,9 +34,12 @@ function edit_field_form($form, &$form_state) {
 }
 
 /**
- * Helper function to simplify the field edit form for in-place editing.
+ * Simplifies the field edit form for in-place editing.
+ *
+ * @param array $form
+ *   An associative array containing the structure of the form.
  */
-function _simplify_edit_field_edit_form(&$form) {
+function _simplify_edit_field_edit_form(array &$form) {
   $elements = element_children($form);
 
   // Required internal form properties.
@@ -84,9 +86,12 @@ function _simplify_edit_field_edit_form(&$form) {
 /**
  * Validate field editing form.
  *
- * @todo: clean up once http://drupal.org/node/1846648 is solved.
+ * @see  edit_field_form()
+ *
+ * @todo: BLOCKED_ON(Drupal core): clean up once http://drupal.org/node/1846648
+ * is solved.
  */
-function edit_field_form_validate($form, &$form_state) {
+function edit_field_form_validate(array $form, array &$form_state) {
   $entity = $form_state['entity'];
   $options = array('field_name' =>  $form_state['field_name']);
 
