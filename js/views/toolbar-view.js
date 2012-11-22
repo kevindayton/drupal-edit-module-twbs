@@ -385,11 +385,6 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .bind(Drupal.edit.util.constants.transitionEnd, function (e) {
         $el.remove();
       });
-    // @todo: verify/confirm that this really necessary. Messing with this.$el
-    // is not recommended - maybe temporarily unbind/undelegate events?
-    // Immediately set to null, so that if the user hovers over the property
-    // before the removal been completed, a new toolbar can be created.
-    // this.$el = null;
   },
 
   /**
