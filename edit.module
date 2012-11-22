@@ -14,8 +14,18 @@
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
 
-// @todo Get rid of missing-api.inc by improving Entity API.
-module_load_include('inc', 'edit', 'includes/missing-api');
+// @todo: BLOCKED_ON(Drupal core) Remove this when Entity Access API is ready.
+// Edit needs the Entity Access API. Sadly, http://drupal.org/node/1696660 is
+// just the framework, it still needs to be used; currently it will simply
+// always return FALSE (i.e. "no access").
+function edit_entity_access($op, $entity_type, $entity = NULL, $account = NULL) {
+  if ($entity_type == 'node') {
+    return node_access($op, $entity, $account);
+  }
+
+  // Currently, only editing of nodes is supported. See the above issue.
+  return FALSE;
+}
 
 /**
  * Implements hook_menu()
