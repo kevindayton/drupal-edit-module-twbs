@@ -352,7 +352,7 @@
   float: left;
 }
 .edit-toolbar a span.close {
-  background: url('../images/close.png') no-repeat 2px 2px;
+  background: url('../images/close.png') no-repeat 3px 2px;
 }
 
 .edit-toolbar a.blank-button {
