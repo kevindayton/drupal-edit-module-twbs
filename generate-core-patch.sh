@@ -24,9 +24,12 @@ cp text.patch $DRUPAL_DIR/
 cp vie-and-create.patch $DRUPAL_DIR/
 cd $DRUPAL_DIR
 git apply text.patch
+rm text.patch
 git apply vie-and-create.patch
+rm vie-and-create.patch
 git add core/modules/edit
 git add core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter
+git add core/modules/system
 git add core/misc/create
 git add core/misc/vie
 git diff --staged --binary --patch-with-stat > $EDIT_DIR/$FILENAME-$COMMENTNR.patch
