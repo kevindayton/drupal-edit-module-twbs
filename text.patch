@@ -14,7 +14,7 @@ index 6b34ba9..85d2878 100644
   *     "text_with_summary"
 + *   },
 + *   edit = {
-+ *    "editability" = "direct"
++ *    "editor" = "direct"
   *   }
   * )
   */
@@ -28,7 +28,7 @@ index 0f7b615..8dc4bf1 100644
   *     "text_with_summary"
 + *   },
 + *   edit = {
-+ *    "editability" = "direct"
++ *    "editor" = "direct"
   *   }
   * )
   */
@@ -42,7 +42,7 @@ index 11f0c14..c69e5e0 100644
   *     "trim_length" = "600"
 + *   },
 + *   edit = {
-+ *    "editability" = "form"
++ *    "editor" = "form"
   *   }
   * )
   */
@@ -56,7 +56,7 @@ index 349cf63..add5d55 100644
   *     "trim_length" = "600"
 + *   },
 + *   edit = {
-+ *    "editability" = "form"
++ *    "editor" = "form"
   *   }
   * )
   */
