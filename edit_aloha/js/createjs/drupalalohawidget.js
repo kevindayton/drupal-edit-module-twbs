@@ -4,7 +4,7 @@
  *
  * NOTE: This does in fact use zero code of jQuery.create.alohaWidget.
  */
-(function (jQuery, Drupal) {
+(function (jQuery, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -46,14 +46,14 @@
       var that = this;
 
       // Sets the state to 'activated' upon clicking the element.
-      this.element.bind("click.edit", function(event) {
+      this.element.on("click.edit", function(event) {
         event.stopPropagation();
         event.preventDefault();
         that.options.activating();
       });
 
       // Sets the state to 'changed' whenever the content has changed.
-      this.element.bind('aloha-content-changed', function(event, $alohaEditable, data) {
+      this.element.on('aloha-content-changed', function(event, $alohaEditable, data) {
         if (!data.editable.isModified()) {
           return true;
         }
@@ -105,7 +105,7 @@
         case 'active':
           // Attach Aloha Editor with this field's text format.
           var formatID = this.options.widget.element.attr('data-edit-text-format');
-          var format = Drupal.settings.aloha.formats[formatID];
+          var format = drupalSettings.aloha.formats[formatID];
           // Let the custom Aloha Editor UI for Drupal know that it should
           // render the Aloha Editor toolbar into Edit's toolbar.
           this.element.attr('data-edit-aloha-toolbar-custom-location', 'true');
@@ -153,4 +153,4 @@
     }
   });
 
-})(jQuery, Drupal);
+})(jQuery, Drupal, drupalSettings);

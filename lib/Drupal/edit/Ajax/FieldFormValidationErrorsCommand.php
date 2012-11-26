@@ -22,7 +22,7 @@ class FieldFormValidationErrorsCommand extends BaseCommand {
    *   The data to pass on to the client side.
    */
   public function __construct($data) {
-    parent::__construct('edit_field_form_validation_errors', $data);
+    parent::__construct('editFieldFormValidationErrors', $data);
   }
 
 }

@@ -22,7 +22,7 @@ class FieldFormSavedCommand extends BaseCommand {
    *   The data to pass on to the client side.
    */
   public function __construct($data) {
-    parent::__construct('edit_field_form_saved', $data);
+    parent::__construct('editFieldFormSaved', $data);
   }
 
 }

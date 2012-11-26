@@ -308,7 +308,7 @@
 
       // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
       // Get rid of this once that issue is solved.
-      editor.options.widget.element.bind('createeditablestatechange', function(event, data) {
+      editor.options.widget.element.on('createeditablestatechange', function(event, data) {
         editor.decorationView.stateChange(data.previous, data.current);
         editor.toolbarView.stateChange(data.previous, data.current);
       });

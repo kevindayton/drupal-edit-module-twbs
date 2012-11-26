@@ -168,6 +168,7 @@ function edit_library_info() {
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
+      array('system', 'drupalSettings'),
     ),
   );
 

@@ -85,7 +85,7 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
     var that = this;
     this.$el
       .addClass('edit-animate-invisible')
-      .bind(Drupal.edit.util.constants.transitionEnd, function(e) {
+      .on(Drupal.edit.util.constants.transitionEnd, function(e) {
         that.remove();
       });
 

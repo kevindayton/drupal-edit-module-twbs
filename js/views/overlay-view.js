@@ -73,7 +73,7 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
     var that = this;
     this.$el
     .addClass('edit-animate-invisible')
-    .bind(Drupal.edit.util.constants.transitionEnd, function (event) {
+    .on(Drupal.edit.util.constants.transitionEnd, function (event) {
       that.$el.remove();
     });
   }

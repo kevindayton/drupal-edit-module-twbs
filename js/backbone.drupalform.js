@@ -37,7 +37,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
     var base = $submit.attr('id');
 
     // Successfully saved.
-    Drupal.ajax[base].commands.edit_field_form_saved = function(ajax, response, status) {
+    Drupal.ajax[base].commands.editFieldFormSaved = function(ajax, response, status) {
       Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
 
       // Call Backbone.sync's success callback with the rerendered field.
@@ -51,7 +51,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
     };
 
     // Unsuccessfully saved; validation errors.
-    Drupal.ajax[base].commands.edit_field_form_validation_errors = function(ajax, response, status) {
+    Drupal.ajax[base].commands.editFieldFormValidationErrors = function(ajax, response, status) {
       // Call Backbone.sync's error callback with the validation error messages.
       options.error(response.data);
     };
@@ -61,7 +61,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
     // API then marks which form items have errors. Therefor, we have to replace
     // the existing form, unbind the existing Drupal.ajax instance and create a
     // new Drupal.ajax instance.
-    Drupal.ajax[base].commands.edit_field_form = function(ajax, response, status) {
+    Drupal.ajax[base].commands.editFieldForm = function(ajax, response, status) {
       Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
 
       Drupal.ajax.prototype.commands.insert(ajax, {
@@ -122,7 +122,7 @@ Backbone.syncDirect = function(method, model, options) {
         var base = Drupal.edit.util.form.ajaxifySaving(formOptions, $submit);
 
         // Successfully saved.
-        Drupal.ajax[base].commands.edit_field_form_saved = function (ajax, response, status) {
+        Drupal.ajax[base].commands.editFieldFormSaved = function (ajax, response, status) {
           Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
           jQuery('#edit_backstage form').remove();
 
@@ -130,18 +130,18 @@ Backbone.syncDirect = function(method, model, options) {
         };
 
         // Unsuccessfully saved; validation errors.
-        Drupal.ajax[base].commands.edit_field_form_validation_errors = function(ajax, response, status) {
+        Drupal.ajax[base].commands.editFieldFormValidationErrors = function(ajax, response, status) {
           // Call Backbone.sync's error callback with the validation error messages.
           options.error(response.data);
         };
 
-        // The edit_field_form AJAX command is only called upon loading the form
+        // The editFieldForm AJAX command is only called upon loading the form
         // for the first time, and when there are validation errors in the form;
         // Form API then marks which form items have errors. This is useful for
         // "form" editors, but pointless for "direct" editors: the form itself
         // won't be visible at all anyway! Therefor, we ignore the new form and
         // we continue to use the existing form.
-        Drupal.ajax[base].commands.edit_field_form = function(ajax, response, status) {
+        Drupal.ajax[base].commands.editFieldForm = function(ajax, response, status) {
           // no-op
         };
 

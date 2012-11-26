@@ -384,7 +384,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .removeAttr('id')
       .find('.edit-toolbar .edit-toolgroup')
       .addClass('edit-animate-invisible')
-      .bind(Drupal.edit.util.constants.transitionEnd, function (e) {
+      .on(Drupal.edit.util.constants.transitionEnd, function (e) {
         $el.remove();
       });
   },

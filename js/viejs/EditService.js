@@ -2,7 +2,7 @@
  * @file
  * VIE DOM parsing service for Edit.
  */
-(function(jQuery, _, Drupal, VIE) {
+(function(jQuery, _, VIE, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -30,7 +30,7 @@
         if (typeof document === 'undefined') {
           return loadable.resolve([]);
         } else {
-          element = Drupal.settings.edit.context;
+          element = drupalSettings.edit.context;
         }
       } else {
         element = loadable.options.element;
@@ -170,7 +170,7 @@
     // editable fields.
     findSubjectElements: function (element) {
       if (!element) {
-        element = Drupal.settings.edit.context;
+        element = drupalSettings.edit.context;
       }
       return jQuery(this.options.subjectSelector, element);
     },
@@ -198,4 +198,4 @@
     }
   };
 
-})(jQuery, _, Drupal, VIE);
+})(jQuery, _, VIE, Drupal, drupalSettings);

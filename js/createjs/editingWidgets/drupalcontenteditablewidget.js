@@ -23,7 +23,7 @@
       var that = this;
 
       // Sets the state to 'activated' upon clicking the element.
-      this.element.bind("click.edit", function(event) {
+      this.element.on("click.edit", function(event) {
         event.stopPropagation();
         event.preventDefault();
         that.options.activated();
@@ -31,7 +31,7 @@
 
       // Sets the state to 'changed' whenever the content has changed.
       var before = jQuery.trim(this.element.text());
-      this.element.bind('keyup paste', function (event) {
+      this.element.on('keyup paste', function (event) {
         if (that.options.disabled) {
           return;
         }

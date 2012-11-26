@@ -22,7 +22,7 @@ class FieldRenderedWithoutTransformationFiltersCommand extends BaseCommand {
    *   The data to pass on to the client side.
    */
   public function __construct($data) {
-    parent::__construct('edit_field_rendered_without_transformation_filters', $data);
+    parent::__construct('editFieldRenderedWithoutTransformationFilters', $data);
   }
 
 }

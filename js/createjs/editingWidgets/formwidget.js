@@ -25,7 +25,7 @@
     _initialize: function() {
       // Sets the state to 'activating' upon clicking the element.
       var that = this;
-      this.element.bind("click.edit", function(event) {
+      this.element.on("click.edit", function(event) {
         event.stopPropagation();
         event.preventDefault();
         that.options.activating();
@@ -114,11 +114,11 @@
         var $submit = widget.$formContainer.find('.edit-form-submit');
         Drupal.edit.util.form.ajaxifySaving(formOptions, $submit);
         widget.$formContainer
-          .delegate(':input', 'formUpdated.edit', function () {
+          .on('formUpdated.edit', ':input', function () {
             // Sets the state to 'changed'.
             widget.options.changed();
           })
-          .delegate('input', 'keypress.edit', function (event) {
+          .on('keypress.edit', 'input', function (event) {
             if (event.keyCode === 13) {
               return false;
             }
@@ -139,8 +139,8 @@
 
       Drupal.edit.util.form.unajaxifySaving(this.$formContainer.find('.edit-form-submit'));
       this.$formContainer
-        .undelegate(':input', 'change.edit')
-        .undelegate('input', 'keypress.edit')
+        .off('change.edit', ':input')
+        .off('keypress.edit', 'input')
         .remove();
       this.$formContainer = null;
     }

@@ -2,7 +2,7 @@
  * @file
  * Determines which editor to use based on a class attribute.
  */
-(function (jQuery, Drupal) {
+(function (jQuery, drupalSettings) {
 
 "use strict";
 
@@ -18,7 +18,7 @@
         options: {}
       };
       this.options.editors['direct-with-wysiwyg'] = {
-        widget: Drupal.settings.edit.wysiwygEditorWidgetName,
+        widget: drupalSettings.edit.wysiwygEditorWidgetName,
         options: {}
       };
       this.options.editors.form = {
@@ -40,4 +40,4 @@
     }
   });
 
-})(jQuery, Drupal);
+})(jQuery, drupalSettings);

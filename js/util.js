@@ -2,7 +2,7 @@
  * @file
  * Provides utility functions for Edit.
  */
-(function($, Drupal) {
+(function($, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -44,19 +44,21 @@ Drupal.edit.util.buildUrl = function(id, urlFormat) {
 Drupal.edit.util.loadRerenderedProcessedText = function(options) {
   // Create a Drupal.ajax instance to load the form.
   Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
-    url: Drupal.edit.util.buildUrl(options.propertyID, Drupal.settings.edit.rerenderProcessedTextURL),
+    url: Drupal.edit.util.buildUrl(options.propertyID, drupalSettings.edit.rerenderProcessedTextURL),
     event: 'edit-internal.edit',
     submit: { nocssjs : true },
     progress: { type : null } // No progress indicator.
   });
-  // Implement a scoped edit_field_form AJAX command: calls the callback.
-  Drupal.ajax[options.propertyID].commands.edit_field_rendered_without_transformation_filters = function(ajax, response, status) {
+  // Implement a scoped editFieldRenderedWithoutTransformationFilters AJAX
+  // command: calls the callback.
+  Drupal.ajax[options.propertyID].commands.editFieldRenderedWithoutTransformationFilters = function(ajax, response, status) {
     options.callback(response.data);
     // Delete the Drupal.ajax instance that called this very function.
     delete Drupal.ajax[options.propertyID];
-    options.$editorElement.unbind('edit-internal.edit');
+    options.$editorElement.off('edit-internal.edit');
   };
-  // This will ensure our scoped edit_field_form AJAX command gets called.
+  // This will ensure our scoped editFieldRenderedWithoutTransformationFilters
+  // AJAX command gets called.
   options.$editorElement.trigger('edit-internal.edit');
 };
 
@@ -82,19 +84,19 @@ Drupal.edit.util.form = {
   load: function(options, callback) {
     // Create a Drupal.ajax instance to load the form.
     Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
-      url: Drupal.edit.util.buildUrl(options.propertyID, Drupal.settings.edit.fieldFormURL),
+      url: Drupal.edit.util.buildUrl(options.propertyID, drupalSettings.edit.fieldFormURL),
       event: 'edit-internal.edit',
       submit: { nocssjs : options.nocssjs },
       progress: { type : null } // No progress indicator.
     });
-    // Implement a scoped edit_field_form AJAX command: calls the callback.
-    Drupal.ajax[options.propertyID].commands.edit_field_form = function(ajax, response, status) {
+    // Implement a scoped editFieldForm AJAX command: calls the callback.
+    Drupal.ajax[options.propertyID].commands.editFieldForm = function(ajax, response, status) {
       callback(response.data, ajax);
       // Delete the Drupal.ajax instance that called this very function.
       delete Drupal.ajax[options.propertyID];
-      options.$editorElement.unbind('edit-internal.edit');
+      options.$editorElement.off('edit-internal.edit');
     };
-    // This will ensure our scoped edit_field_form AJAX command gets called.
+    // This will ensure our scoped editFieldForm AJAX command gets called.
     options.$editorElement.trigger('edit-internal.edit');
   },
 
@@ -133,8 +135,8 @@ Drupal.edit.util.form = {
    */
   unajaxifySaving: function($submit) {
     delete Drupal.ajax[$submit.attr('id')];
-    $submit.unbind('click.edit');
+    $submit.off('click.edit');
   }
 };
 
-})(jQuery, Drupal);
+})(jQuery, Drupal, drupalSettings);
