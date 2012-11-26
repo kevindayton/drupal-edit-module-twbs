@@ -74,29 +74,33 @@ function edit_toolbar() {
       'href' => '',
       'html' => FALSE,
       'attributes' => array(
-        'class' => array('icon', 'icon-edit'),
-      ),
-      // @todo: BLOCKED_ON(Drupal core, http://drupal.org/node/1847198)
-      // This #post_render callback does not yet get called, which means that
-      // even if zero fields on the current page are editable for the current
-      // user, the "Edit" tab will still show up.
-      '#post_render' => array(
-        'edit_toolbar_post_render',
+        'class' => array('icon', 'icon-edit', 'edit-nothing-editable-hidden'),
       ),
     ),
     'tray' => array(
+      '#heading' => t('In-place editing operations'),
       'view_edit_toggle' => array(
-        '#prefix' => '<h2 class="element-invisible">' . t('In-place edit operations') . '</h2><ul id="edit_view-edit-toggles" class="menu">',
-        '#suffix' => '</ul>',
-        'content' => array(
-          array(
-            '#theme' => 'menu_local_task',
-            '#link' => array('title' => t('View'), 'href' => current_path(), 'localized_options' => array('fragment' => 'view', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
-            '#active' => TRUE,
+        '#theme' => 'links__toolbar_edit',
+        '#attributes' => array(
+          'id' => 'edit_view-edit-toggles',
+          'class' => 'menu',
+        ),
+        '#links' => array(
+          'view' => array(
+            'title' => t('View'),
+            'href' => request_path(),
+            'fragment' => 'view',
+            'attributes' => array(
+              'class' => array('edit_view-edit-toggle', 'edit-view'),
+            ),
           ),
-          array(
-            '#theme' => 'menu_local_task',
-            '#link' => array('title' => t('Quick edit'), 'href' => current_path(), 'localized_options' => array('fragment' => 'quick-edit', 'attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          'edit' => array(
+            'title' => t('Quick edit'),
+            'href' => request_path(),
+            'fragment' => 'quick-edit',
+            'attributes' => array(
+              'class' => array('edit_view-edit-toggle', 'edit-edit'),
+            ),
           ),
         ),
         '#attached' => array(
@@ -105,24 +109,10 @@ function edit_toolbar() {
           ),
         ),
       ),
-      '#post_render' => array(
-        'edit_toolbar_post_render',
-      ),
     ),
   );
 
   return $tab;
-}
-
-/**
- * Post-render function to only show the Edit tab in the toolbar if relevant.
- *
- * When the user cannot edit any of the fields on the page, he should not be
- * given the possibility to toggle edit mode.
- */
-function edit_toolbar_post_render($html) {
-  global $edit_toolbar;
-  return ($edit_toolbar !== TRUE) ? '' : $html;
 }
 
 /**
@@ -222,9 +212,6 @@ function edit_preprocess_field(&$variables) {
   $field_access = field_access('edit', $field_name, $entity->entityType(), $entity);
   $editor = _edit_get_field_editor($items, $instance, $formatter_type);
   if ($entity_access && $field_access && $editor != 'disabled') {
-    global $edit_toolbar;
-    $edit_toolbar = TRUE;
-
     // Mark this field as editable and provide metadata through data- attributes.
     $variables['attributes']['data-edit-field-label'] = $instance->definition['label'];
     $variables['attributes']['data-edit-id'] = $entity->entityType() . ':' . $entity->id() . ':' . $field_name . ':' . $langcode . ':' . $view_mode;

@@ -73,9 +73,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     // Retrieve the updated entity, save it and render only the modified field.
     $entity = $form_state['entity'];
     $entity->save();
-    $options = array('field_name' => $field_name);
-    field_attach_prepare_view($entity->entityType(), array($entity->id() => $entity), $view_mode, $langcode, $options);
-    $output = field_attach_view($entity->entityType(), $entity, $view_mode, $langcode, $options);
+    $output = field_view_field($entity->entityType(), $entity, $field_name, $view_mode, $langcode);
 
     $commands[] = array(
       'command' => 'edit_field_form_saved',

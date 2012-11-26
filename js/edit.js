@@ -25,6 +25,12 @@ Drupal.behaviors.editDiscoverEditables = {
 Drupal.behaviors.edit = {
   attach: function(context) {
     $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
+
+    // As soon as there is at least one editable field, show the Edit tab in the
+    // toolbar.
+    if ($(context).find('.edit-field.edit-allowed').length) {
+      $('.toolbar .icon-edit.edit-nothing-editable-hidden').removeClass('edit-nothing-editable-hidden');
+    }
   }
 };
 
