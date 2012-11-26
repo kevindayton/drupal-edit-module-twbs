@@ -42,8 +42,6 @@ function edit_menu() {
     'page callback'    => 'edit_field_edit',
     'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
-    'delivery callback'=> 'ajax_deliver',
-    'theme callback'   => 'ajax_base_page_theme',
   );
   $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
@@ -53,8 +51,6 @@ function edit_menu() {
     'page callback'    => 'edit_text_field_render_without_transformation_filters',
     'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
-    'delivery callback'=> 'ajax_deliver',
-    'theme callback'   => 'ajax_base_page_theme',
   );
 
   return $items;

@@ -4,6 +4,11 @@
  * AJAX endpoints to retrieve & save subforms for fields and re-render fields.
  */
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\edit\Ajax\FieldFormCommand;
+use Drupal\edit\Ajax\FieldFormSavedCommand;
+use Drupal\edit\Ajax\FieldFormValidationErrorsCommand;
+use Drupal\edit\Ajax\FieldRenderedWithoutTransformationFiltersCommand;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -24,6 +29,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *   A render array.
  */
 function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view_mode) {
+  $response = new AjaxResponse();
+
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
     throw new NotFoundHttpException();
@@ -64,37 +71,23 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     'no_redirect' => TRUE,
     'build_info' => array('args' => array()),
   );
-  $commands = array();
   form_load_include($form_state, 'inc', 'edit', 'includes/form');
   $form = drupal_build_form('edit_field_form', $form_state);
 
-  $id = "$entity_type:$entity_id:$field_name:$langcode:$view_mode";
   if (!empty($form_state['executed'])) {
     // Retrieve the updated entity, save it and render only the modified field.
     $entity = $form_state['entity'];
     $entity->save();
     $output = field_view_field($entity->entityType(), $entity, $field_name, $view_mode, $langcode);
 
-    $commands[] = array(
-      'command' => 'edit_field_form_saved',
-      'id'      => $id,
-      'data'    => drupal_render($output),
-    );
+    $response->addCommand(new FieldFormSavedCommand(drupal_render($output)));
   }
   else {
-    $commands[] = array(
-      'command' => 'edit_field_form',
-      'id'      => $id,
-      'data'    => drupal_render($form),
-    );
+    $response->addCommand(new FieldFormCommand(drupal_render($form)));
 
     $errors = form_get_errors();
     if (count($errors)) {
-      $commands[] = array(
-        'command' => 'edit_field_form_validation_errors',
-        'id'      => $id,
-        'data'    => theme('status_messages'),
-      );
+      $response->addCommand(new FieldFormValidationErrorsCommand(theme('status_messages')));
     }
   }
 
@@ -104,7 +97,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     drupal_static_reset('drupal_add_js');
   }
 
-  return array('#type' => 'ajax', '#commands' => $commands);
+  return $response;
 }
 
 /**
@@ -127,6 +120,8 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
  *   A render array.
  */
 function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode, $view_mode) {
+  $response = new AjaxResponse();
+
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
     throw new NotFoundHttpException();
@@ -160,18 +155,11 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
     throw new NotFoundHttpException();
   }
 
-  $commands = array();
-
   // Render the field in our custom display mode; retrieve the re-rendered
   // markup, this is what we're after.
   $field_output = field_view_field($entity_type, $entity, $field_name, 'edit-render-without-transformation-filters');
   $output = $field_output[0]['#markup'];
+  $response->addCommand(new FieldRenderedWithoutTransformationFiltersCommand($output));
 
-  $commands[] = array(
-    'command' => 'edit_field_rendered_without_transformation_filters',
-    'id'      => "$entity_type:$entity_id:$field_name:$langcode:$view_mode",
-    'data'    => $output,
-  );
-
-  return array('#type' => 'ajax', '#commands' => $commands);
+  return $response;
 }
