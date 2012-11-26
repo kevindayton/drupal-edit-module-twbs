@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Definition of Drupal\edit_aloha\Plugin\edit\processedTextPropertyEditor\Aloha.
+ * Definition of Drupal\edit_aloha\Plugin\edit\processed_text_editor\Aloha.
  */
 
-namespace Drupal\edit_aloha\Plugin\edit\processedTextPropertyEditor;
+namespace Drupal\edit_aloha\Plugin\edit\processed_text_editor;
 
-use Drupal\edit\Plugin\ProcessedTextPropertyEditorBase;
+use Drupal\edit\Plugin\ProcessedTextEditorBase;
 use Drupal\Core\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 
@@ -24,17 +24,17 @@ use Drupal\Core\Annotation\Translation;
  *   propertyEditorName = "drupalAlohaWidget"
  * )
  */
-class Aloha extends ProcessedTextPropertyEditorBase  {
+class Aloha extends ProcessedTextEditorBase {
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorBase::addJsSettings().
+   * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::addJsSettings().
    */
   function addJsSettings() {
     aloha_add_format_settings();
   }
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorBase::checkFormatCompatibility().
+   * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::checkFormatCompatibility().
    */
   function checkFormatCompatibility($format_id) {
     return aloha_check_format_compatibility($format_id);

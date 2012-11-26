@@ -1,12 +1,12 @@
 <?php
 /**
  * @file
- * Definition of Drupal\edit\Plugin\ProcessedTextPropertyEditorBase.
+ * Definition of Drupal\edit\Plugin\ProcessedTextPropertyBase.
  */
 
 namespace Drupal\edit\Plugin;
 
-use Drupal\views\Plugin\views\PluginBase;
+use Drupal\Component\Plugin\PluginBase;
 
 /**
  * Defines an interface for PropertyEditor widgets for processed text fields.
@@ -14,7 +14,7 @@ use Drupal\views\Plugin\views\PluginBase;
  * A PropertyEditor widget is a user-facing interface to edit an entity property
  * through Create.js.
  */
-abstract class ProcessedTextPropertyEditorBase extends PluginBase {
+abstract class ProcessedTextEditorBase extends PluginBase {
 
   /**
    * Adds JavaScript settings.

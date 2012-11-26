@@ -13,7 +13,7 @@
 
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
-use Drupal\edit\Plugin\Type\ProcessedTextPropertyEditorManager;
+use Drupal\edit\Plugin\Type\ProcessedTextEditorManager;
 
 // @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1839516)
 // Remove this when Entity Access API is ready.
@@ -342,12 +342,11 @@ function _edit_wysiwyg_get_field_editor($format_id = NULL) {
   // @todo: make it possible to have multiple processed text PropertyEditor
   // widgets.
   if (!isset($wysiwyg_plugin) && isset($format_id)) {
-    $type = new ProcessedTextPropertyEditorManager();
-    $definitions = $type->getDefinitions();
+    $definitions = drupal_container()->get('plugin.manager.edit.processed_text_editor')->getDefinitions();
     if (count($definitions)) {
       $plugin_ids = array_keys($definitions);
       $plugin_id = $plugin_ids[0];
-      $wysiwyg_plugin = $type->createInstance($plugin_id);
+      $wysiwyg_plugin = drupal_container()->get('plugin.manager.edit.processed_text_editor')->createInstance($plugin_id);
       $wysiwyg_plugin->settingsAdded = FALSE;
     }
   }

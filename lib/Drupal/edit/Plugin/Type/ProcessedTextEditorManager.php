@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\edit\Plugin\Type\ProcessedTextPropertyEditorManager.
+ * Definition of Drupal\edit\Plugin\Type\ProcessedTextEditorManager.
  */
 
 namespace Drupal\edit\Plugin\Type;
@@ -14,15 +14,15 @@ use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Core\Plugin\Discovery\CacheDecorator;
 
 /**
- * ProcessedTextPropertyEditor manager.
+ * ProcessedTextEditor manager.
  */
-class ProcessedTextPropertyEditorManager extends PluginManagerBase {
+class ProcessedTextEditorManager extends PluginManagerBase {
 
   /**
    * Overrides Drupal\Component\Plugin\PluginManagerBase::__construct().
    */
   public function __construct() {
-    $this->discovery = new AnnotatedClassDiscovery('edit', 'ProcessedTextPropertyEditor');
+    $this->discovery = new AnnotatedClassDiscovery('edit', 'processed_text_editor');
     $this->discovery = new AlterDecorator($this->discovery, 'edit_wysiwyg');
     $this->discovery = new CacheDecorator($this->discovery, 'edit:wysiwyg');
     $this->factory = new DefaultFactory($this->discovery);
