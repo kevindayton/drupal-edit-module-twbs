@@ -32,13 +32,6 @@ function edit_aloha_library_info() {
       array(
         'data' => array(
           'edit' => array('wysiwyg' => 'aloha'),
-          'aloha' => array('settings' => array(
-            // Ensure the Edit module can embed the rendered toolbar within
-            // its own DOM infrastructure.
-            'DrupalUI' => array(
-              'renderOwnToolbarContainer' => FALSE,
-            )
-          ))
         ),
         'type' => 'setting',
       ),

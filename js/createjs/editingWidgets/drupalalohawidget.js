@@ -106,6 +106,9 @@
           // Attach Aloha Editor with this field's text format.
           var formatID = this.options.widget.element.attr('data-edit-text-format');
           var format = Drupal.settings.aloha.formats[formatID];
+          // Let the custom Aloha Editor UI for Drupal know that it should
+          // render the Aloha Editor toolbar into Edit's toolbar.
+          this.element.attr('data-edit-aloha-toolbar-custom-location', 'true');
           Drupal.aloha.attach(this.element, format);
           Drupal.aloha.activate(this.element, format);
           break;
