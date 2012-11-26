@@ -43,10 +43,11 @@ module.exports = function(grunt) {
       },
       globals: {
         jQuery: true,
+        _: true,
         Backbone: true,
-        Drupal: true,
         VIE: true,
-        _: true
+        Drupal: true,
+        drupalSettings: true
       }
     },
     csslint: {
