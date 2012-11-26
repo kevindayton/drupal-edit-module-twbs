@@ -22,8 +22,10 @@ class ProcessedTextPropertyEditorManager extends PluginManagerBase {
    * Overrides Drupal\Component\Plugin\PluginManagerBase::__construct().
    */
   public function __construct() {
-    $this->discovery = new CacheDecorator(new AlterDecorator(new AnnotatedClassDiscovery('edit', 'ProcessedTextPropertyEditor'), 'edit_wysiwyg'), 'edit:wysiwyg');
-    $this->factory = new DefaultFactory($this);
+    $this->discovery = new AnnotatedClassDiscovery('edit', 'ProcessedTextPropertyEditor');
+    $this->discovery = new AlterDecorator($this->discovery, 'edit_wysiwyg');
+    $this->discovery = new CacheDecorator($this->discovery, 'edit:wysiwyg');
+    $this->factory = new DefaultFactory($this->discovery);
   }
 
 }

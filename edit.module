@@ -344,12 +344,9 @@ function _edit_wysiwyg_get_field_editor($format_id = NULL) {
     $definitions = $type->getDefinitions();
     if (count($definitions)) {
       $plugin_ids = array_keys($definitions);
-      $plugin_id = $plugin_ids[0];//array_slice(, 0, 1);
-      $wysiwyg_plugin = array(
-        'definition' => $definitions[$plugin_id],
-        'plugin' => $type->createInstance($plugin_id),
-        'settings added' => FALSE,
-      );
+      $plugin_id = $plugin_ids[0];
+      $wysiwyg_plugin = $type->createInstance($plugin_id);
+      $wysiwyg_plugin->settingsAdded = FALSE;
     }
   }
 
@@ -360,23 +357,22 @@ function _edit_wysiwyg_get_field_editor($format_id = NULL) {
   // If the WYSIWYG editor is not compatible with the current format, then fall
   // back to form-based editing.
   else {
-    $plugin = $wysiwyg_plugin['plugin'];
-    $match = $plugin->checkFormatCompatibility($format_id);
+    $match = $wysiwyg_plugin->checkFormatCompatibility($format_id);
     if (!$match) {
       return 'form';
     }
     else if ($match) {
       // Only load the WYSIWYG editor's JavaScript if it hasn't been already.
-      if ($wysiwyg_plugin['settings added'] === FALSE) {
-        $definition = $wysiwyg_plugin['definition'];
+      if ($wysiwyg_plugin->settingsAdded === FALSE) {
+        $definition = $wysiwyg_plugin->getDefinition();
         drupal_add_library($definition['library']['module'], $definition['library']['name']);
-        $plugin->addJsSettings();
+        $wysiwyg_plugin->addJsSettings();
 
         // Let Create.js know which WYSIWYG editor widget it should use.
         drupal_add_js(array('edit' => array(
           'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
         )), 'setting');
-        $wysiwyg_plugin['settings added'] = TRUE;
+        $wysiwyg_plugin->settingsAdded = TRUE;
       }
       return 'direct-with-wysiwyg';
     }

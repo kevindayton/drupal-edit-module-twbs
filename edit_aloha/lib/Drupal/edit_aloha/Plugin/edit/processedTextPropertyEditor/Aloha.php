@@ -7,7 +7,7 @@
 
 namespace Drupal\edit_aloha\Plugin\edit\processedTextPropertyEditor;
 
-use Drupal\edit\Plugin\ProcessedTextPropertyEditorInterface;
+use Drupal\edit\Plugin\ProcessedTextPropertyEditorBase;
 use Drupal\Core\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 
@@ -24,17 +24,17 @@ use Drupal\Core\Annotation\Translation;
  *   propertyEditorName = "drupalAlohaWidget"
  * )
  */
-class Aloha implements ProcessedTextPropertyEditorInterface  {
+class Aloha extends ProcessedTextPropertyEditorBase  {
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorInterface::addJsSettings().
+   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorBase::addJsSettings().
    */
   function addJsSettings() {
     aloha_add_format_settings();
   }
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorInterface::checkFormatCompatibility().
+   * Implements Drupal\edit\Plugin\ProcessedTextPropertyEditorBase::checkFormatCompatibility().
    */
   function checkFormatCompatibility($format_id) {
     return aloha_check_format_compatibility($format_id);
