@@ -41,6 +41,7 @@ function edit_menu() {
     'access callback'  => TRUE,
     'page callback'    => 'edit_field_edit',
     'page arguments'   => array(3, 4, 5, 6, 7),
+    'theme callback'   => 'ajax_base_page_theme',
     'file'             => 'includes/pages.inc',
   );
   $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
@@ -50,6 +51,7 @@ function edit_menu() {
     'access callback'  => TRUE,
     'page callback'    => 'edit_text_field_render_without_transformation_filters',
     'page arguments'   => array(3, 4, 5, 6, 7),
+    'theme callback'   => 'ajax_base_page_theme',
     'file'             => 'includes/pages.inc',
   );
 
