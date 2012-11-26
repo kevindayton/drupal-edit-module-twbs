@@ -7,7 +7,7 @@
 "use strict";
 
   jQuery.widget('Drupal.createEditable', jQuery.Midgard.midgardEditable, {
-    _create: function () {
+    _create: function() {
       this.vie = this.options.vie;
 
       this.options.domService = 'edit';
@@ -18,7 +18,7 @@
         options: {}
       };
       this.options.editors['direct-with-wysiwyg'] = {
-        widget: 'drupalAlohaWidget',
+        widget: Drupal.settings.edit.wysiwygEditorWidgetName,
         options: {}
       };
       this.options.editors.form = {
@@ -29,9 +29,9 @@
       jQuery.Midgard.midgardEditable.prototype._create.call(this);
     },
 
-    _propertyEditorName: function (data) {
+    _propertyEditorName: function(data) {
       if (jQuery(this.element).hasClass('edit-type-direct')) {
-        if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
+        if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
           return 'direct-with-wysiwyg';
         }
         return 'direct';

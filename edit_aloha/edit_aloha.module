@@ -8,18 +8,6 @@
  */
 
 /**
- * Implements hook_edit_wysiwyg_info().
- */
-function edit_aloha_edit_wysiwyg_info() {
-  $info['edit_aloha'] = array(
-    'javascript library' => array('edit_aloha', 'aloha.edit'),
-    'format compatibility callback' => 'aloha_check_format_compatibility',
-    'javascript settings callback' => 'aloha_add_format_settings',
-  );
-  return $info;
-}
-
-/**
  * Implements hook_library_info().
  */
 function edit_aloha_library_info() {
@@ -28,19 +16,14 @@ function edit_aloha_library_info() {
     'title' => 'Integrate Aloha Editor with the Edit module.',
     'version' => ALOHA_VERSION,
     'js' => array(
-      // Configure Edit's JS to use aloha as the WYSIWYG.
-      array(
-        'data' => array(
-          'edit' => array('wysiwyg' => 'aloha'),
-        ),
-        'type' => 'setting',
-      ),
+      $module_path . '/js/createjs/drupalalohawidget.js' => array('defer' => TRUE),
     ),
     'css' => array(
       $module_path . '/css/drupal.aloha.edit.css',
     ),
     'dependencies' => array(
       array('aloha', 'aloha'),
+      array('edit', 'edit')
     )
   );
   return $libraries;

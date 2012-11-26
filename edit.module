@@ -13,6 +13,7 @@
 
 use Drupal\Core\Template\Attribute;
 use Drupal\field\FieldInstance;
+use Drupal\edit\Plugin\Type\ProcessedTextPropertyEditorManager;
 
 // @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1839516)
 // Remove this when Entity Access API is ready.
@@ -156,7 +157,6 @@ function edit_library_info() {
       $path . '/js/createjs/storage.js' => array('defer' => TRUE),
       $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
       $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/drupalalohawidget.js' => array('defer' => TRUE),
       // Other.
       $path . '/js/util.js' => array('defer' => TRUE),
       $path . '/js/theme.js' => array('defer' => TRUE),
@@ -184,11 +184,6 @@ function edit_library_info() {
       array('system', 'drupal.ajax'),
     ),
   );
-
-  // Only add dependencies on the WYSIWYG editor when it's actually available.
-  if (count(module_implements('edit_wysiwyg_info'))) {
-    $libraries['edit']['dependencies'][] = _edit_get_wysiwyg_info('javascript library');
-  }
 
   return $libraries;
 }
@@ -258,11 +253,6 @@ function edit_preprocess_field(&$variables) {
 function _edit_preprocess_field_wysiwyg(&$variables, $format_id) {
   // Let the WYSIWYG editor know the text format.
   $variables['attributes']['data-edit-text-format'] = $format_id;
-
-  // Ensure the WYSIWYG editor has the necessary text format related
-  // metadata.
-  $settings_callback = _edit_get_wysiwyg_info('javascript settings callback');
-  $settings_callback();
 
   // Let the JavaScript logic know whether transformation filters are used
   // in this format, so it can decide whether to re-render the text or not.
@@ -352,62 +342,59 @@ function _edit_get_field_editor($items, FieldInstance $instance, $formatter_type
  *   The editor: 'direct-with-wysiwyg' or 'form'.
  */
 function _edit_wysiwyg_get_field_editor($format_id = NULL) {
+  $wysiwyg_plugin = &drupal_static(__FUNCTION__);
+
   // If no format is assigned yet, (e.g. when the field is still empty (NULL)),
   // then provide form-based editing, so that the user is able to select a text
   // format. (Direct editing doesn't allow the user to change the format.)
   if (empty($format_id)) {
     return 'form';
   }
+
+  // NOTE: this code will pick the first processed text PropertyEditor widget
+  // plug-in that is available and consider that the only available choice.
+  // @todo: make it possible to have multiple processed text PropertyEditor
+  // widgets.
+  if (!isset($wysiwyg_plugin) && isset($format_id)) {
+    $type = new ProcessedTextPropertyEditorManager();
+    $definitions = $type->getDefinitions();
+    if (count($definitions)) {
+      $plugin_ids = array_keys($definitions);
+      $plugin_id = $plugin_ids[0];//array_slice(, 0, 1);
+      $wysiwyg_plugin = array(
+        'definition' => $definitions[$plugin_id],
+        'plugin' => $type->createInstance($plugin_id),
+        'settings added' => FALSE,
+      );
+    }
+  }
+
   // If no WYSIWYG editor is available, then fall back to form-based editing.
-  elseif (count(_edit_get_wysiwyg_info()) == 0) {
+  if (!isset($wysiwyg_plugin)) {
     return 'form';
   }
   // If the WYSIWYG editor is not compatible with the current format, then fall
   // back to form-based editing.
   else {
-    $compatibility_callback = _edit_get_wysiwyg_info('format compatibility callback');
-    if (!$compatibility_callback($format_id)) {
+    $plugin = $wysiwyg_plugin['plugin'];
+    $match = $plugin->checkFormatCompatibility($format_id);
+    if (!$match) {
       return 'form';
     }
-  }
+    else if ($match) {
+      // Only load the WYSIWYG editor's JavaScript if it hasn't been already.
+      if ($wysiwyg_plugin['settings added'] === FALSE) {
+        $definition = $wysiwyg_plugin['definition'];
+        drupal_add_library($definition['library']['module'], $definition['library']['name']);
+        $plugin->addJsSettings();
 
-  return 'direct-with-wysiwyg';
-}
-
-/**
- * Retrieves a list of all available WYSIWYG integration for Edit. Only the
- * first is actually used.
- *
- * @todo Convert to the plug-in system!
- *
- * @param string $key
- *   The key to get a value for.
- *
- * @see hook_edit_wysiwyg_info()
- * @see hook_edit_wysiwyg_info_alter()
- */
-function _edit_get_wysiwyg_info($key = NULL) {
-  $edit_wysiwyg_info = &drupal_static(__FUNCTION__, array());
-
-  if (empty($edit_wysiwyg_info)) {
-    $cache = cache()->get('edit_wysiwyg_info');
-    if ($cache === FALSE) {
-      // Rebuild the cache and save it.
-      $edit_wysiwyg_info = module_invoke_all('edit_wysiwyg_info');
-      drupal_alter('edit_wysiwyg_info', $edit_wysiwyg_info);
+        // Let Create.js know which WYSIWYG editor widget it should use.
+        drupal_add_js(array('edit' => array(
+          'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
+        )), 'setting');
+        $wysiwyg_plugin['settings added'] = TRUE;
+      }
+      return 'direct-with-wysiwyg';
     }
-    else {
-      $edit_wysiwyg_info = $cache->data;
-    }
-  }
-
-  if (isset($key)) {
-    $modules = array_keys($edit_wysiwyg_info);
-    $first = $modules[0];
-
-    return $edit_wysiwyg_info[$first][$key];
-  }
-  else {
-    return $edit_wysiwyg_info;
   }
 }
