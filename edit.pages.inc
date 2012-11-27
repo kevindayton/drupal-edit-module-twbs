@@ -71,7 +71,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode, $view
     'no_redirect' => TRUE,
     'build_info' => array('args' => array()),
   );
-  form_load_include($form_state, 'inc', 'edit', 'includes/form');
+  form_load_include($form_state, 'inc', 'edit', 'edit.form');
   $form = drupal_build_form('edit_field_form', $form_state);
 
   if (!empty($form_state['executed'])) {
