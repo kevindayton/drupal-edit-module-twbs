@@ -12,14 +12,18 @@
  */
 function edit_aloha_library_info() {
   $module_path = drupal_get_path('module', 'edit_aloha');
+  $options = array(
+    'scope' => 'footer',
+    'attributes' => array('defer' => TRUE),
+  );
   $libraries['aloha.edit'] = array(
     'title' => 'Integrate Aloha Editor with the Edit module.',
     'version' => ALOHA_VERSION,
     'js' => array(
-      $module_path . '/js/createjs/drupalalohawidget.js' => array('defer' => TRUE),
+      $module_path . '/js/createjs/drupalalohawidget.js' => $options,
     ),
     'css' => array(
-      $module_path . '/css/drupal.aloha.edit.css',
+      $module_path . '/css/drupal.aloha.edit.css' => array(),
     ),
     'dependencies' => array(
       array('aloha', 'aloha'),

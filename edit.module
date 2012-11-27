@@ -118,36 +118,40 @@ function edit_toolbar() {
  */
 function edit_library_info() {
   $path = drupal_get_path('module', 'edit');
+  $options = array(
+    'scope' => 'footer',
+    'attributes' => array('defer' => TRUE),
+  );
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
     'website' => 'http://drupal.org/project/edit',
     'version' => VERSION,
     'js' => array(
       // Core.
-      $path . '/js/edit.js' => array('defer' => TRUE),
-      $path . '/js/app.js' => array('defer' => TRUE),
+      $path . '/js/edit.js' => $options,
+      $path . '/js/app.js' => $options,
       // Routers.
-      $path . '/js/routers/edit-router.js' => array('defer' => TRUE),
+      $path . '/js/routers/edit-router.js' => $options,
       // Models.
-      $path . '/js/models/edit-app-model.js' => array('defer' => TRUE),
+      $path . '/js/models/edit-app-model.js' => $options,
       // Views.
-      $path . '/js/views/propertyeditordecoration-view.js' => array('defer' => TRUE),
-      $path . '/js/views/menu-view.js' => array('defer' => TRUE),
-      $path . '/js/views/modal-view.js' => array('defer' => TRUE),
-      $path . '/js/views/overlay-view.js' => array('defer' => TRUE),
-      $path . '/js/views/toolbar-view.js' => array('defer' => TRUE),
+      $path . '/js/views/propertyeditordecoration-view.js' => $options,
+      $path . '/js/views/menu-view.js' => $options,
+      $path . '/js/views/modal-view.js' => $options,
+      $path . '/js/views/overlay-view.js' => $options,
+      $path . '/js/views/toolbar-view.js' => $options,
       // Backbone.sync implementation on top of Drupal forms.
-      $path . '/js/backbone.drupalform.js' => array('defer' => TRUE),
+      $path . '/js/backbone.drupalform.js' => $options,
       // VIE service.
-      $path . '/js/viejs/EditService.js' => array('defer' => TRUE),
+      $path . '/js/viejs/EditService.js' => $options,
       // Create.js subclasses.
-      $path . '/js/createjs/editable.js' => array('defer' => TRUE),
-      $path . '/js/createjs/storage.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/formwidget.js' => array('defer' => TRUE),
-      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => array('defer' => TRUE),
+      $path . '/js/createjs/editable.js' => $options,
+      $path . '/js/createjs/storage.js' => $options,
+      $path . '/js/createjs/editingWidgets/formwidget.js' => $options,
+      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => $options,
       // Other.
-      $path . '/js/util.js' => array('defer' => TRUE),
-      $path . '/js/theme.js' => array('defer' => TRUE),
+      $path . '/js/util.js' => $options,
+      $path . '/js/theme.js' => $options,
       // Basic settings.
       array(
         'data' => array('edit' => array(
@@ -159,7 +163,7 @@ function edit_library_info() {
       ),
     ),
     'css' => array(
-      $path . '/css/edit.css',
+      $path . '/css/edit.css' => array(),
     ),
     'dependencies' => array(
       array('system', 'jquery'),
