@@ -10,7 +10,7 @@ namespace Drupal\edit\Tests;
 use Drupal\simpletest\WebTestBase;
 
 /**
- * Test field editor associations.
+ * Test in-place field editor selection.
  */
 class EditorSelectionTest extends WebTestBase {
   var $default_storage = 'field_sql_storage';
@@ -22,19 +22,17 @@ class EditorSelectionTest extends WebTestBase {
    */
   public static $modules = array('field_test', 'filter', 'field', 'number', 'text', 'edit');
 
-  /**
-   * Administrator level user to run tests with.
-   */
-  private $admin_user;
-
   public static function getInfo() {
     return array(
-      'name' => 'In-place editor selection',
-      'description' => 'Tests in-place editor selection.',
+      'name' => 'In-place field editor selection',
+      'description' => 'Tests in-place field editor selection.',
       'group' => 'Edit',
     );
   }
 
+  /**
+   * Sets the default field storage backend for fields created during tests.
+   */
   function setUp() {
     parent::setUp();
 
@@ -42,6 +40,27 @@ class EditorSelectionTest extends WebTestBase {
     variable_set('field_storage_default', $this->default_storage);
   }
 
+  /**
+   * Creates a field and an instance of it.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $type
+   *   The field type.
+   * @param int $cardinality
+   *   The field's cardinality.
+   * @param string $label
+   *   The field's label (used everywhere: widget label, formatter label).
+   * @param array $instance_settings
+   * @param string $widget_type
+   *   The widget type.
+   * @param array $widget_settings
+   *   The widget settings.
+   * @param string $formatter_type
+   *   The formatter type.
+   * @param array $formatter_settings
+   *   The formatter settings.
+   */
   function createFieldWithInstance($field_name, $type, $cardinality, $label, $instance_settings, $widget_type, $widget_settings, $formatter_type, $formatter_settings) {
     $field = $field_name . '_field';
     $this->$field = array(
@@ -164,7 +183,7 @@ class EditorSelectionTest extends WebTestBase {
     );
 
     // Pretend there is an entity with these items for the field.
-    $items = array(42);
+    $items = array(42, 43);
 
     // Editor selection with cardinality 1.
     $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "With cardinality 1, the 'form' editor is selected.");
