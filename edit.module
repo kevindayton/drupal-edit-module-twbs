@@ -304,7 +304,7 @@ function _edit_get_field_editor($items, FieldInstance $instance, $formatter_type
     // On the other hand, if it is configured to use text processing; then we
     // must check whether 'direct-with-wysiwyg' or 'form' editor should be
     // used.
-    if (!empty($instance['settings']['text_processing'])) {
+    if (!empty($instance['settings']['text_processing']) && isset($items[0]['format'])) {
       $format_id = $items[0]['format'];
       $editor = _edit_wysiwyg_get_field_editor($format_id);
     }
@@ -366,14 +366,18 @@ function _edit_wysiwyg_get_field_editor($format_id = NULL) {
       // Only load the WYSIWYG editor's JavaScript if it hasn't been already.
       if ($wysiwyg_plugin->settingsAdded === FALSE) {
         $definition = $wysiwyg_plugin->getDefinition();
-        drupal_add_library($definition['library']['module'], $definition['library']['name']);
+        if (!empty($definition['library'])) {
+          drupal_add_library($definition['library']['module'], $definition['library']['name']);
+        }
         $wysiwyg_plugin->addJsSettings();
 
         // Let Create.js know which WYSIWYG editor widget it should use.
-        drupal_add_js(array('edit' => array(
-          'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
-        )), 'setting');
-        $wysiwyg_plugin->settingsAdded = TRUE;
+        if (!empty($definition['propertyEditorName'])) {
+          drupal_add_js(array('edit' => array(
+            'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
+          )), 'setting');
+          $wysiwyg_plugin->settingsAdded = TRUE;
+        }
       }
       return 'direct-with-wysiwyg';
     }

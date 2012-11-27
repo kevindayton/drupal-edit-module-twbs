@@ -155,14 +155,40 @@ class EditorSelectionTest extends WebTestBase {
    * >1, always with a WYSIWYG editor present.
    */
   function testTextWysiwyg() {
-    // @todo: the exact same test cases as in testText(), but now with a WYSIWYG
-    // editor plugin present (cfr. Aloha.php). That plug-in's
-    // checkFormatCompatibility() method should always return TRUE. Whereever
-    // the result is 'direct' in testText(), it should be 'direct-with-wysiwyg'
-    // here.
-    // Then we should reconfigure that plug-in in this test to  always return
-    // FALSE. Now the result should be 'form' wherever it was
-    // 'direct-with-wysiwyg'.
+    $field_name = 'field_textarea';
+    $this->createFieldWithInstance(
+      $field_name, 'text', 1, 'Long text field',
+      // Instance settings.
+      array('text_processing' => 0),
+      // Widget type & settings.
+      'text_textarea',
+      array('size' => 42),
+      // 'default' formatter type & settings.
+      'text_default',
+      array()
+    );
+    state()->set('edit_test.enable_wysiwyg', TRUE);
+
+    // Pretend there is an entity with these items for the field.
+    $items = array(array('value' => 'Hello, world!', 'format' => 1));
+
+    // Editor selection with text processing, with cardinality 1.
+    $this->assertEqual('direct-with-wysiwyg', $this->getSelectedEditor($items, $field_name), "With text processing, cardinality 1, the 'direct-with-wysiwyg' editor is selected.");
+
+    // Editor selection without WYSIWYG, with cardinality 1.
+    state()->set('edit_test.enable_wysiwyg', FALSE);
+    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without WYSIWYG, cardinality 1, the 'form' editor is selected.");
+    state()->set('edit_test.enable_wysiwyg', TRUE);
+
+    // Editor selection with text processing, cardinality >1
+    $items[] = array('value' => 'Hallo, wereld!', 'format' => 1);
+    $this->field_text_field['cardinality'] = 2;
+    field_update_field($this->field_textarea_field);
+    $this->assertEqual('direct-with-wysiwyg', $this->getSelectedEditor($items, $field_name), "With text processing, cardinality >1, the 'direct-with-wysiwyg' editor is selected.");
+
+    // Editor selection without WYSIWYG, with cardinality >1.
+    state()->set('edit_test.enable_wysiwyg', FALSE);
+    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without WYSIWYG, cardinality 1, the 'form' editor is selected.");
   }
 
   /**
