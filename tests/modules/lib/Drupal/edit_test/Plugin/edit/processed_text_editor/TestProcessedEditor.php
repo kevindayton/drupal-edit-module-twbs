@@ -25,7 +25,7 @@ class TestProcessedEditor extends ProcessedTextEditorBase {
    * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::checkFormatCompatibility().
    */
   function checkFormatCompatibility($format_id) {
-    return state()->get('edit_test.enable_wysiwyg');
+    return state()->get('edit_test.compatible_format') == $format_id;
   }
 
 }

@@ -308,7 +308,7 @@ function _edit_get_field_editor($items, FieldInstance $instance, $formatter_type
     // On the other hand, if it is configured to use text processing; then we
     // must check whether 'direct-with-wysiwyg' or 'form' editor should be
     // used.
-    if (!empty($instance['settings']['text_processing']) && isset($items[0]['format'])) {
+    if (!empty($instance['settings']['text_processing'])) {
       $format_id = $items[0]['format'];
       $editor = _edit_wysiwyg_get_field_editor($format_id);
     }
@@ -380,8 +380,9 @@ function _edit_wysiwyg_get_field_editor($format_id = NULL) {
           drupal_add_js(array('edit' => array(
             'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
           )), 'setting');
-          $wysiwyg_plugin->settingsAdded = TRUE;
         }
+
+        $wysiwyg_plugin->settingsAdded = TRUE;
       }
       return 'direct-with-wysiwyg';
     }

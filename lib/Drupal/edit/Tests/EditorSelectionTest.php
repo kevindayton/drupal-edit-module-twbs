@@ -123,7 +123,7 @@ class EditorSelectionTest extends WebTestBase {
     );
 
     // Pretend there is an entity with these items for the field.
-    $items = array('Hello, world!');
+    $items = array(array('value' => 'Hello, world!', 'format' => 'full_html'));
 
     // Editor selection without text processing, with cardinality 1.
     $this->assertEqual('direct', $this->getSelectedEditor($items, $field_name), "Without text processing, cardinality 1, the 'direct' editor is selected.");
@@ -139,9 +139,9 @@ class EditorSelectionTest extends WebTestBase {
     $this->assertEqual('direct', $this->getSelectedEditor($items, $field_name), "Without text processing again, cardinality 1, the 'direct' editor is selected.");
 
     // Editor selection without text processing, cardinality >1
-    $items[] = 'Hallo, wereld!';
     $this->field_text_field['cardinality'] = 2;
     field_update_field($this->field_text_field);
+    $items[] = array('value' => 'Hallo, wereld!', 'format' => 'full_html');
     $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without text processing, cardinality >1, the 'form' editor is selected.");
 
     // Editor selection with text processing, cardinality >1
@@ -151,8 +151,9 @@ class EditorSelectionTest extends WebTestBase {
   }
 
   /**
-   * Tests a textual field, without/with text processing, with cardinality 1 and
-   * >1, always with a WYSIWYG editor present.
+   * Tests a textual field, with text processing, with cardinality 1 and >1,
+   * always with a ProcessedTextEditor plug-in present, but with varying text
+   * format compatibility.
    */
   function testTextWysiwyg() {
     $field_name = 'field_textarea';
@@ -167,28 +168,25 @@ class EditorSelectionTest extends WebTestBase {
       'text_default',
       array()
     );
-    state()->set('edit_test.enable_wysiwyg', TRUE);
+
+    // ProcessedTextEditor plug-in compatible with the full_html text format.
+    state()->set('edit_test.compatible_format', 'full_html');
 
     // Pretend there is an entity with these items for the field.
-    $items = array(array('value' => 'Hello, world!', 'format' => 1));
+    $items = array(array('value' => 'Hello, world!', 'format' => 'filtered_html'));
 
-    // Editor selection with text processing, with cardinality 1.
-    $this->assertEqual('direct-with-wysiwyg', $this->getSelectedEditor($items, $field_name), "With text processing, cardinality 1, the 'direct-with-wysiwyg' editor is selected.");
+    // Editor selection with cardinality 1, without compatible text format.
+    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without cardinality 1, and the filtered_html text format, the 'form' editor is selected.");
 
-    // Editor selection without WYSIWYG, with cardinality 1.
-    state()->set('edit_test.enable_wysiwyg', FALSE);
-    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without WYSIWYG, cardinality 1, the 'form' editor is selected.");
-    state()->set('edit_test.enable_wysiwyg', TRUE);
+    // Editor selection with cardinality 1, with compatible text format.
+    $items[0]['format'] = 'full_html';
+    $this->assertEqual('direct-with-wysiwyg', $this->getSelectedEditor($items, $field_name), "With cardinality 1, and the full_html text format, the 'direct-with-wysiwyg' editor is selected.");
 
     // Editor selection with text processing, cardinality >1
-    $items[] = array('value' => 'Hallo, wereld!', 'format' => 1);
-    $this->field_text_field['cardinality'] = 2;
+    $this->field_textarea_field['cardinality'] = 2;
     field_update_field($this->field_textarea_field);
-    $this->assertEqual('direct-with-wysiwyg', $this->getSelectedEditor($items, $field_name), "With text processing, cardinality >1, the 'direct-with-wysiwyg' editor is selected.");
-
-    // Editor selection without WYSIWYG, with cardinality >1.
-    state()->set('edit_test.enable_wysiwyg', FALSE);
-    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "Without WYSIWYG, cardinality 1, the 'form' editor is selected.");
+    $items[] = array('value' => 'Hallo, wereld!', 'format' => 'full_html');
+    $this->assertEqual('form', $this->getSelectedEditor($items, $field_name), "With cardinality >1, and both items using the full_html text format, the 'form' editor is selected.");
   }
 
   /**
