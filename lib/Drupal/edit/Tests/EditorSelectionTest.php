@@ -7,12 +7,12 @@
 
 namespace Drupal\edit\Tests;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\simpletest\DrupalUnitTestBase;
 
 /**
  * Test in-place field editor selection.
  */
-class EditorSelectionTest extends WebTestBase {
+class EditorSelectionTest extends DrupalUnitTestBase {
   var $default_storage = 'field_sql_storage';
 
   /**
@@ -20,7 +20,7 @@ class EditorSelectionTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('field_test', 'filter', 'field', 'number', 'text', 'edit', 'edit_test');
+  public static $modules = array('system', 'field_test', 'field', 'number', 'text', 'edit', 'edit_test');
 
   public static function getInfo() {
     return array(
@@ -35,6 +35,9 @@ class EditorSelectionTest extends WebTestBase {
    */
   function setUp() {
     parent::setUp();
+
+    $this->installSchema('system', 'variable');
+    $this->enableModules(array('field', 'field_sql_storage', 'field_test'));
 
     // Set default storage backend.
     variable_set('field_storage_default', $this->default_storage);
