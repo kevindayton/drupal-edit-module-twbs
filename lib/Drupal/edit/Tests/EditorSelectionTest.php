@@ -159,7 +159,7 @@ class EditorSelectionTest extends WebTestBase {
     $this->createFieldWithInstance(
       $field_name, 'text', 1, 'Long text field',
       // Instance settings.
-      array('text_processing' => 0),
+      array('text_processing' => 1),
       // Widget type & settings.
       'text_textarea',
       array('size' => 42),
