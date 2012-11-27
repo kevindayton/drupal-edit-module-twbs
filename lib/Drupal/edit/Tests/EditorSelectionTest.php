@@ -20,7 +20,7 @@ class EditorSelectionTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('field_test', 'filter', 'field', 'number', 'text', 'edit');
+  public static $modules = array('field_test', 'filter', 'field', 'number', 'text', 'edit', 'edit_test');
 
   public static function getInfo() {
     return array(
