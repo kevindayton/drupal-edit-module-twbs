@@ -23,10 +23,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   _id: null,
 
   events: {
-    'click.edit a.label': 'onClickInfoLabel',
+    'click.edit button.label': 'onClickInfoLabel',
     'mouseleave.edit': 'onMouseLeave',
-    'click.edit a.field-save': 'onClickSave',
-    'click.edit a.field-close': 'onClickClose'
+    'click.edit button.field-save': 'onClickSave',
+    'click.edit button.field-close': 'onClickClose'
   },
 
   /**
@@ -92,7 +92,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         break;
       case 'changed':
         this.$el
-          .find('a.save')
+          .find('button.save')
           .addClass('blue-button')
           .removeClass('gray-button');
         break;
@@ -258,7 +258,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .append(Drupal.theme('editToolgroup', {
         classes: 'info',
         buttons: [
-          { label: label, classes: 'blank-button label', hasButtonRole: false }
+          { label: label, classes: 'blank-button label' }
         ]
       }));
 
@@ -277,7 +277,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .append(Drupal.theme('editToolgroup', {
         classes: 'ops',
         buttons: [
-          { label: Drupal.t('Save'), classes: 'field-save save gray-button' },
+          { label: Drupal.t('Save'), type: 'submit', classes: 'field-save save gray-button' },
           { label: '<span class="close"></span>', classes: 'field-close close gray-button' }
         ]
       }));

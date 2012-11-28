@@ -101,11 +101,9 @@ Drupal.theme.editToolgroup = function(settings) {
  * @param settings
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
- *     - url: the URL the button should point to.
+ *     - type: the type of the button (defaults to 'button')
  *     - classes: the classes of the button.
  *     - label: the label of the button.
- *     - hasButtonRole: whether this button should have its "role" attribute set
- *       to "button".
  *     - action: sets a data-edit-modal-action attribute.
  * @return
  *   The corresponding HTML.
@@ -114,19 +112,15 @@ Drupal.theme.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
-    if (!button.hasOwnProperty('url')) {
-      button.url = '';
-    }
-    if (!button.hasOwnProperty('hasButtonRole')) {
-      button.hasButtonRole = true;
+    if (!button.hasOwnProperty('type')) {
+      button.type = 'button';
     }
 
-    html += '<a href="' + button.url + '" class="' + button.classes + '"';
-    html += (button.hasButtonRole) ? ' role="button"' : '';
+    html += '<button type="' + button.type + '" class="' + button.classes + '"';
     html += (button.action) ? ' data-edit-modal-action="' + button.action + '"' : '';
     html += '>';
     html +=    button.label;
-    html += '</a>';
+    html += '</button>';
   }
   return html;
 };

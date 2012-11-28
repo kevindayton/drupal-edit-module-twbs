@@ -212,7 +212,7 @@
           message: Drupal.t('You have unsaved changes'),
           buttons: [
             { action: 'discard', classes: 'gray-button', label: Drupal.t('Discard changes') },
-            { action: 'save', classes: 'blue-button', label: Drupal.t('Save') }
+            { action: 'save', type: 'submit', classes: 'blue-button', label: Drupal.t('Save') }
           ],
           callback: function(action) {
             // The active modal has been removed.
