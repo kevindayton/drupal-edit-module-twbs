@@ -402,7 +402,7 @@
           if ($confirmDialog.length) {
             context = $confirmDialog;
             selector = inputsSelector;
-            if (!$currentEditable.length || $currentEditable.is(editablesSelector)) {
+            if (!$currentEditable || $currentEditable.is(editablesSelector)) {
               $currentEditable = $(selector, context).eq(-1);
             }
           }
@@ -412,7 +412,7 @@
             context = $(activeEditor.$formContainer).add(activeEditor.toolbarView.$el);
             // Include the view mode toggle with the editables selector.
             selector = inputsSelector + ', .edit_view-edit-toggle.edit-view';
-            if (!$currentEditable.length || $currentEditable.is(editablesSelector)) {
+            if (!$currentEditable || $currentEditable.is(editablesSelector)) {
               $currentEditable = $(selector, context).eq(-1);
             }
           }
