@@ -40,6 +40,94 @@
       loadable.resolve(entities);
     },
 
+    _getViewForElement:function (element, collectionView) {
+      var viewInstance;
+
+      jQuery.each(this.views, function () {
+        if (jQuery(this.el).get(0) === element.get(0)) {
+          if (collectionView && !this.template) {
+            return true;
+          }
+          viewInstance = this;
+          return false;
+        }
+      });
+      return viewInstance;
+    },
+
+    _registerEntityView:function (entity, element, isNew) {
+      if (!element.length) {
+        return;
+      }
+
+      // Let's only have this overhead for direct types. Form-based editors are
+      // handled in backbone.drupalform.js and the PropertyEditor instance.
+      if (!jQuery(element).hasClass('edit-type-direct')) {
+        return;
+      }
+
+      var service = this;
+      var viewInstance = this._getViewForElement(element);
+      if (viewInstance) {
+        return viewInstance;
+      }
+
+      viewInstance = new this.vie.view.Entity({
+        model:entity,
+        el:element,
+        tagName:element.get(0).nodeName,
+        vie:this.vie,
+        service:this.name
+      });
+
+      this.views.push(viewInstance);
+
+      return viewInstance;
+    },
+
+    save: function(saveable) {
+      var correct = saveable instanceof this.vie.Savable;
+      if (!correct) {
+        throw "Invalid Savable passed";
+      }
+
+      if (!saveable.options.element) {
+        // FIXME: we could find element based on subject
+        throw "Unable to write entity to edit.module-markup, no element given";
+      }
+
+      if (!saveable.options.entity) {
+        throw "Unable to write to edit.module-markup, no entity given";
+      }
+
+      var $element = jQuery(saveable.options.element);
+      this._writeEntity(saveable.options.entity, saveable.options.element);
+      saveable.resolve();
+    },
+
+    _writeEntity:function (entity, element) {
+      var service = this;
+      this.findPredicateElements(this.getElementSubject(element), element, true).each(function () {
+        var predicateElement = jQuery(this);
+        var predicate = service.getElementPredicate(predicateElement);
+        if (!entity.has(predicate)) {
+          return true;
+        }
+
+        var value = entity.get(predicate);
+        if (value && value.isCollection) {
+          // Handled by CollectionViews separately
+          return true;
+        }
+        if (value === service.readElementValue(predicate, predicateElement)) {
+          return true;
+        }
+        // Unlike in the VIE's RdfaService no (re-)mapping needed here.
+        predicateElement.html(value);
+      });
+      return true;
+    },
+
     // The edit-id data attribute contains the full identifier of
     // each entity element in the format
     // `<entity type>:<id>:<field name>:<language code>:<view mode>`.
@@ -102,17 +190,16 @@
         entity['@type'] = this._registerType(type, element);
       }
 
-      // Register with VIE
-      return this._registerEntity(entity);
-    },
-
-    _registerEntity: function (entityData) {
-      var entityInstance = new this.vie.Entity(entityData);
-      return this.vie.entities.addOrUpdate(entityInstance, {
+      var entityInstance = new this.vie.Entity(entity);
+      entityInstance = this.vie.entities.addOrUpdate(entityInstance, {
         updateOptions: {
-          silent: true
+          silent: true,
+          ignoreChanges: true
         }
       });
+
+      this._registerEntityView(entityInstance, element);
+      return entityInstance;
     },
 
     _registerType: function (typeId, element) {
@@ -152,7 +239,7 @@
         if (!predicate) {
           return;
         }
-        var value = service._readElementValue(predicateElement);
+        var value = service.readElementValue(predicate, predicateElement);
         if (value === null && !emptyValues) {
           return;
         }
@@ -162,7 +249,8 @@
       return entityPredicates;
     },
 
-    _readElementValue: function (element) {
+    readElementValue : function(predicate, element) {
+      // Unlike in RdfaService there is parsing needed here.
       return jQuery.trim(element.html());
     },
 
@@ -179,16 +267,18 @@
     // to edit.
     findPredicateElements: function (subject, element, allowNestedPredicates, stop) {
       var predicates = jQuery();
+      // Make sure that element is wrapped by jQuery.
+      var $element = jQuery(element);
 
       // Form-type predicates
-      predicates = predicates.add(element.filter('.edit-type-form'));
+      predicates = predicates.add($element.filter('.edit-type-form'));
 
       // Direct-type predicates
-      var direct = element.filter('.edit-type-direct');
+      var direct = $element.filter('.edit-type-direct');
       predicates = predicates.add(direct.find('.field-item'));
 
       if (!predicates.length && !stop) {
-        var parentElement = element.parent(this.options.subjectSelector);
+        var parentElement = $element.parent(this.options.subjectSelector);
         if (parentElement.length) {
           return this.findPredicateElements(subject, parentElement, allowNestedPredicates, true);
         }

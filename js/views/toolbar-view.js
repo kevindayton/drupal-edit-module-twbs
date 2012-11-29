@@ -135,6 +135,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       success: function (model) {
         editableEntity.setState('saved', predicate);
 
+        // Now that the changes to this property have been saved, the saved
+        // attributes are now the "original" attributes.
+        entity._originalAttributes = entity._previousAttributes = _.clone(entity.attributes);
+
         // Replace the old content with the new content.
         var updatedField = entity.get(predicate + '/rendered');
         var $inner = $(updatedField).html();
