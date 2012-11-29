@@ -352,8 +352,9 @@
   display: block;
   float: left;
 }
-.edit-toolbar button span.close {
+.edit-toolbar span.close {
   background: url('../images/close.png') no-repeat 3px 2px;
+  text-indent: -999em;
 }
 
 .edit-toolbar button.blank-button {
