@@ -18,31 +18,25 @@ var $messages;
 
 Drupal.edit = Drupal.edit || {};
 
-Drupal.behaviors.editDiscoverEditables = {
-  attach: function(context) {
-    // @todo BLOCKED_ON(VIE.js, how to let VIE know that some content was
-    // removed and how to scan new content for VIE entities, to make them
-    // editable?)
-    //
-    // Also see ToolbarView.save().
-    // We need to separate the discovery of editables if we want updated
-    // or new content (added by code other than Edit) to be detected
-    // automatically. Once we implement this, we'll be able to get rid of all
-    // calls to Drupal.edit.domService.findSubjectElements() :)
-  }
-};
-
 /**
  * Attach toggling behavior and in-place editing.
  */
 Drupal.behaviors.edit = {
   attach: function(context) {
-    $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
+    var $context = $(context);
 
-    // As soon as there is at least one editable field, show the Edit tab in the
-    // toolbar.
-    if ($(context).find('.edit-field.edit-allowed').length) {
+    // Initialize the Edit app.
+    $context.find('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
+
+    // As soon as there is at least one editable property, show the Edit tab in
+    // the toolbar.
+    if ($context.find('.edit-field.edit-allowed').length) {
       $('.toolbar .icon-edit.edit-nothing-editable-hidden').removeClass('edit-nothing-editable-hidden');
+    }
+
+    // Find editable properties, make them editable.
+    if (Drupal.edit.app) {
+      Drupal.edit.app.findEditableProperties($context);
     }
   }
 };
@@ -66,6 +60,11 @@ Drupal.edit.init = function() {
 
   // Start Backbone's history/route handling.
   Backbone.history.start();
+
+  // For now, we work with a singleton app, because for Drupal.behaviors to be
+  // able to discover new editable properties that get AJAXed in, it must know
+  // with which app instance they should be associated.
+  Drupal.edit.app = app;
 };
 
 /**

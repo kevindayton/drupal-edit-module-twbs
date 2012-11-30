@@ -17,7 +17,7 @@
     singleEditorStates: [],
 
     // State.
-    $entityElements: [],
+    $entityElements: $([]),
 
     /**
      * Implements Backbone Views' initialize() function.
@@ -45,9 +45,33 @@
         editableNs: 'createeditable'
       });
 
-      // Instantiate an EditableEntity widget for each property.
+      // Instantiate OverlayView.
+      var overlayView = new Drupal.edit.views.OverlayView({
+        model: this.model
+      });
+
+      // Instantiate MenuView.
+      var editMenuView = new Drupal.edit.views.MenuView({
+        el: this.el,
+        model: this.model
+      });
+
+      // When view/edit mode is toggled in the menu, update the editor widgets.
+      this.model.on('change:isViewing', this.appStateChange);
+    },
+
+    /**
+     * Finds editable properties within a given context.
+     *
+     * Finds editable properties, registers them with the app, updates their
+     * state to match the current app state.
+     *
+     * @param $context
+     *   A jQuery-wrapped context DOM element within which will be searched.
+     */
+    findEditableProperties: function($context) {
       var that = this;
-      this.$entityElements = this.domService.findSubjectElements().each(function() {
+      this.$entityElements = this.domService.findSubjectElements($context).each(function() {
         $(this).createEditable({
           vie: that.vie,
           disabled: true,
@@ -62,19 +86,7 @@
         });
       });
 
-      // Instantiate OverlayView
-      var overlayView = new Drupal.edit.views.OverlayView({
-        model: this.model
-      });
-
-      // Instantiate MenuView
-      var editMenuView = new Drupal.edit.views.MenuView({
-        el: this.el,
-        model: this.model
-      });
-
-      // When view/edit mode is toggled in the menu, update the editor widgets.
-      this.model.on('change:isViewing', this.appStateChange);
+      this.appStateChange();
     },
 
     /**
