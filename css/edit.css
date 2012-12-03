@@ -61,6 +61,13 @@
           transition: opacity .2s ease;
 }
 
+.edit-animate-only-background-and-padding {
+  -webkit-transition: background, padding .2s ease;
+     -moz-transition: background, padding .2s ease;
+      -ms-transition: background, padding .2s ease;
+       -o-transition: background, padding .2s ease;
+          transition: background, padding .2s ease;
+}
 
 
 

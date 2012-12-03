@@ -276,7 +276,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       .find('.edit-toolbar')
       // Append the "info" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
-        classes: 'info',
+        classes: 'info edit-animate-only-background-and-padding',
         buttons: [
           { label: label, classes: 'blank-button label' }
         ]
