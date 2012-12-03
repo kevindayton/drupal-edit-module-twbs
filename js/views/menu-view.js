@@ -11,8 +11,7 @@ Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.MenuView = Backbone.View.extend({
 
   events: {
-    'click #toolbar-tab-edit': 'editClickHandler',
-    'click #toolbar-administration .tab a': 'tabClickHandler'
+    'click #toolbar-tab-edit': 'editClickHandler'
   },
 
   /**
@@ -30,9 +29,13 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
     // #attached properties are not processed. The toolbar tray DOM element is
     // unnecessary right now, so it is removed.
     this.$el.find('#toolbar-tray-edit').remove();
-
-    // We have to call stateChange() here, because URL fragments are not passed
-    // the server, thus the wrong anchor may be marked as active.
+    // Respond to clicks on other toolbar tabs. This temporary pending
+    // improvements to the toolbar module.
+    $('#toolbar-administration').on('click.edit', '.bar a:not(#toolbar-tab-edit)', _.bind(function (event) {
+      this.model.set('isViewing', true);
+    }, this));
+    // We have to call stateChange() here because URL fragments are not passed
+    // to the server, thus the wrong anchor may be marked as active.
     this.stateChange();
   },
 
@@ -66,21 +69,7 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
     // Toggle the href of the Toolbar Edit tab based on the isViewing state. The
     // href value should represent to state to be entered.
     this.$el.find('#toolbar-tab-edit').attr('href', (isViewing) ? '#edit' : '#view');
-    if (!isViewing) {
-      this.model.set('isViewing', !isViewing);
-    }
-  },
-  /**
-   * Handles clicks on tabs of the toolbar other than the edit tab.
-   *
-   * STILL WORKING ON THIS.
-   *
-   * @param {Object} event
-   */
-  tabClickHandler: function (event) {
-    if (this.model.get('isViewing')) {
-      this.model.set('isViewing', false);
-    }
+    this.model.set('isViewing', !isViewing);
   }
 });
 

@@ -20,15 +20,19 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   /**
    * Implements Backbone Views' initialize() function.
    */
-  initialize: function(options) {
+  initialize: function (options) {
     _.bindAll(this, 'stateChange');
     this.model.on('change:isViewing', this.stateChange);
+    // Add the overlay to the page.
+    this.$el
+      .addClass('edit-animate-slow edit-animate-invisible')
+      .appendTo('body');
   },
 
   /**
    * Listens to app state changes.
    */
-  stateChange: function() {
+  stateChange: function () {
     if (this.model.get('isViewing')) {
       this.remove();
       return;
@@ -40,9 +44,9 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
    * Equates clicks anywhere on the overlay to clicking the active editor's (if
    * any) "close" button.
    *
-   * @param event
+   * @param {Object} event
    */
-  onClick: function(event) {
+  onClick: function (event) {
     event.preventDefault();
     var activeEditor = this.model.get('activeEditor');
     if (activeEditor) {
@@ -50,32 +54,31 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
       var predicate = activeEditor.options.property;
       editableEntity.setState('candidate', predicate, { reason: 'overlay' });
     }
+    else {
+      this.model.set('isViewing', true);
+    }
   },
 
   /**
-   * Inserts the overlay element and appends it to the body.
+   * Reveal the overlay element.
    */
-  render: function() {
-    this.setElement(
-      $(Drupal.theme('editOverlay', {}))
-      .appendTo('body')
-      .addClass('edit-animate-slow edit-animate-invisible')
-    );
-    // Animations
-    this.$el.css('top', $('#navbar').outerHeight());
-    this.$el.removeClass('edit-animate-invisible');
+  render: function () {
+    this.$el
+      .show()
+      .css('top', $('#navbar').outerHeight())
+      .removeClass('edit-animate-invisible');
   },
 
   /**
-   * Remove the overlay element.
+   * Hide the overlay element.
    */
-  remove: function() {
+  remove: function () {
     var that = this;
     this.$el
-    .addClass('edit-animate-invisible')
-    .on(Drupal.edit.util.constants.transitionEnd, function (event) {
-      that.$el.remove();
-    });
+      .addClass('edit-animate-invisible')
+      .on(Drupal.edit.util.constants.transitionEnd, function (event) {
+        that.$el.hide();
+      });
   }
 });
 

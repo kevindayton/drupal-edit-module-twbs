@@ -49,6 +49,7 @@
 
       // Instantiate OverlayView.
       var overlayView = new Drupal.edit.views.OverlayView({
+        el: (Drupal.theme('editOverlay', {})),
         model: this.model
       });
 
