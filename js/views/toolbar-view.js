@@ -20,6 +20,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   predicate : null,
   editorName: null,
 
+  _loader: null,
+  _loaderVisibleStart: 0,
+
   _id: null,
 
   events: {
@@ -50,6 +53,9 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     this.entity = this.editor.options.entity;
     this.predicate = this.editor.options.property;
     this.editorName = this.editor.options.editorName;
+
+    this._loader = null;
+    this._loaderVisibleStart = 0;
 
     // Generate a DOM-compatible ID for the toolbar DOM element.
     var propertyID = Drupal.edit.util.calcPropertyID(this.entity, this.predicate);
@@ -229,28 +235,32 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   },
 
   /**
-   * Indicate in the 'info' toolgroup that we're waiting for a server reponse.
+   * Indicates in the 'info' toolgroup that we're waiting for a server reponse.
+   *
+   * Prevents flickering loading indicator by only showing it after 0.6 seconds
+   * and if it is shown, only hiding it after another 0.6 seconds.
    *
    * @param bool enabled
    *   Whether the loading indicator should be displayed or not.
    */
   setLoadingIndicator: function(enabled) {
-    // @todo: avoid showing the loading indicator for a very brief period of
-    // time ("The interaction is so fast, 99% of the time I wouldn't need it."),
-    // the solution is to gather statistics and then heuristically show this.
-    // See http://drupal.org/node/1824500#comment-6795190 and later.
-    return;
-
+    var that = this;
     if (enabled) {
-      this.addClass('info', 'loading');
+      this._loader = setTimeout(function() {
+        that.addClass('info', 'loading');
+        that._loaderVisibleStart = new Date().getTime();
+      }, 600);
     }
     else {
-      // Only stop showing the loading indicator after half a second to prevent
-      // it from flashing, which is bad UX.
-      var that = this;
-      setTimeout(function() {
-        that.removeClass('info', 'loading');
-      }, 500);
+      var currentTime = new Date().getTime();
+      clearTimeout(this._loader);
+      if (this._loaderVisibleStart) {
+        setTimeout(function() {
+          that.removeClass('info', 'loading');
+        }, this._loaderVisibleStart + 600 - currentTime);
+      }
+      this._loader = null;
+      this._loaderVisibleStart = 0;
     }
   },
 
