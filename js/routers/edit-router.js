@@ -13,7 +13,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
   appModel: null,
 
   routes: {
-    "quick-edit": "edit",
+    "edit": "edit",
     "view": "view",
     "": "view"
   },
@@ -40,7 +40,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
           that.appModel.set('isViewing', true);
         }
         else {
-          that.navigate('#quick-edit');
+          that.navigate('#edit');
         }
       });
     }

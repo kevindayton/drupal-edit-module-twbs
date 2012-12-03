@@ -26,7 +26,7 @@ Drupal.behaviors.edit = {
     var $context = $(context);
 
     // Initialize the Edit app.
-    $context.find('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
+    $context.find('#toolbar-tab-edit').once('edit-init', Drupal.edit.init);
 
     // As soon as there is at least one editable property, show the Edit tab in
     // the toolbar.

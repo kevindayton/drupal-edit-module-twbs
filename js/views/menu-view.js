@@ -10,12 +10,26 @@ Drupal.edit = Drupal.edit || {};
 Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.MenuView = Backbone.View.extend({
 
+  events: {
+    'click #toolbar-tab-edit': 'editClickHandler',
+    'click #toolbar-administration .tab a': 'tabClickHandler'
+  },
+
   /**
    * Implements Backbone Views' initialize() function.
    */
   initialize: function() {
     _.bindAll(this, 'stateChange');
     this.model.on('change:isViewing', this.stateChange);
+    // @todo
+    // Re-implement hook_toolbar and the corresponding JavaScript behaviors
+    // once https://drupal.org/node/1847198 is resolved. The toolbar tray is
+    // necessary when the page request is processed because its render element
+    // has an #attached property with the Edit module library code assigned to
+    // it. Currently a toolbar tab is not passed as a renderable array, so
+    // #attached properties are not processed. The toolbar tray DOM element is
+    // unnecessary right now, so it is removed.
+    this.$el.find('#toolbar-tray-edit').remove();
 
     // We have to call stateChange() here, because URL fragments are not passed
     // the server, thus the wrong anchor may be marked as active.
@@ -26,16 +40,47 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
    * Listens to app state changes.
    */
   stateChange: function() {
-    // Unmark whichever one is currently marked as active.
-    this.$('a.edit_view-edit-toggle')
-      .removeClass('active')
-      .parent().removeClass('active');
-
-    // Mark the correct one as active.
-    var activeAnchor = this.model.get('isViewing') ? 'view' : 'edit';
-    this.$('a.edit_view-edit-toggle.edit-' + activeAnchor)
-      .addClass('active')
-      .parent().addClass('active');
+    var isViewing = this.model.get('isViewing');
+    // Toggle the state of the Toolbar Edit tab based on the isViewing state.
+    this.$el.find('#toolbar-tab-edit').toggleClass('active', !isViewing);
+    // Manage the toolbar state until
+    // https://drupal.org/node/1847198 is resolved
+    if (!isViewing) {
+      // Remove the 'toolbar-tray-open' class from the body element.
+      this.$el.removeClass('toolbar-tray-open');
+      // Deactivate any other active tabs and trays.
+      this.$el
+        .find('.bar a', '#toolbar-administration')
+        .not('#toolbar-tab-edit')
+        .add('.tray', '#toolbar-administration')
+        .removeClass('active');
+    }
+  },
+  /**
+   * Handles clicks on the edit tab of the toolbar.
+   *
+   * @param {Object} event
+   */
+  editClickHandler: function (event) {
+    var isViewing = this.model.get('isViewing');
+    // Toggle the href of the Toolbar Edit tab based on the isViewing state. The
+    // href value should represent to state to be entered.
+    this.$el.find('#toolbar-tab-edit').attr('href', (isViewing) ? '#edit' : '#view');
+    if (!isViewing) {
+      this.model.set('isViewing', !isViewing);
+    }
+  },
+  /**
+   * Handles clicks on tabs of the toolbar other than the edit tab.
+   *
+   * STILL WORKING ON THIS.
+   *
+   * @param {Object} event
+   */
+  tabClickHandler: function (event) {
+    if (this.model.get('isViewing')) {
+      this.model.set('isViewing', false);
+    }
   }
 });
 
