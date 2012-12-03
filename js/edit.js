@@ -75,34 +75,10 @@ Drupal.edit.init = function() {
  * @param {String} message
  *   A string to be inserted into the message area.
  */
-Drupal.edit.setMessage = function (message) {
+Drupal.edit.setMessage = function(message) {
   var args = Array.prototype.slice.call(arguments);
   args.unshift('editMessage');
   $messages.html(Drupal.theme.apply(this, args));
 }
 
-/**
- * A region to post messages that a screen reading UA will announce.
- *
- * @return {String}
- *   A string representing a DOM fragment.
- */
-Drupal.theme.editMessageBox = function () {
-  return '<div id="edit-messages" class="element-invisible" role="region" aria-live="polite"></div>';
-};
-
-/**
- * Wrap message strings in p tags.
- *
- * @return {String}
- *   A string representing a DOM fragment.
- */
-Drupal.theme.editMessage = function () {
-  var messages = Array.prototype.slice.call(arguments);
-  var output = '';
-  for (var i = 0; i < messages.length; i++) {
-   output += '<p>' + messages[i] + '</p>';
-  }
-  return output;
-};
 })(jQuery, Backbone, Drupal);
