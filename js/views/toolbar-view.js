@@ -235,6 +235,12 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *   Whether the loading indicator should be displayed or not.
    */
   setLoadingIndicator: function(enabled) {
+    // @todo: avoid showing the loading indicator for a very brief period of
+    // time ("The interaction is so fast, 99% of the time I wouldn't need it."),
+    // the solution is to gather statistics and then heuristically show this.
+    // See http://drupal.org/node/1824500#comment-6795190 and later.
+    return;
+
     if (enabled) {
       this.addClass('info', 'loading');
     }
