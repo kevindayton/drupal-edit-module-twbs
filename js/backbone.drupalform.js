@@ -45,7 +45,7 @@ Backbone.syncDrupalFormWidget = function(method, model, options) {
       // @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1784216)
       // Once full JSON-LD support in Drupal core lands, we can ensure that the
       // models that VIE maintains are properly updated.
-      changedAttributes[predicate] = 'JSON-LD representation N/A yet.';
+      changedAttributes[predicate] = undefined;
       changedAttributes[predicate + '/rendered'] = response.data;
       options.success(changedAttributes);
     };
@@ -126,7 +126,14 @@ Backbone.syncDirect = function(method, model, options) {
           Drupal.edit.util.form.unajaxifySaving(jQuery(ajax.element));
           jQuery('#edit_backstage form').remove();
 
-          options.success();
+          // Call Backbone.sync's success callback with the rerendered field.
+          var changedAttributes = {};
+          // @todo: POSTPONED_ON(Drupal core, http://drupal.org/node/1784216)
+          // Once full JSON-LD support in Drupal core lands, we can ensure that the
+          // models that VIE maintains are properly updated.
+          changedAttributes[predicate] = jQuery(response.data).find('.field-item').html();
+          changedAttributes[predicate + '/rendered'] = response.data;
+          options.success(changedAttributes);
         };
 
         // Unsuccessfully saved; validation errors.

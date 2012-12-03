@@ -245,13 +245,19 @@
         }
 
         entityPredicates[predicate] = value;
+        entityPredicates[predicate + '/rendered'] = predicateElement[0].outerHTML;
       });
       return entityPredicates;
     },
 
     readElementValue : function(predicate, element) {
       // Unlike in RdfaService there is parsing needed here.
-      return jQuery.trim(element.html());
+      if (element.hasClass('edit-type-form')) {
+        return undefined;
+      }
+      else {
+        return jQuery.trim(element.html());
+      }
     },
 
     // Subject elements are the DOM elements containing a single or multiple

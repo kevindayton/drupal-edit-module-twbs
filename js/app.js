@@ -17,7 +17,7 @@
     singleEditorStates: [],
 
     // State.
-    $entityElements: $([]),
+    $entityElements: null,
 
     /**
      * Implements Backbone Views' initialize() function.
@@ -38,6 +38,8 @@
       ];
       this.activeEditorStates = ['activating', 'active'];
       this.singleEditorStates = _.union(['highlighted'], this.activeEditorStates);
+
+      this.$entityElements = $([]);
 
       // Use Create's Storage widget.
       this.$el.createStorage({
@@ -71,22 +73,43 @@
      */
     findEditableProperties: function($context) {
       var that = this;
-      this.$entityElements = this.domService.findSubjectElements($context).each(function() {
-        $(this).createEditable({
-          vie: that.vie,
-          disabled: true,
-          state: 'inactive',
-          acceptStateChange: that.acceptEditorStateChange,
-          statechange: function(event, data) {
-            that.editorStateChange(data.previous, data.current, data.propertyEditor);
-          },
-          decoratePropertyEditor: function(data) {
-            that.decorateEditor(data.propertyEditor);
-          }
-        });
-      });
+      var newState = (this.model.get('isViewing')) ? 'inactive' : 'candidate';
 
-      this.appStateChange();
+      this.domService.findSubjectElements($context).each(function() {
+        var $element = $(this);
+
+        // Ignore editable properties for which we've already set up Create.js.
+        if (that.$entityElements.index($element) !== -1) {
+          return;
+        }
+
+        $element
+          // Instantiate an EditableEntity widget.
+          .createEditable({
+            vie: that.vie,
+            disabled: true,
+            state: 'inactive',
+            acceptStateChange: that.acceptEditorStateChange,
+            statechange: function(event, data) {
+              that.editorStateChange(data.previous, data.current, data.propertyEditor);
+            },
+            decoratePropertyEditor: function(data) {
+              that.decorateEditor(data.propertyEditor);
+            }
+          })
+          // This event is triggered just before Edit removes an EditableEntity
+          // widget, so that we can do proper clean-up.
+          .on('destroyedPropertyEditor.edit', function(event, editor) {
+            that.undecorateEditor(editor);
+            that.$entityElements = that.$entityElements.not($(this));
+
+          })
+          // Transition the new PropertyEditor into the current state.
+          .createEditable('setState', newState);
+
+        // Add this new EditableEntity widget element to the list.
+        that.$entityElements = that.$entityElements.add($element);
+      });
     },
 
     /**
@@ -343,6 +366,28 @@
         editor.toolbarView.stateChange(data.previous, data.current);
       });
     },
+
+    /**
+     * Undecorates an editor (PropertyEditor).
+     *
+     * Whenever a property has been updated, the old HTML will be replaced by
+     * the new (re-rendered) HTML. The EditableEntity widget will be destroyed,
+     * as will be the PropertyEditor widget. This method ensures Edit's editor
+     * views also are removed properly.
+     *
+     * @param editor
+     *   The PropertyEditor widget object.
+     */
+    undecorateEditor: function(editor) {
+      editor.toolbarView.undelegateEvents();
+      editor.toolbarView.remove();
+      delete editor.toolbarView;
+      editor.decorationView.undelegateEvents();
+      // Don't call .remove() on the decoration view, because that would remove
+      // a potentially rerendered field.
+      delete editor.decorationView;
+    },
+
     /**
      * Makes elements other than the editables unreachable via the tab key.
      *

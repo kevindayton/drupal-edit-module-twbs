@@ -139,22 +139,22 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         // attributes are now the "original" attributes.
         entity._originalAttributes = entity._previousAttributes = _.clone(entity.attributes);
 
-        // Replace the old content with the new content.
-        var updatedField = entity.get(predicate + '/rendered');
-        var $inner = $(updatedField).html();
-        editor.element.html($inner);
-
-        // @todo BLOCKED_ON(VIE.js, how to let VIE know that some content was removed and how to scan new content for VIE entities, to make them editable?)
-        // Also see Drupal.behaviors.editDiscoverEditables.
-        // VIE doesn't seem to like this? :) It seems that if I delete/
-        // overwrite an existing field, that VIE refuses to find the same
-        // predicate again for the same entity?
-        // self.$el.replaceWith(updatedField);
-        // debugger;
-        // console.log(self.$el, self.el, Drupal.edit.domService.findSubjectElements(self.$el));
-        // Drupal.edit.domService.findSubjectElements(self.$el).each(Drupal.edit.prepareFieldView);
+        // Get data necessary to rerender property before it is unavailable.
+        var updatedProperty = entity.get(predicate + '/rendered');
+        var $propertyWrapper = editor.element.closest('.edit-field');
+        var $context = $propertyWrapper.parent();
 
         editableEntity.setState('candidate', predicate);
+        // Unset the property, because it will be parsed again from the DOM, iff
+        // its new value causes it to still be rendered.
+        entity.unset(predicate, { silent: true });
+        entity.unset(predicate + '/rendered', { silent: true });
+        // Trigger event to allow for proper clean-up of editor-specific views.
+        editor.element.trigger('destroyedPropertyEditor.edit', editor);
+
+        // Replace the old content with the new content.
+        $propertyWrapper.replaceWith(updatedProperty);
+        Drupal.attachBehaviors($context);
       },
 
       // Save attempted but failed due to validation errors.
