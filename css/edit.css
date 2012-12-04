@@ -363,6 +363,7 @@
 .edit-toolbar span.close {
   background: url('../images/close.png') no-repeat 3px 2px;
   text-indent: -999em;
+  direction: ltr;
 }
 
 .edit-toolbar button.blank-button {
