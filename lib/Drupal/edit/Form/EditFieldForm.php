@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\Form\EditFieldForm.
+ * Contains \Drupal\edit\Form\EditFieldForm.
  */
 
 namespace Drupal\edit\Form;
@@ -84,15 +84,6 @@ class EditFieldForm {
   protected function simplify(array &$form, array &$form_state) {
     $field_name = $form_state['field_name'];
     $langcode = $form_state['langcode'];
-
-    // We expect the form to only contain the single field being edited, the
-    // submit button, and some hidden elements internal to Form API. If there's
-    // anything else, then simplifying the field element itself (e.g., by hiding
-    // its label) may lead to confusion elsewhere.
-    // @todo Find a real use case of this to document. Otherwise, remove it.
-    if (array_diff(element_children($form), array($field_name, 'actions', 'form_build_id', 'form_token', 'form_id'))) {
-      return;
-    }
 
     $widget_element =& $form[$field_name][$langcode];
 

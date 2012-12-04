@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\EditorAttacher.
+ * Contains \Drupal\edit\EditorAttacher.
  */
 
 namespace Drupal\edit;

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\edit\Plugin\ProcessedTextEditorInterface.
+ * Definition of \Drupal\edit\Plugin\ProcessedTextEditorInterface.
  */
 
 namespace Drupal\edit\Plugin;

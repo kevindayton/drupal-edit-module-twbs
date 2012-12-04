@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains of Drupal\edit\EditController.
+ * Contains of \Drupal\edit\EditController.
  */
 
 namespace Drupal\edit;
@@ -87,7 +87,7 @@ class EditController extends ContainerAware {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The Ajax response.
    */
-  public function getEditableText(EntityInterface $entity, $field_name, $langcode, $view_mode) {
+  public function getUntransformedText(EntityInterface $entity, $field_name, $langcode, $view_mode) {
     $response = new AjaxResponse();
 
     $output = field_view_field($entity->entityType(), $entity, $field_name, $view_mode, $langcode);

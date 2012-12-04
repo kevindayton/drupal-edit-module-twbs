@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\EditBundle.
+ * Contains \Drupal\edit\EditBundle.
  */
 
 namespace Drupal\edit;

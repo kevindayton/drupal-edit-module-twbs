@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\edit\Plugin\ProcessedTextEditorManager.
+ * Definition of \Drupal\edit\Plugin\ProcessedTextEditorManager.
  */
 
 namespace Drupal\edit\Plugin;
@@ -19,7 +19,7 @@ use Drupal\Core\Plugin\Discovery\CacheDecorator;
 class ProcessedTextEditorManager extends PluginManagerBase {
 
   /**
-   * Overrides Drupal\Component\Plugin\PluginManagerBase::__construct().
+   * Overrides \Drupal\Component\Plugin\PluginManagerBase::__construct().
    */
   public function __construct() {
     $this->discovery = new AnnotatedClassDiscovery('edit', 'processed_text_editor');

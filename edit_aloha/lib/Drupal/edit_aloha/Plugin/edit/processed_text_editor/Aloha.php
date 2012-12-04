@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\edit_aloha\Plugin\edit\processed_text_editor\Aloha.
+ * Definition of \Drupal\edit_aloha\Plugin\edit\processed_text_editor\Aloha.
  */
 
 namespace Drupal\edit_aloha\Plugin\edit\processed_text_editor;
@@ -27,14 +27,14 @@ use Drupal\Core\Annotation\Translation;
 class Aloha extends ProcessedTextEditorBase {
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::addJsSettings().
+   * Implements \Drupal\edit\Plugin\ProcessedTextEditorBase::addJsSettings().
    */
   function addJsSettings() {
     aloha_add_format_settings();
   }
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::checkFormatCompatibility().
+   * Implements \Drupal\edit\Plugin\ProcessedTextEditorBase::checkFormatCompatibility().
    */
   function checkFormatCompatibility($format_id) {
     return aloha_check_format_compatibility($format_id);

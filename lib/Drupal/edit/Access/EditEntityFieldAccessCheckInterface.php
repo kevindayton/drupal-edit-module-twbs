@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\Access\EditEntityFieldAccessCheckInterface.
+ * Contains \Drupal\edit\Access\EditEntityFieldAccessCheckInterface.
  */
 
 namespace Drupal\edit\Access;

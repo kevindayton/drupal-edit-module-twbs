@@ -107,7 +107,7 @@ function edit_library_info() {
       // Basic settings.
       array(
         'data' => array('edit' => array(
-          'fieldFormURL' => url('edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+          'fieldFormURL' => url('edit/form/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'rerenderProcessedTextURL' => url('edit/text/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'context' => 'body',
         )),

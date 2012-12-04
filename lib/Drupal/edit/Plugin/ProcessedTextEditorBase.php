@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Definition of Drupal\edit\Plugin\ProcessedTextPropertyBase.
+ * Definition of \Drupal\edit\Plugin\ProcessedTextPropertyBase.
  */
 
 namespace Drupal\edit\Plugin;
@@ -17,6 +18,12 @@ abstract class ProcessedTextEditorBase extends PluginBase implements ProcessedTe
    * Implements \Drupal\edit\Plugin\ProcessedTextEditorInterface::addJsSettings().
    */
   public function addJsSettings() {
+  }
+
+  /**
+   * Implements \Drupal\edit\Plugin\ProcessedTextEditorInterface::checkFormatCompatibility().
+   */
+  public function checkFormatCompatibility($format_id) {
   }
 
 }

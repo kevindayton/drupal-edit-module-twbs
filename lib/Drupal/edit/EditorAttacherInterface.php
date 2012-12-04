@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Contains Drupal\edit\EditorAttacherInterface.
+ * Contains \Drupal\edit\EditorAttacherInterface.
  */
 
 namespace Drupal\edit;
 
 /**
- * Interface for attaching an in-place editor to a field.
+ * Interface for attaching an in-place editor to an entity field.
  */
 interface EditorAttacherInterface {
 

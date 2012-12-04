@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\EditorSelector.
+ * Contains \Drupal\edit\EditorSelector.
  */
 
 namespace Drupal\edit;
@@ -79,7 +79,7 @@ class EditorSelector implements EditorSelectorInterface {
         if (isset($format_id)) {
           $wysiwyg_plugin = $this->getProcessedTextEditorPlugin();
           if (isset($wysiwyg_plugin) && $wysiwyg_plugin->checkFormatCompatibility($format_id)) {
-            // Yay! Even though the text is processed, there's a wysiwyg editor
+            // Yay! Even though the text is processed, there's a WYSIWYG editor
             // that can work with it.
             $editor = 'direct-with-wysiwyg';
           }
@@ -113,7 +113,7 @@ class EditorSelector implements EditorSelectorInterface {
    *
    * @todo The terminology here is confusing. 'direct-with-wysiwyg' is one of
    *   several possible "editor"s for processed text. When using it, we need to
-   *   integrate a particular wysiwyg editor, which in Create.js is called a
+   *   integrate a particular WYSIWYG editor, which in Create.js is called a
    *   "PropertyEditor widget", but we're not yet including "widget" in the name
    *   of ProcessedTextEditorInterface to minimize confusion with Field API
    *   widgets. So, we're currently refering to these as "plugins", which is

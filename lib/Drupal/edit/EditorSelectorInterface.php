@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\edit\EditorSelectorInterface.
+ * Contains \Drupal\edit\EditorSelectorInterface.
  */
 
 namespace Drupal\edit;
