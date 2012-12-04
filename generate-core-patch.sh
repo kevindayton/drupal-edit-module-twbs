@@ -18,15 +18,12 @@ COMMENTNR=$2
 mkdir $DRUPAL_DIR/core/modules/edit
 
 # Generate the patch for the Edit module.
-cp -R edit.info edit.module edit.*.inc css images js lib tests $DRUPAL_DIR/core/modules/edit/
+cp -R edit.info edit.module edit.*.yml css images js lib tests $DRUPAL_DIR/core/modules/edit/
 rm -rf $DRUPAL_DIR/core/modules/edit/js/build
 cp text.patch $DRUPAL_DIR/
-cp vie-and-create.patch $DRUPAL_DIR/
 cd $DRUPAL_DIR
 git apply text.patch
 rm text.patch
-git apply vie-and-create.patch
-rm vie-and-create.patch
 git add core/modules/edit
 git add core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter
 git add core/modules/system
