@@ -20,6 +20,11 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
 
   initialize: function(options) {
     this.appModel = options.appModel;
+
+    var that = this;
+    this.appModel.on('change:isViewing', function() {
+      that.navigate(that.appModel.get('isViewing') ? '#view' : '#edit');
+    });
   },
 
   edit: function() {
@@ -40,7 +45,7 @@ Drupal.edit.routers.EditRouter = Backbone.Router.extend({
           that.appModel.set('isViewing', true);
         }
         else {
-          that.navigate('#edit');
+          that.appModel.set('isViewing', false);
         }
       });
     }
