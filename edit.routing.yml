@@ -1,0 +1,13 @@
+edit_field_form:
+  pattern: '/edit/field/{entity_type}/{entity}/{field_name}/{langcode}/{view_mode}'
+  defaults:
+    _controller: '\Drupal\edit\EditController::fieldForm'
+  requirements:
+    _access_edit_entity_field: 'TRUE'
+
+edit_text:
+  pattern: '/edit/text/{entity_type}/{entity}/{field_name}/{langcode}/{view_mode}'
+  defaults:
+    _controller: '\Drupal\edit\EditController::getEditableText'
+  requirements:
+    _access_edit_entity_field: 'TRUE'

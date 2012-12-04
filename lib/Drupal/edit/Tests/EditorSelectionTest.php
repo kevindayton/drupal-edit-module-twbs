@@ -8,12 +8,21 @@
 namespace Drupal\edit\Tests;
 
 use Drupal\simpletest\DrupalUnitTestBase;
+use Drupal\edit\Plugin\ProcessedTextEditorManager;
+use Drupal\edit\EditorSelector;
 
 /**
  * Test in-place field editor selection.
  */
 class EditorSelectionTest extends DrupalUnitTestBase {
   var $default_storage = 'field_sql_storage';
+
+  /**
+   * The editor selector object to be tested.
+   *
+   * @var \Drupal\edit\EditorSelectorInterface
+   */
+  protected $editorSelector;
 
   /**
    * Modules to enable.
@@ -41,6 +50,13 @@ class EditorSelectionTest extends DrupalUnitTestBase {
 
     // Set default storage backend.
     variable_set('field_storage_default', $this->default_storage);
+
+    // @todo Rather than using the real ProcessedTextEditorManager, which can
+    //   find all text editor plugins in the codebase, create a mock one for
+    //   testing that is populated with only the ones we want to test.
+    $text_editor_manager = new ProcessedTextEditorManager();
+
+    $this->editorSelector = new EditorSelector($text_editor_manager);
   }
 
   /**
@@ -104,7 +120,7 @@ class EditorSelectionTest extends DrupalUnitTestBase {
    */
   function getSelectedEditor($items, $field_name, $display = 'default') {
     $field_instance = field_info_instance('test_entity', $field_name, 'test_bundle');
-    return _edit_get_field_editor($items, $field_instance, $field_instance['display'][$display]['type']);
+    return $this->editorSelector->getEditor($field_instance['display'][$display]['type'], $field_instance, $items);
   }
 
   /**

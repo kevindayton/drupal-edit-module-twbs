@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Definition of Drupal\edit\Plugin\Type\ProcessedTextEditorManager.
+ * Definition of Drupal\edit\Plugin\ProcessedTextEditorManager.
  */
 
-namespace Drupal\edit\Plugin\Type;
+namespace Drupal\edit\Plugin;
 
 use Drupal\Component\Plugin\PluginManagerBase;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
