@@ -76,39 +76,9 @@ function edit_toolbar() {
       ),
     ),
     'tray' => array(
-      '#heading' => t('In-place editing operations'),
-      'view_edit_toggle' => array(
-        '#theme' => 'links__toolbar_edit',
-        '#attributes' => array(
-          'id' => 'edit_view-edit-toggles',
-          'class' => 'menu',
-        ),
-        '#links' => array(
-          'view' => array(
-            'title' => t('View'),
-            'href' => request_path(),
-            'fragment' => 'view',
-            'attributes' => array(
-              'title' => t('Exit quick edit mode.'),
-              'role' => 'button',
-              'class' => array('edit_view-edit-toggle', 'edit-view'),
-            ),
-          ),
-          'edit' => array(
-            'title' => t('Quick edit'),
-            'href' => request_path(),
-            'fragment' => 'quick-edit',
-            'attributes' => array(
-              'title' => t('Enter quick edit mode.'),
-              'role' => 'button',
-              'class' => array('edit_view-edit-toggle', 'edit-edit'),
-            ),
-          ),
-        ),
-        '#attached' => array(
-          'library' => array(
-            array('edit', 'edit'),
-          ),
+      '#attached' => array(
+        'library' => array(
+          array('edit', 'edit'),
         ),
       ),
     ),
