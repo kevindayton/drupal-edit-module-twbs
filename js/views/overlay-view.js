@@ -26,6 +26,7 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
     // Add the overlay to the page.
     this.$el
       .addClass('edit-animate-slow edit-animate-invisible')
+      .hide()
       .appendTo('body');
   },
 
@@ -64,6 +65,7 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
    */
   render: function () {
     this.$el
+      .show()
       .css('top', $('#navbar').outerHeight())
       .removeClass('edit-animate-invisible');
   },
@@ -72,7 +74,12 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
    * Hide the overlay element.
    */
   remove: function () {
-    this.$el.addClass('edit-animate-invisible');
+    var that = this;
+    this.$el
+      .addClass('edit-animate-invisible')
+      .on(Drupal.edit.util.constants.transitionEnd, function (event) {
+        that.$el.hide();
+      });
   }
 });
 
