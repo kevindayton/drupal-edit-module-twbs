@@ -44,7 +44,7 @@ Drupal.behaviors.edit = {
 Drupal.edit.init = function() {
   // Append a messages element for appending interaction updates for screen
   // readers.
-  $messages = $(Drupal.theme('editMessageBox')).appendTo(this);
+  $messages = $(Drupal.theme('editMessageBox')).appendTo($(this).parent());
   // Instantiate EditAppView, which is the controller of it all. EditAppModel
   // instance tracks global state (viewing/editing in-place).
   var appModel = new Drupal.edit.models.EditAppModel();

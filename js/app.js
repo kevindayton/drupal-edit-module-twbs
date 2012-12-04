@@ -132,7 +132,7 @@
         this._manageDocumentFocus();
         Drupal.edit.setMessage(Drupal.t('In place edit mode is active'), Drupal.t('Page navigation is limited to editable items.'), Drupal.t('Press escape to exit'));
       }
-      else {
+      else if (newState === 'inactive') {
         this._releaseDocumentFocusManagement();
         Drupal.edit.setMessage(Drupal.t('Edit mode is inactive.'), Drupal.t('Resume normal page navigation'));
       }
@@ -415,7 +415,7 @@
           'tabindex': 0,
           'role': 'button'
         });
-      // Store the first editable in the set.
+      // Instantiate a variable to hold the editable element in the set.
       var $currentEditable;
       // We're using simple function scope to manage 'this' for the internal
       // handler, so save this as that.
@@ -453,7 +453,7 @@
         if (event.keyCode === 9) {
           var context = '';
           // Include the view mode toggle with the editables selector.
-          var selector = editablesSelector + ', .edit_view-edit-toggle.edit-view';
+          var selector = editablesSelector + ', #toolbar-tab-edit';
           activeEditor = that.model.get('activeEditor');
           var $confirmDialog = $('#edit_modal');
           // If the edit modal is active, that is the tabbing context.
@@ -469,7 +469,7 @@
           else if (activeEditor) {
             context = $(activeEditor.$formContainer).add(activeEditor.toolbarView.$el);
             // Include the view mode toggle with the editables selector.
-            selector = inputsSelector + ', .edit_view-edit-toggle.edit-view';
+            selector = inputsSelector;
             if (!$currentEditable || $currentEditable.is(editablesSelector)) {
               $currentEditable = $(selector, context).eq(-1);
             }
@@ -481,7 +481,6 @@
           }
           var count = $editables.length - 1;
           var index = $editables.index($currentEditable);
-          console.log(index + " of " + count);
           // Navigate backwards.
           if (event.shiftKey) {
             // Beginning of the set, loop to the end.
@@ -514,13 +513,15 @@
           event.stopPropagation();
         }
       });
+      // Set focus on the edit button initially.
+      $('#toolbar-tab-edit').focus();
     },
     /**
      * Removes key management and edit accessibility features from the DOM.
      */
     _releaseDocumentFocusManagement: function () {
       $(document).off('keydown.edit');
-      $('.edit-candidate.edit-editable').removeAttr('tabindex role');
+      $('.edit-allowed.edit-field').removeAttr('tabindex role');
     }
   });
 

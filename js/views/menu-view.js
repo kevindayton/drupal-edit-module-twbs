@@ -45,7 +45,9 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
   stateChange: function() {
     var isViewing = this.model.get('isViewing');
     // Toggle the state of the Toolbar Edit tab based on the isViewing state.
-    this.$el.find('#toolbar-tab-edit').toggleClass('active', !isViewing);
+    this.$el.find('#toolbar-tab-edit')
+      .toggleClass('active', !isViewing)
+      .attr('aria-pressed', !isViewing);
     // Manage the toolbar state until
     // https://drupal.org/node/1847198 is resolved
     if (!isViewing) {
