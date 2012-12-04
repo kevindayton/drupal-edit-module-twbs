@@ -317,8 +317,8 @@
         Drupal.edit.setMessage(Drupal.t('An editor is active'));
       }
       else if (this.model.get('activeEditor') === editor && to === 'candidate') {
-        // Discarded if it transits from 'candidate' to 'changed'.
-        if (from == 'changed') {
+        // Discarded if it transitions from a changed state to 'candidate'.
+        if (from === 'changed' || from === 'invalid') {
           // Retrieve the storage widget from DOM.
           var createStorageWidget = this.$el.data('createStorage');
           // Revert changes in the model, this will trigger the direct editable
