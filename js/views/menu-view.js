@@ -59,6 +59,10 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
         .not('#toolbar-tab-edit')
         .add('.tray', '#toolbar-administration')
         .removeClass('active');
+      // Set the height of the toolbar.
+      if ('toolbar' in Drupal) {
+        Drupal.toolbar.setHeight();
+      }
     }
   },
   /**
