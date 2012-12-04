@@ -79,6 +79,6 @@ Drupal.edit.setMessage = function(message) {
   var args = Array.prototype.slice.call(arguments);
   args.unshift('editMessage');
   $messages.html(Drupal.theme.apply(this, args));
-}
+};
 
 })(jQuery, Backbone, Drupal);

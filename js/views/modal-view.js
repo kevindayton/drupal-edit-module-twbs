@@ -48,10 +48,7 @@ Drupal.edit.views.ModalView = Backbone.View.extend({
     this.$elementsToHide = $([])
       .add((editor.element.hasClass('edit-belowoverlay')) ? null : editor.element)
       .add(editor.toolbarView.$el)
-      .add((editor.options.editorName === 'form')
-        ? editor.$formContainer
-        : editor.element.next('.edit-validation-errors')
-      );
+      .add((editor.options.editorName === 'form') ? editor.$formContainer : editor.element.next('.edit-validation-errors'));
     this.$elementsToHide.addClass('edit-belowoverlay');
 
     // Step 2: the modal. When the user makes a choice, the UI elements that
