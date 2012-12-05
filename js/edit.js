@@ -378,6 +378,10 @@ Drupal.edit.editables = {
   _wysiwygify: function($editable) {
     var $field = Drupal.edit.findFieldForEditable($editable);
     $editable.addClass('edit-wysiwyg-attached');
+    // Let the custom Aloha Editor UI for Drupal know that it should
+    // render the Aloha Editor toolbar into Edit's toolbar.
+    $editable.attr('data-edit-aloha-toolbar-custom-location', 'true');
+
     var formatID = $field.attr('data-edit-text-format');
     var format = Drupal.settings.aloha.formats[formatID];
     Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].attach($editable, format);

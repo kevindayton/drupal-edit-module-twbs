@@ -28,7 +28,7 @@ function edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_na
   }
   // When the text format uses >=1 filters that generate HTML, disallow direct
   // editing, and fall back to form-based editing.
-  elseif (in_array(FILTER_TYPE_HTML_GENERATOR, filter_get_filter_types_by_format($format_id))) {
+  elseif (in_array(FILTER_TYPE_MARKUP_LANGUAGE, filter_get_filter_types_by_format($format_id))) {
     return 'form';
   }
   else {

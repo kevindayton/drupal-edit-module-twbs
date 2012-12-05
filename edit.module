@@ -189,7 +189,7 @@ function edit_field_attach_view_alter(&$output, $context) {
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
       $format_id = $output[$field]['#items'][$item]['format'];
-      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
+      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE));
       $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
     }
   }
@@ -573,7 +573,7 @@ function edit_preprocess_field(&$variables) {
       // Let the JavaScript logic know whether transformation filters are used
       // in this format, so it can decide whether to re-render the text or not.
       $filter_types = filter_get_filter_types_by_format($format_id);
-      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types))) {
+      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE), $filter_types))) {
         $variables['classes_array'][] = 'edit-text-with-transformation-filters';
       }
       else {
