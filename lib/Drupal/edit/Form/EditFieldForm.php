@@ -7,6 +7,8 @@
 
 namespace Drupal\edit\Form;
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Builds and process a form for editing a single entity field.
  */
@@ -50,7 +52,41 @@ class EditFieldForm {
    */
   public function submit(array $form, array &$form_state) {
     $form_state['entity'] = $this->buildEntity($form, $form_state);
+    $this->applyDefaultRevisioning($form_state['entity'], $form_state['field_name']);
     $form_state['entity']->save();
+  }
+
+  /**
+   * Applies the default revision setting to an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface &$entity
+   *   The entity to be updated with the default revision setting.
+   * @param string $field_name
+   *   The name of the field that is being edited. For use in a log message.
+   *
+   * @todo Improve when the node module doesn't have any special cases anymore.
+   */
+  protected function applyDefaultRevisioning(EntityInterface &$entity, $field_name) {
+    $create_revision = FALSE;
+
+    switch ($entity->entityType()) {
+      case 'node':
+        $node_options = variable_get('node_options_' . $entity->bundle(), array('status', 'promote'));
+        $create_revision = in_array('revision', $node_options);
+        break;
+
+      default:
+        $entity_info = entity_get_info($entity->entityType());
+        $create_revision = !empty($entity_info['revision table']);
+        break;
+    }
+
+    $entity->setNewRevision($create_revision);
+    $entity->revision = $create_revision;
+    if ($create_revision) {
+      $instance = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
+      $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
+    }
   }
 
   /**
