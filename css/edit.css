@@ -87,7 +87,10 @@
 .toolbar .icon-edit.edit-nothing-editable-hidden {
   display: none;
 }
-
+/* In-place editing doesn't work in the overlay, so always hide the tab. */
+.overlay-open .toolbar .icon-edit {
+  display: none;
+}
 
 
 
