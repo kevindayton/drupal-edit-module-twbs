@@ -40,10 +40,6 @@ function edit_permission() {
  * Implements hook_toolbar().
  */
 function edit_toolbar() {
-  if (path_is_admin(current_path())) {
-    return;
-  }
-
   $tab['edit'] = array(
     'tab' => array(
       'title' => t('Edit'),
