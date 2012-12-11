@@ -38,11 +38,9 @@ class EditController extends ContainerAware {
     $response = new AjaxResponse();
 
     $form_state = array(
-      'entity' => $entity,
-      'field_name' => $field_name,
       'langcode' => $langcode,
       'no_redirect' => TRUE,
-      'build_info' => array('args' => array()),
+      'build_info' => array('args' => array($entity, $field_name)),
     );
     $form = drupal_build_form('edit_field_form', $form_state);
 

@@ -11,6 +11,7 @@
  * entities, enabling them for in-place editing.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\edit\Form\EditFieldForm;
 
 /**
@@ -143,7 +144,7 @@ function edit_preprocess_field(&$variables) {
  *
  * @ingroup forms
  */
-function edit_field_form(array $form, array &$form_state) {
+function edit_field_form(array $form, array &$form_state, EntityInterface $entity, $field_name) {
   $form_handler = new EditFieldForm();
-  return $form_handler->build($form, $form_state);
+  return $form_handler->build($form, $form_state, $entity, $field_name);
 }

@@ -17,7 +17,11 @@ class EditFieldForm {
   /**
    * Builds a form for a single entity field.
    */
-  public function build(array $form, array &$form_state) {
+  public function build(array $form, array &$form_state, EntityInterface $entity, $field_name) {
+    if (!isset($form_state['entity'])) {
+      $this->init($form_state, $entity, $field_name);
+    }
+
     // Add the field form.
     field_attach_form($form_state['entity']->entityType(), $form_state['entity'], $form, $form_state, $form_state['langcode'], array('field_name' =>  $form_state['field_name']));
 
@@ -40,6 +44,21 @@ class EditFieldForm {
   }
 
   /**
+   * Initialize the form state and the entity before the first form build.
+   */
+  protected function init(array &$form_state, EntityInterface $entity, $field_name) {
+    // @todo Rather than special-casing $node->revision, invoke prepareEdit()
+    //   once http://drupal.org/node/1863258 lands.
+    if ($entity->entityType() == 'node') {
+      $entity->setNewRevision(in_array('revision', variable_get('node_options_' . $entity->bundle(), array())));
+      $entity->log = NULL;
+    }
+
+    $form_state['entity'] = $entity;
+    $form_state['field_name'] = $field_name;
+  }
+
+  /**
    * Validates the form.
    */
   public function validate(array $form, array &$form_state) {
@@ -52,41 +71,7 @@ class EditFieldForm {
    */
   public function submit(array $form, array &$form_state) {
     $form_state['entity'] = $this->buildEntity($form, $form_state);
-    $this->applyDefaultRevisioning($form_state['entity'], $form_state['field_name']);
     $form_state['entity']->save();
-  }
-
-  /**
-   * Applies the default revision setting to an entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface &$entity
-   *   The entity to be updated with the default revision setting.
-   * @param string $field_name
-   *   The name of the field that is being edited. For use in a log message.
-   *
-   * @todo Improve when the node module doesn't have any special cases anymore.
-   */
-  protected function applyDefaultRevisioning(EntityInterface &$entity, $field_name) {
-    $create_revision = FALSE;
-
-    switch ($entity->entityType()) {
-      case 'node':
-        $node_options = variable_get('node_options_' . $entity->bundle(), array('status', 'promote'));
-        $create_revision = in_array('revision', $node_options);
-        break;
-
-      default:
-        $entity_info = entity_get_info($entity->entityType());
-        $create_revision = !empty($entity_info['revision table']);
-        break;
-    }
-
-    $entity->setNewRevision($create_revision);
-    $entity->revision = $create_revision;
-    if ($create_revision) {
-      $instance = field_info_instance($entity->entityType(), $field_name, $entity->bundle());
-      $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
-    }
   }
 
   /**
@@ -102,6 +87,13 @@ class EditFieldForm {
     //   object, not to anywhere persistent. Consider renaming it to minimize
     //   confusion: http://drupal.org/node/1846648.
     field_attach_submit($entity->entityType(), $entity, $form, $form_state, array('field_name' =>  $form_state['field_name']));
+
+    // @todo Refine automated log messages and abstract them to all entity
+    //   types: http://drupal.org/node/1678002.
+    if ($entity->entityType() == 'node' && $entity->isNewRevision() && !isset($entity->log)) {
+      $instance = field_info_instance($entity->entityType(), $form_state['field_name'], $entity->bundle());
+      $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
+    }
 
     return $entity;
   }
