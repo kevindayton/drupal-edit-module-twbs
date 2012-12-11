@@ -21,9 +21,12 @@ mkdir $DRUPAL_DIR/core/modules/edit
 cp -R edit.info edit.module edit.*.yml css images js lib tests $DRUPAL_DIR/core/modules/edit/
 rm -rf $DRUPAL_DIR/core/modules/edit/js/build
 cp text.patch $DRUPAL_DIR/
+cp standard-profile.patch $DRUPAL_DIR/
 cd $DRUPAL_DIR
 git apply text.patch
 rm text.patch
+git apply standard-profile.patch
+rm standard-profile.patch
 git add core/modules/edit
 git add core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter
 git add core/modules/system
