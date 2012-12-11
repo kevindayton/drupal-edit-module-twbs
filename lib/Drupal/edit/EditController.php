@@ -8,8 +8,11 @@
 namespace Drupal\edit;
 
 use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\edit\Access\EditEntityFieldAccessCheckInterface;
 use Drupal\edit\Ajax\FieldFormCommand;
 use Drupal\edit\Ajax\FieldFormSavedCommand;
 use Drupal\edit\Ajax\FieldFormValidationErrorsCommand;
@@ -19,6 +22,54 @@ use Drupal\edit\Ajax\FieldRenderedWithoutTransformationFiltersCommand;
  * Returns responses for Edit module routes.
  */
 class EditController extends ContainerAware {
+
+  /**
+   * Determines which fields a user may edit.
+   *
+   * Given a list of field edit IDs as POST parameters, run access checks on the
+   * entity and field level to determine whether the current user may edit them.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The JSON response.
+   */
+  public function access() {
+    if (!isset($_POST['fields'])) {
+      throw new NotFoundHttpException();
+    }
+    $fields = $_POST['fields'];
+    $accessChecker = drupal_container()->get('access_check.edit.entity_field');
+
+    $results = array();
+    foreach ($fields as $field) {
+      list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode(':', $field);
+
+      // Load the entity.
+      if (!$entity_type || !entity_get_info($entity_type)) {
+        throw new NotFoundHttpException();
+      }
+      $entity = entity_load($entity_type, $entity_id);
+      if (!$entity) {
+        throw new NotFoundHttpException();
+      }
+
+      // Validate the field name and language.
+      if (!$field_name || !field_info_instance($entity->entityType(), $field_name, $entity->bundle())) {
+        throw new NotFoundHttpException();
+      }
+      if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
+        throw new NotFoundHttpException();
+      }
+
+      if ($accessChecker->accessEditEntityField($entity, $field_name)) {
+        $results[$field] = TRUE;
+      }
+      else {
+       $results[$field] = FALSE;
+      }
+    }
+
+    return new JsonResponse($results);
+  }
 
   /**
    * Returns a single field edit form as an Ajax response.

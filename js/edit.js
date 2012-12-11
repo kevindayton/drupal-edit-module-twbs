@@ -2,7 +2,7 @@
  * @file
  * Behaviors for Edit, including the one that initializes Edit's EditAppView.
  */
-(function ($, Backbone, Drupal) {
+(function ($, _, Backbone, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -17,6 +17,7 @@
 var $messages;
 
 Drupal.edit = Drupal.edit || {};
+Drupal.edit.accessCache = Drupal.edit.accessCache || {};
 
 /**
  * Attach toggling behavior and in-place editing.
@@ -24,19 +25,66 @@ Drupal.edit = Drupal.edit || {};
 Drupal.behaviors.edit = {
   attach: function(context) {
     var $context = $(context);
+    var $fields = $context.find('.edit-field');
 
     // Initialize the Edit app.
     $context.find('#toolbar-tab-edit').once('edit-init', Drupal.edit.init);
 
-    // As soon as there is at least one editable property, show the Edit tab in
-    // the toolbar.
-    if ($context.find('.edit-field.edit-allowed').length) {
-      $('.toolbar .icon-edit.edit-nothing-editable-hidden').removeClass('edit-nothing-editable-hidden');
-    }
+    var annotateFieldAccess = function(field) {
+      if (_.has(Drupal.edit.accessCache, field.editID)) {
+        var access = Drupal.edit.accessCache[field.editID];
+        field.$el.addClass((access) ? 'edit-allowed' : 'edit-disallowed');
+        return true;
+      }
+      return false;
+    };
 
-    // Find editable properties, make them editable.
-    if (Drupal.edit.app) {
-      Drupal.edit.app.findEditableProperties($context);
+    // Find all fields in the context without access metadata.
+    var fieldsToAnnotate = _.map($fields.not('.edit-allowed, .edit-disallowed'), function(el) {
+      var $el = $(el);
+      return { $el: $el, editID: $el.attr('data-edit-id') };
+    });
+
+    // Fields whose access is known (typically when they were just modified) can
+    // be annotated immediately, those remaining must be checked on the server.
+    var remainingFieldsToAnnotate = _.reduce(fieldsToAnnotate, function(result, field) {
+      if (!annotateFieldAccess(field)) {
+        result.push(field);
+      }
+      return result;
+    }, []);
+
+    // Make fields that could be annotated immediately available for editing.
+    Drupal.edit.app.findEditableProperties($context);
+
+    if (remainingFieldsToAnnotate.length) {
+      $(function() {
+        $.ajax({
+          url: drupalSettings.edit.accessURL,
+          type: 'POST',
+          data: { 'fields[]' : _.pluck(remainingFieldsToAnnotate, 'editID') },
+          dataType: 'json',
+          success: function(results) {
+            // Update the access cache.
+            _.each(results, function(access, editID) {
+              Drupal.edit.accessCache[editID] = access;
+            });
+
+            // Annotate the remaining fields based on the updated access cache.
+            _.each(remainingFieldsToAnnotate, annotateFieldAccess);
+
+            // As soon as there is at least one editable field, show the Edit
+            // tab in the toolbar.
+            if ($fields.filter('.edit-allowed').length) {
+              $('.toolbar .icon-edit.edit-nothing-editable-hidden')
+                .removeClass('edit-nothing-editable-hidden');
+            }
+
+            // Find editable fields, make them editable.
+            Drupal.edit.app.findEditableProperties($context);
+          }
+        });
+      });
     }
   }
 };
@@ -81,4 +129,4 @@ Drupal.edit.setMessage = function(message) {
   $messages.html(Drupal.theme.apply(this, args));
 };
 
-})(jQuery, Backbone, Drupal);
+})(jQuery, _, Backbone, Drupal, drupalSettings);

@@ -30,7 +30,6 @@ class EditBundle extends Bundle {
       ->addArgument(new Reference('plugin.manager.edit.processed_text_editor'));
 
     $container->register('edit.editor.attacher', 'Drupal\edit\EditorAttacher')
-      ->addArgument(new Reference('access_check.edit.entity_field'))
       ->addArgument(new Reference('edit.editor.selector'));
   }
 

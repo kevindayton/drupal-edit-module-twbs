@@ -41,6 +41,10 @@ function edit_permission() {
  * Implements hook_toolbar().
  */
 function edit_toolbar() {
+  if (!user_access('access in-place editing')) {
+    return;
+  }
+
   $tab['edit'] = array(
     'tab' => array(
       'title' => t('Edit'),
@@ -104,6 +108,7 @@ function edit_library_info() {
       // Basic settings.
       array(
         'data' => array('edit' => array(
+          'accessURL' => url('edit/access'),
           'fieldFormURL' => url('edit/form/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'rerenderProcessedTextURL' => url('edit/text/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'context' => 'body',
@@ -134,9 +139,7 @@ function edit_library_info() {
  * Implements hook_preprocess_HOOK() for field.tpl.php.
  */
 function edit_preprocess_field(&$variables) {
-  if (user_access('access in-place editing')) {
-    drupal_container()->get('edit.editor.attacher')->preprocessField($variables);
-  }
+  drupal_container()->get('edit.editor.attacher')->preprocessField($variables);
 }
 
 /**
