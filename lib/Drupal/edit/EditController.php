@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\edit\Access\EditEntityFieldAccessCheckInterface;
 use Drupal\edit\Ajax\FieldFormCommand;
 use Drupal\edit\Ajax\FieldFormSavedCommand;
 use Drupal\edit\Ajax\FieldFormValidationErrorsCommand;
@@ -24,22 +23,23 @@ use Drupal\edit\Ajax\FieldRenderedWithoutTransformationFiltersCommand;
 class EditController extends ContainerAware {
 
   /**
-   * Determines which fields a user may edit.
+   * Returns the metadata for a set of fields.
    *
    * Given a list of field edit IDs as POST parameters, run access checks on the
    * entity and field level to determine whether the current user may edit them.
+   * Also retrieves other metadata.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The JSON response.
    */
-  public function access() {
+  public function metadata() {
     if (!isset($_POST['fields'])) {
       throw new NotFoundHttpException();
     }
     $fields = $_POST['fields'];
-    $accessChecker = drupal_container()->get('access_check.edit.entity_field');
+    $metadataGenerator = drupal_container()->get('edit.metadata.generator');
 
-    $results = array();
+    $metadata = array();
     foreach ($fields as $field) {
       list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode(':', $field);
 
@@ -53,22 +53,17 @@ class EditController extends ContainerAware {
       }
 
       // Validate the field name and language.
-      if (!$field_name || !field_info_instance($entity->entityType(), $field_name, $entity->bundle())) {
+      if (!$field_name || !($instance = field_info_instance($entity->entityType(), $field_name, $entity->bundle()))) {
         throw new NotFoundHttpException();
       }
       if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
         throw new NotFoundHttpException();
       }
 
-      if ($accessChecker->accessEditEntityField($entity, $field_name)) {
-        $results[$field] = TRUE;
-      }
-      else {
-       $results[$field] = FALSE;
-      }
+      $metadata[$field] = $metadataGenerator->generate($entity, $instance, $langcode, $view_mode);
     }
 
-    return new JsonResponse($results);
+    return new JsonResponse($metadata);
   }
 
   /**

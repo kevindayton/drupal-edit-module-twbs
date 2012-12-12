@@ -1,7 +1,7 @@
-edit_access:
-  pattern: '/edit/access'
+edit_metadata:
+  pattern: '/edit/metadata'
   defaults:
-    _controller: '\Drupal\edit\EditController::access'
+    _controller: '\Drupal\edit\EditController::metadata'
   requirements:
     _permission: 'access in-place editing'
 

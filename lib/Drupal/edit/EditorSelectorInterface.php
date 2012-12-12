@@ -43,4 +43,13 @@ interface EditorSelectorInterface {
    */
   public function getEditor($formatter_type, FieldInstance $instance, array $items);
 
+  /**
+   * Returns the attachments for all editors.
+   *
+   * @return array
+   *   An array of attachments, for use with #attached.
+   *
+   * @see drupal_process_attached()
+   */
+  public function getAllEditorAttachments();
 }

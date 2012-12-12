@@ -17,7 +17,7 @@
 var $messages;
 
 Drupal.edit = Drupal.edit || {};
-Drupal.edit.accessCache = Drupal.edit.accessCache || {};
+Drupal.edit.metadataCache = Drupal.edit.metadataCache || {};
 
 /**
  * Attach toggling behavior and in-place editing.
@@ -25,30 +25,42 @@ Drupal.edit.accessCache = Drupal.edit.accessCache || {};
 Drupal.behaviors.edit = {
   attach: function(context) {
     var $context = $(context);
-    var $fields = $context.find('.edit-field');
+    var $fields = $context.find('[data-edit-id]');
 
     // Initialize the Edit app.
     $context.find('#toolbar-tab-edit').once('edit-init', Drupal.edit.init);
 
-    var annotateFieldAccess = function(field) {
-      if (_.has(Drupal.edit.accessCache, field.editID)) {
-        var access = Drupal.edit.accessCache[field.editID];
-        field.$el.addClass((access) ? 'edit-allowed' : 'edit-disallowed');
+    var annotateField = function(field) {
+      if (_.has(Drupal.edit.metadataCache, field.editID)) {
+        var meta = Drupal.edit.metadataCache[field.editID];
+        field.$el
+          .attr('data-edit-field-label', meta.label)
+          .attr('aria-label', meta.aria)
+          .addClass('edit-field edit-type-' + meta.editor)
+          .addClass((meta.access) ? 'edit-allowed' : 'edit-disallowed');
+        if (meta.editor === 'direct-with-wysiwyg') {
+          field.$el
+            // This editor also uses the Backbone.syncDirect saving mechanism.
+            .addClass('edit-type-direct')
+            .attr('data-edit-text-format', meta.format)
+            .addClass((meta.formatHasTransformations) ? 'edit-text-with-transformation-filters' : 'edit-text-without-transformation-filters');
+        }
+
         return true;
       }
       return false;
     };
 
-    // Find all fields in the context without access metadata.
+    // Find all fields in the context without metadata.
     var fieldsToAnnotate = _.map($fields.not('.edit-allowed, .edit-disallowed'), function(el) {
       var $el = $(el);
       return { $el: $el, editID: $el.attr('data-edit-id') };
     });
 
-    // Fields whose access is known (typically when they were just modified) can
-    // be annotated immediately, those remaining must be checked on the server.
+    // Fields whose metadata is known (typically when they were just modified)
+    // can be annotated immediately, those remaining must be requested.
     var remainingFieldsToAnnotate = _.reduce(fieldsToAnnotate, function(result, field) {
-      if (!annotateFieldAccess(field)) {
+      if (!annotateField(field)) {
         result.push(field);
       }
       return result;
@@ -58,20 +70,20 @@ Drupal.behaviors.edit = {
     Drupal.edit.app.findEditableProperties($context);
 
     if (remainingFieldsToAnnotate.length) {
-      $(function() {
+      $(window).ready(function() {
         $.ajax({
-          url: drupalSettings.edit.accessURL,
+          url: drupalSettings.edit.metadataURL,
           type: 'POST',
           data: { 'fields[]' : _.pluck(remainingFieldsToAnnotate, 'editID') },
           dataType: 'json',
           success: function(results) {
-            // Update the access cache.
-            _.each(results, function(access, editID) {
-              Drupal.edit.accessCache[editID] = access;
+            // Update the metadata cache.
+            _.each(results, function(metadata, editID) {
+              Drupal.edit.metadataCache[editID] = metadata;
             });
 
             // Annotate the remaining fields based on the updated access cache.
-            _.each(remainingFieldsToAnnotate, annotateFieldAccess);
+            _.each(remainingFieldsToAnnotate, annotateField);
 
             // As soon as there is at least one editable field, show the Edit
             // tab in the toolbar.

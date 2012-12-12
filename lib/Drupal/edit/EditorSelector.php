@@ -101,6 +101,39 @@ class EditorSelector implements EditorSelectorInterface {
   }
 
   /**
+   * Implements \Drupal\edit\EditorSelectorInterface::getAllEditorAttachments().
+   */
+  public function getAllEditorAttachments() {
+    $this->getProcessedTextEditorPlugin();
+    if (!isset($this->processedTextEditorPlugin)) {
+      return array();
+    }
+
+    $js = array();
+
+    // Add library and settings for the selected processed text editor plugin.
+    $definition = $this->processedTextEditorPlugin->getDefinition();
+    if (!empty($definition['library'])) {
+      $js['library'][] = array($definition['library']['module'], $definition['library']['name']);
+    }
+    $this->processedTextEditorPlugin->addJsSettings();
+
+    // Also add the setting to register it with Create.js
+    if (!empty($definition['propertyEditorName'])) {
+      $js['js'][] = array(
+        'data' => array(
+          'edit' => array(
+            'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
+          ),
+        ),
+        'type' => 'setting'
+      );
+    }
+
+    return $js;
+  }
+
+  /**
    * Returns the plugin to use for the 'direct-with-wysiwyg' editor.
    *
    * @return \Drupal\edit\Plugin\ProcessedTextEditorInterface
@@ -127,24 +160,6 @@ class EditorSelector implements EditorSelectorInterface {
         $plugin_ids = array_keys($definitions);
         $plugin_id = $plugin_ids[0];
         $this->processedTextEditorPlugin = $this->processedTextEditorManager->createInstance($plugin_id);
-
-        // Add JavaScript required by this plugin, including the setting to
-        // register it with Create.js.
-        // @todo For compatibility with render caching, this should be done
-        //   with #attached rather than drupal_add_*() functions. However, this
-        //   is called from the context of edit_preprocess_field(), and
-        //   #attached does not bubble up from theme preprocess functions:
-        //   http://drupal.org/node/495968#comment-3639542.
-        $definition = $this->processedTextEditorPlugin->getDefinition();
-        if (!empty($definition['library'])) {
-          drupal_add_library($definition['library']['module'], $definition['library']['name']);
-        }
-        $this->processedTextEditorPlugin->addJsSettings();
-        if (!empty($definition['propertyEditorName'])) {
-          drupal_add_js(array('edit' => array(
-            'wysiwygEditorWidgetName' => $definition['propertyEditorName'],
-          )), 'setting');
-        }
       }
     }
     return $this->processedTextEditorPlugin;
