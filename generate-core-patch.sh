@@ -32,6 +32,7 @@ git add core/modules/text/lib/Drupal/text/Plugin/field/formatter
 git add core/modules/system
 git add core/misc/create
 git add core/misc/vie
+git add core/profiles
 git diff --staged --binary --patch-with-stat > $EDIT_DIR/$FILENAME-$COMMENTNR.patch
 git commit -m "edit module"
 cd $EDIT_DIR
