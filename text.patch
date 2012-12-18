@@ -4,59 +4,59 @@
  .../lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php |    3 +++
  4 files changed, 12 insertions(+)
 
-diff --git a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
-index 6b34ba9..85d2878 100644
---- a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
-+++ b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
+index 6b34ba9..72c9a8a 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
 @@ -23,6 +23,9 @@
   *     "text",
   *     "text_long",
   *     "text_with_summary"
 + *   },
 + *   edit = {
-+ *    "editor" = "direct"
++ *     "editor" = "direct"
   *   }
   * )
   */
-diff --git a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
-index 0f7b615..8dc4bf1 100644
---- a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
-+++ b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
+index 0f7b615..694c53f 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
 @@ -23,6 +23,9 @@
   *     "text",
   *     "text_long",
   *     "text_with_summary"
 + *   },
 + *   edit = {
-+ *    "editor" = "direct"
++ *     "editor" = "direct"
   *   }
   * )
   */
-diff --git a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
-index 11f0c14..c69e5e0 100644
---- a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
-+++ b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
+index 11f0c14..bb82254 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
 @@ -22,6 +22,9 @@
   *   },
   *   settings = {
   *     "trim_length" = "600"
 + *   },
 + *   edit = {
-+ *    "editor" = "form"
++ *     "editor" = "form"
   *   }
   * )
   */
-diff --git a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
-index 349cf63..add5d55 100644
---- a/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
-+++ b/core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
+index 349cf63..37709b5 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
 @@ -31,6 +31,9 @@
   *   },
   *   settings = {
   *     "trim_length" = "600"
 + *   },
 + *   edit = {
-+ *    "editor" = "form"
++ *     "editor" = "form"
   *   }
   * )
   */
