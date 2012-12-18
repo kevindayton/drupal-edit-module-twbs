@@ -28,7 +28,7 @@ rm text.patch
 git apply standard-profile.patch
 rm standard-profile.patch
 git add core/modules/edit
-git add core/modules/field/modules/text/lib/Drupal/text/Plugin/field/formatter
+git add core/modules/text/lib/Drupal/text/Plugin/field/formatter
 git add core/modules/system
 git add core/misc/create
 git add core/misc/vie
