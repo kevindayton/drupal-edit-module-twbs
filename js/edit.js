@@ -33,17 +33,20 @@ Drupal.behaviors.edit = {
     var annotateField = function(field) {
       if (_.has(Drupal.edit.metadataCache, field.editID)) {
         var meta = Drupal.edit.metadataCache[field.editID];
-        field.$el
-          .attr('data-edit-field-label', meta.label)
-          .attr('aria-label', meta.aria)
-          .addClass('edit-field edit-type-' + meta.editor)
-          .addClass((meta.access) ? 'edit-allowed' : 'edit-disallowed');
-        if (meta.editor === 'direct-with-wysiwyg') {
+
+        field.$el.addClass((meta.access) ? 'edit-allowed' : 'edit-disallowed');
+        if (meta.access) {
           field.$el
-            // This editor also uses the Backbone.syncDirect saving mechanism.
-            .addClass('edit-type-direct')
-            .attr('data-edit-text-format', meta.format)
-            .addClass((meta.formatHasTransformations) ? 'edit-text-with-transformation-filters' : 'edit-text-without-transformation-filters');
+            .attr('data-edit-field-label', meta.label)
+            .attr('aria-label', meta.aria)
+            .addClass('edit-field edit-type-' + meta.editor);
+          if (meta.editor === 'direct-with-wysiwyg') {
+            field.$el
+              // This editor also uses the Backbone.syncDirect saving mechanism.
+              .addClass('edit-type-direct')
+              .attr('data-edit-text-format', meta.format)
+              .addClass((meta.formatHasTransformations) ? 'edit-text-with-transformation-filters' : 'edit-text-without-transformation-filters');
+          }
         }
 
         return true;

@@ -50,6 +50,13 @@ class MetadataGenerator implements MetadataGeneratorInterface {
    */
   public function generate(EntityInterface $entity, FieldInstance $instance, $langcode, $view_mode) {
     $field_name = $instance['field_name'];
+
+    // Early-return if user does not have access.
+    $access = $this->accessChecker->accessEditEntityField($entity, $field_name);
+    if (!$access) {
+      return array('access' => FALSE);
+    }
+
     $label = $instance['label'];
     $formatter_id = $instance->getFormatter($view_mode)->getPluginId();
     $items = $entity->get($field_name);
@@ -57,7 +64,7 @@ class MetadataGenerator implements MetadataGeneratorInterface {
     $editor = $this->editorSelector->getEditor($formatter_id, $instance, $items);
     $metadata = array(
       'label' => $label,
-      'access' => $this->accessChecker->accessEditEntityField($entity, $field_name),
+      'access' => TRUE,
       'editor' => $editor,
       'aria' => t('Entity @type @id, field @field', array('@type' => $entity->entityType(), '@id' => $entity->id(), '@field' => $label)),
     );
