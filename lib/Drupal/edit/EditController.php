@@ -38,7 +38,7 @@ class EditController extends ContainerAware {
     if (!isset($fields)) {
       throw new NotFoundHttpException();
     }
-    $metadataGenerator = drupal_container()->get('edit.metadata.generator');
+    $metadataGenerator = $this->container->get('edit.metadata.generator');
 
     $metadata = array();
     foreach ($fields as $field) {
