@@ -9,6 +9,7 @@ namespace Drupal\edit;
 
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\EntityInterface;
@@ -32,11 +33,11 @@ class EditController extends ContainerAware {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The JSON response.
    */
-  public function metadata() {
-    if (!isset($_POST['fields'])) {
+  public function metadata(Request $request) {
+    $fields = $request->request->get('fields');
+    if (!isset($fields)) {
       throw new NotFoundHttpException();
     }
-    $fields = $_POST['fields'];
     $metadataGenerator = drupal_container()->get('edit.metadata.generator');
 
     $metadata = array();
