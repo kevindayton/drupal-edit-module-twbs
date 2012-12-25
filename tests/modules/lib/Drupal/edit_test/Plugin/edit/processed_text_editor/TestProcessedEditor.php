@@ -22,7 +22,7 @@ use Drupal\Core\Annotation\Translation;
 class TestProcessedEditor extends ProcessedTextEditorBase {
 
   /**
-   * Implements Drupal\edit\Plugin\ProcessedTextEditorBase::checkFormatCompatibility().
+   * Implements Drupal\edit\Plugin\ProcessedTextEditorInterface::checkFormatCompatibility().
    */
   function checkFormatCompatibility($format_id) {
     return state()->get('edit_test.compatible_format') == $format_id;

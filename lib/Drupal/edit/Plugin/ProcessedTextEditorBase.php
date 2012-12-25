@@ -16,14 +16,11 @@ abstract class ProcessedTextEditorBase extends PluginBase implements ProcessedTe
 
   /**
    * Implements \Drupal\edit\Plugin\ProcessedTextEditorInterface::addJsSettings().
+   *
+   * This base class provides an empty implementation for text editors that
+   * do not need to add JavaScript settings besides those added by the library.
    */
   public function addJsSettings() {
-  }
-
-  /**
-   * Implements \Drupal\edit\Plugin\ProcessedTextEditorInterface::checkFormatCompatibility().
-   */
-  public function checkFormatCompatibility($format_id) {
   }
 
 }
