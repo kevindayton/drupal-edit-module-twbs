@@ -18,7 +18,7 @@ function theme_edit_spanned_field($variables) {
 
   $attributes = drupal_attributes($variables['attributes']);
 
-  return '<span' . $attributes . '>' .  $variables['value'] . '</span>';
+  return '<span' . $attributes . '><span class="field-item">' .  $variables['value'] . '</span></span>';
 }
 
 /**

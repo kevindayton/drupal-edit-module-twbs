@@ -1,4 +1,10 @@
-(function($) {
+/**
+ * @file
+ * Provides overridable theme functions for all of Edit's client-side HTML.
+ */
+(function($, Drupal) {
+
+"use strict";
 
 /**
  * Theme function for the overlay of the Edit module.
@@ -20,13 +26,32 @@ Drupal.theme.editOverlay = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - None.
+ *   - id: the id to apply to the backstage.
  * @return
  *   The corresponding HTML.
  */
 Drupal.theme.editBackstage = function(settings) {
   var html = '';
-  html += '<div id="edit_backstage" />';
+  html += '<div id="' + settings.id + '" />';
+  return html;
+};
+
+/**
+ * Theme function for a modal of the Edit module.
+ *
+ * @param settings
+ *   An object with the following keys:
+ *   - None.
+ * @return
+ *   The corresponding HTML.
+ */
+Drupal.theme.editModal = function(settings) {
+  var classes = 'edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
+  var html = '';
+  html += '<div id="edit_modal" class="' + classes + '" role="dialog">';
+  html += '  <div class="main"><p></p></div>';
+  html += '  <div class="actions"></div>';
+  html += '</div>';
   return html;
 };
 
@@ -35,7 +60,7 @@ Drupal.theme.editBackstage = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  * @return
  *   The corresponding HTML.
  */
@@ -55,7 +80,8 @@ Drupal.theme.editToolbarContainer = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - classes: the class of the toolgroup
+ *   - id: (optional) the id of the toolgroup
+ *   - classes: the class of the toolgroup.
  *   - buttons: @see Drupal.theme.prototype.editButtons().
  * @return
  *   The corresponding HTML.
@@ -63,7 +89,11 @@ Drupal.theme.editToolbarContainer = function(settings) {
 Drupal.theme.editToolgroup = function(settings) {
   var classes = 'edit-toolgroup edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
   var html = '';
-  html += '<div class="' + classes + ' ' + settings.classes + '">';
+  html += '<div class="' + classes + ' ' + settings.classes + '"';
+  if (settings.id) {
+    html += ' id="' + settings.id + '"';
+  }
+  html += '>';
   html += Drupal.theme('editButtons', { buttons: settings.buttons });
   html += '</div>';
   return html;
@@ -77,11 +107,10 @@ Drupal.theme.editToolgroup = function(settings) {
  * @param settings
  *   An object with the following keys:
  *   - buttons: an array of objects with the following keys:
- *     - url: the URL the button should point to
- *     - classes: the classes of the button
- *     - label: the label of the button
- *     - hasButtonRole: whether this button should have its "role" attribute set
- *       to "button"
+ *     - type: the type of the button (defaults to 'button')
+ *     - classes: the classes of the button.
+ *     - label: the label of the button.
+ *     - action: sets a data-edit-modal-action attribute.
  * @return
  *   The corresponding HTML.
  */
@@ -89,15 +118,15 @@ Drupal.theme.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
-    if (!button.hasOwnProperty('hasButtonRole')) {
-      button.hasButtonRole = true;
+    if (!button.hasOwnProperty('type')) {
+      button.type = 'button';
     }
 
-    html += '<a href="' + button.url + '" class="' + button.classes + '"';
-    html += (button.hasButtonRole) ? 'role="button"' : '';
+    html += '<button type="' + button.type + '" class="' + button.classes + '"';
+    html += (button.action) ? ' data-edit-modal-action="' + button.action + '"' : '';
     html += '>';
     html +=    button.label;
-    html += '</a>';
+    html += '</button>';
   }
   return html;
 };
@@ -107,12 +136,11 @@ Drupal.theme.editButtons = function(settings) {
  *
  * @param settings
  *   An object with the following keys:
- *   - id: the id to apply to the toolbar container
+ *   - id: the id to apply to the toolbar container.
  *   - loadingMsg: The message to show while loading.
  * @return
  *   The corresponding HTML.
  */
-// @todo: remove, no usages found.
 Drupal.theme.editFormContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-form-container">';
@@ -125,4 +153,29 @@ Drupal.theme.editFormContainer = function(settings) {
   return html;
 };
 
-})(jQuery);
+/**
+ * A region to post messages that a screen reading UA will announce.
+ *
+ * @return {String}
+ *   A string representing a DOM fragment.
+ */
+Drupal.theme.editMessageBox = function() {
+  return '<div id="edit-messages" class="element-invisible" role="region" aria-live="polite"></div>';
+};
+
+/**
+ * Wrap message strings in p tags.
+ *
+ * @return {String}
+ *   A string representing a DOM fragment.
+ */
+Drupal.theme.editMessage = function() {
+  var messages = Array.prototype.slice.call(arguments);
+  var output = '';
+  for (var i = 0; i < messages.length; i++) {
+   output += '<p>' + messages[i] + '</p>';
+  }
+  return output;
+};
+
+})(jQuery, Drupal);

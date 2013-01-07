@@ -1,169 +1,151 @@
-(function($) {
-
 /**
- * @file util.js
- *
- * Utilities for Edit module.
+ * @file
+ * Provides utility functions for Edit.
  */
+(function($, Drupal, drupalSettings) {
+
+"use strict";
 
 Drupal.edit = Drupal.edit || {};
 Drupal.edit.util = Drupal.edit.util || {};
 
-Drupal.edit.util.getID = function(element) {
-  var id = jQuery(element).data('edit-id');
-  if (!id) {
-    id = jQuery(element).closest('[data-edit-id]').data('edit-id');
-  }
-  return id;
+Drupal.edit.util.constants = {};
+Drupal.edit.util.constants.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
+
+Drupal.edit.util.calcPropertyID = function(entity, predicate) {
+  return entity.getSubjectUri() + '/' + predicate;
 };
 
-Drupal.edit.util.getElementSubject = function(element) {
-  return Drupal.edit.util.getID(element).split(':').slice(0, 2).join(':');
-};
-
-Drupal.edit.util.getElementPredicate = function(element) {
-  return Drupal.edit.util.getID(element).split(':').pop();
-};
-
-Drupal.edit.util.getElementValue = function(element) {
-  var valueElement = jQuery('.field-item', element);
-  if (valueElement.length === 0) {
-    // Handle page title
-    valueElement = jQuery('h1', element);
-  }
-  return $.trim(valueElement.html());
-};
-
-Drupal.edit.util.getElementEntity = function(element, vie) {
-  return vie.entities.get(Drupal.edit.util.getElementSubject(element));
-};
-
-/*
- * findEditableFields() just looks for fields that are editable, i.e. for the
- * field *wrappers*. Depending on the field, however, either the whole field wrapper
- * will be marked as editable (in this case, an inline form will be used for editing),
- * *or* a specific (field-specific even!) DOM element within that field wrapper will be
- * marked as editable.
- * This function is for finding the *editables* themselves, given the *editable fields*.
- */
-Drupal.edit.util.findEditablesForFields = function($fields) {
-  var $editables = $();
-
-  // type = form
-  $editables = $editables.add($fields.filter('.edit-type-form'));
-
-  // type = direct
-  var $direct = $fields.filter('.edit-type-direct');
-  $editables = $editables.add($direct.find('.field-item'));
-  // Edge case: "title" pseudofield on pages with lists of nodes.
-  $editables = $editables.add($direct.filter('h2').find('a'));
-  // Edge case: "title" pseudofield on node pages.
-  $editables = $editables.add($direct.find('h1'));
-
-  return $editables;
-};
-
-Drupal.edit.util.findFieldForID = function(id, context) {
-  return $('[data-edit-id="' + id + '"]', context || $('#content'));
-};
-
-Drupal.edit.util.findFieldForEditable = function($editable) {
-  return $editable.filter('.edit-type-form').length ? $editable : $editable.closest('.edit-type-direct');
-};
-
-// @todo: remove, no usages found.
-Drupal.edit.util.findEntityForField = function($f) {
-  var $e = $f.closest('.edit-entity');
-  if ($e.length === 0) {
-    var entity_edit_id = $f.data('edit-id').split(':').slice(0,2).join(':');
-    $e = $('.edit-entity[data-edit-id="' + entity_edit_id + '"]');
-  }
-  return $e;
-};
-
-Drupal.edit.util.calcFormURLForField = function(id) {
-  var parts = id.split(':');
-  var urlFormat = decodeURIComponent(Drupal.settings.edit.fieldFormURL);
-  return Drupal.t(urlFormat, {
+Drupal.edit.util.buildUrl = function(id, urlFormat) {
+  var parts = id.split('/');
+  return Drupal.formatString(decodeURIComponent(urlFormat), {
     '!entity_type': parts[0],
     '!id'         : parts[1],
-    '!field_name' : parts[2]
-  });
-};
-
-// @todo: remove, no usage found.
-Drupal.edit.util.calcRerenderProcessedTextURL = function(id) {
-  var parts = id.split(':');
-  var urlFormat = decodeURIComponent(Drupal.settings.edit.rerenderProcessedTextURL);
-  return Drupal.t(urlFormat, {
-    '!entity_type': parts[0],
-    '!id'         : parts[1],
-    '!field_name' : parts[2]
+    '!field_name' : parts[2],
+    '!langcode'   : parts[3],
+    '!view_mode'  : parts[4]
   });
 };
 
 /**
- * Get the background color of an element (or the inherited one).
+ * Loads rerendered processed text for a given property.
+ *
+ * Leverages Drupal.ajax' ability to have scoped (per-instance) command
+ * implementations to be able to call a callback.
+ *
+ * @param options
+ *   An object with the following keys:
+ *    - $editorElement (required): the PredicateEditor DOM element.
+ *    - propertyID (required): the property ID that uniquely identifies the
+ *      property for which this form will be loaded.
+ *    - callback (required: A callback function that will receive the rerendered
+ *      processed text.
  */
-Drupal.edit.util.getBgColor = function($e) {
-  var c;
-
-  if ($e === null || $e[0].nodeName == 'HTML') {
-    // Fallback to white.
-    return 'rgb(255, 255, 255)';
-  }
-  c = $e.css('background-color');
-  // TRICKY: edge case for Firefox' "transparent" here; this is a
-  // browser bug: https://bugzilla.mozilla.org/show_bug.cgi?id=635724
-  if (c == 'rgba(0, 0, 0, 0)' || c == 'transparent') {
-    return Drupal.edit.util.getBgColor($e.parent());
-  }
-  return c;
+Drupal.edit.util.loadRerenderedProcessedText = function(options) {
+  // Create a Drupal.ajax instance to load the form.
+  Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
+    url: Drupal.edit.util.buildUrl(options.propertyID, drupalSettings.edit.rerenderProcessedTextURL),
+    event: 'edit-internal.edit',
+    submit: { nocssjs : true },
+    progress: { type : null } // No progress indicator.
+  });
+  // Implement a scoped editFieldRenderedWithoutTransformationFilters AJAX
+  // command: calls the callback.
+  Drupal.ajax[options.propertyID].commands.editFieldRenderedWithoutTransformationFilters = function(ajax, response, status) {
+    options.callback(response.data);
+    // Delete the Drupal.ajax instance that called this very function.
+    delete Drupal.ajax[options.propertyID];
+    options.$editorElement.off('edit-internal.edit');
+  };
+  // This will ensure our scoped editFieldRenderedWithoutTransformationFilters
+  // AJAX command gets called.
+  options.$editorElement.trigger('edit-internal.edit');
 };
 
-/**
- * Ignore hovering to/from the given closest element, but as soon as a hover
- * occurs to/from *another* element, then call the given callback.
- */
-Drupal.edit.util.ignoreHoveringVia = function(e, closest, callback) {
-  if ($(e.relatedTarget).closest(closest).length > 0) {
-    e.stopPropagation();
-  }
-  else {
-    callback();
+Drupal.edit.util.form = {
+  /**
+   * Loads a form, calls a callback to inserts.
+   *
+   * Leverages Drupal.ajax' ability to have scoped (per-instance) command
+   * implementations to be able to call a callback.
+   *
+   * @param options
+   *   An object with the following keys:
+   *    - $editorElement (required): the PredicateEditor DOM element.
+   *    - propertyID (required): the property ID that uniquely identifies the
+   *      property for which this form will be loaded.
+   *    - nocssjs (required): boolean indicating whether no CSS and JS should be
+   *      returned (necessary when the form is invisible to the user).
+   * @param callback
+   *   A callback function that will receive the form to be inserted, as well as
+   *   the ajax object, necessary if the callback wants to perform other AJAX
+   *   commands.
+   */
+  load: function(options, callback) {
+    // Create a Drupal.ajax instance to load the form.
+    Drupal.ajax[options.propertyID] = new Drupal.ajax(options.propertyID, options.$editorElement, {
+      url: Drupal.edit.util.buildUrl(options.propertyID, drupalSettings.edit.fieldFormURL),
+      event: 'edit-internal.edit',
+      submit: { nocssjs : options.nocssjs },
+      progress: { type : null } // No progress indicator.
+    });
+    // Implement a scoped editFieldForm AJAX command: calls the callback.
+    Drupal.ajax[options.propertyID].commands.editFieldForm = function(ajax, response, status) {
+      callback(response.data, ajax);
+      // Delete the Drupal.ajax instance that called this very function.
+      delete Drupal.ajax[options.propertyID];
+      options.$editorElement.off('edit-internal.edit');
+    };
+    // This will ensure our scoped editFieldForm AJAX command gets called.
+    options.$editorElement.trigger('edit-internal.edit');
+  },
+
+  /**
+   * Creates a Drupal.ajax instance that is used to save a form.
+   *
+   * @param options
+   *   An object with the following keys:
+   *    - nocssjs (required): boolean indicating whether no CSS and JS should be
+   *      returned (necessary when the form is invisible to the user).
+   *
+   * @return
+   *   The key of the Drupal.ajax instance.
+   */
+  ajaxifySaving: function(options, $submit) {
+    // Re-wire the form to handle submit.
+    var element_settings = {
+      url: $submit.closest('form').attr('action'),
+      setClick: true,
+      event: 'click.edit',
+      progress: { type: null },
+      submit: { nocssjs : options.nocssjs }
+    };
+    var base = $submit.attr('id');
+
+    Drupal.ajax[base] = new Drupal.ajax(base, $submit[0], element_settings);
+    // Reimplement the success handler to ensure Drupal.attachBehaviors() does
+    // not get called on the form.
+    Drupal.ajax[base].success = function (response, status) {
+      for (var i in response) {
+        if (response.hasOwnProperty(i) && response[i].command && this.commands[response[i].command]) {
+          this.commands[response[i].command](this, response[i], status);
+        }
+      }
+    };
+
+    return base;
+  },
+
+  /**
+   * Cleans up the Drupal.ajax instance that is used to save the form.
+   *
+   * @param $submit
+   *   The jQuery-wrapped submit DOM element that should be unajaxified.
+   */
+  unajaxifySaving: function($submit) {
+    delete Drupal.ajax[$submit.attr('id')];
+    $submit.off('click.edit');
   }
 };
 
-/**
- * If no position properties defined, replace value with zero.
- */
-Drupal.edit.util.replaceBlankPosition = function(pos) {
-  // @todo: this was pos == NaN (which always returns false, keeping this
-  // notice in case we find a regression.
-  if (pos == 'auto' || !pos) {
-    pos = '0px';
-  }
-  return pos;
-};
-
-/**
- * Get the top and left properties of an element and convert extraneous
- * values and information into numbers ready for subtraction.
- */
-Drupal.edit.util.getPositionProperties = function($e) {
-  var p,
-      r = {},
-      props = [
-        'top', 'left', 'bottom', 'right',
-        'padding-top', 'padding-left', 'padding-right', 'padding-bottom',
-        'margin-bottom'
-      ];
-
-  for (var i = 0; i < props.length; i++) {
-    p = props[i];
-    r[p] = parseFloat(this.replaceBlankPosition($e.css(p)));
-  }
-  return r;
-};
-
-})(jQuery);
+})(jQuery, Drupal, Drupal.settings);

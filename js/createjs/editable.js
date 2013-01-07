@@ -1,22 +1,24 @@
-(function (jQuery, undefined) {
-  // # Create.js editing widget for Spark
-  //
-  // This widget inherits from the Create.js editable widget to accommodate
-  // for the fact that Spark is using custom data attributes and not RDFa
-  // to communicate editable fields.
+/**
+ * @file
+ * Determines which editor to use based on a class attribute.
+ */
+(function (jQuery, drupalSettings) {
+
+"use strict";
+
   jQuery.widget('Drupal.createEditable', jQuery.Midgard.midgardEditable, {
-    _create: function () {
+    _create: function() {
       this.vie = this.options.vie;
 
       this.options.domService = 'edit';
       this.options.predicateSelector = '*'; //'.edit-field.edit-allowed';
 
       this.options.editors.direct = {
-        widget: 'editWidget',
+        widget: 'drupalContentEditableWidget',
         options: {}
       };
-      this.options.editors.directWysiwyg = {
-        widget: 'alohaWidget',
+      this.options.editors['direct-with-wysiwyg'] = {
+        widget: drupalSettings.edit.wysiwygEditorWidgetName,
         options: {}
       };
       this.options.editors.form = {
@@ -27,14 +29,15 @@
       jQuery.Midgard.midgardEditable.prototype._create.call(this);
     },
 
-    _editorName: function (data) {
-      if (Drupal.settings.edit.wysiwyg && jQuery(this.element).hasClass('edit-type-direct')) {
+    _propertyEditorName: function(data) {
+      if (jQuery(this.element).hasClass('edit-type-direct')) {
         if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
-          return 'directWysiwyg';
+          return 'direct-with-wysiwyg';
         }
         return 'direct';
       }
       return 'form';
     }
   });
-})(jQuery);
+
+})(jQuery, Drupal.settings);

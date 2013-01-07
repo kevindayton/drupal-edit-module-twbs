@@ -13,31 +13,41 @@
 
 define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
 // @TODO: provide a UI so users can switch to
-define('EDIT_WYSIWYG_DEFAULT', 'aloha');
+define('EDIT_WYSIWYG_DEFAULT', 'ckeditor');
 
 /**
  * Implements hook_menu()
  */
 function edit_menu() {
   $items = array();
-  $items['admin/edit/field/%/%/%'] = array(
+  $items['edit/metadata'] = array(
+    // Access is controlled after we have inspected the entity, which can't
+    // easily happen until after the callback.
+    'access arguments' => array(TRUE),
+    'access callback'  => TRUE,
+    'page callback'    => 'edit_metadata',
+    'file'             => 'includes/pages.inc',
+    //'delivery callback'=> 'ajax_deliver',
+    //'theme callback'   => 'ajax_base_page_theme',
+  );
+  $items['admin/edit/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback'  => TRUE,
     'page callback'    => 'edit_field_edit',
-    'page arguments'   => array(3, 4, 5),
+    'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
     'delivery callback'=> 'ajax_deliver',
     'theme callback'   => 'ajax_base_page_theme',
   );
-  $items['admin/render-without-transformations/field/%/%/%'] = array(
+  $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback'  => TRUE,
     'page callback'    => 'edit_text_field_render_without_transformation_filters',
-    'page arguments'   => array(3, 4, 5),
+    'page arguments'   => array(3, 4, 5, 6, 7),
     'file'             => 'includes/pages.inc',
     'delivery callback'=> 'ajax_deliver',
     'theme callback'   => 'ajax_base_page_theme',
@@ -47,52 +57,62 @@ function edit_menu() {
 }
 
 /**
- * Implements hook_page_alter().
+ * Implements hook_block_info().
  */
-function edit_page_alter(&$page) {
-  // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
-  if (arg(0) == 'admin' || (arg(0) == 'node' && arg(1) == 'add') || (arg(0) == 'node' && arg(2) == 'edit')) {
-    return;
-  }
-
-  // @todo: fix http://drupal.org/node/1798458, this is a stopgap measure
-  if (!(arg(0) == 'node' && is_numeric(arg(1)))) {
-    return;
-  }
-
-  $page['page_top']['edit'] = array(
-    'view_edit_toggle' => array(
-      '#prefix' => '<div id="editbar"><h2 class="element-invisible">' . t('In-place edit operations') . '</h2><ul id="edit_view-edit-toggles">',
-      '#suffix' => '</ul></div>',
-      'content' => array(
-        array(
-          '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('View'), 'href' => $_GET['q'], 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
-          '#active' => TRUE,
-        ),
-        array(
-          '#theme' => 'menu_local_task',
-          '#link' => array('title' => t('Quick edit'), 'href' => '#', 'localized_options' => array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-edit')))),
-        ),
-      ),
-      '#attached' => array(
-        'library' => array(
-          array('edit', 'edit'),
-        ),
-      ),
-    ),
-    '#post_render' => array(
-      'edit_editbar_post_render',
-    ),
+function edit_block_info() {
+  $blocks['edit'] = array(
+    'info' => t('Quick edit'),
+    'status' => TRUE,
+    'region' => 'sidebar_first',  // Not usually provided.
   );
+
+  return $blocks;
 }
+
+/**
+ * Implements hook_block_view().
+ */
+function edit_block_view($delta = '') {
+  if ($delta === 'edit') {
+    $block['subject'] = t('In-place edit operations');
+    $content = '';
+
+    $path = current_path();
+    // @todo: fix http://drupal.org/node/1798458, this is a stopgap measure
+    $node_only = arg(0) == 'node' && is_numeric(arg(1));
+
+    // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
+    if (!path_is_admin($path) && $node_only) {
+      $content = array(
+        'content' => array(
+          '#theme' => 'item_list',
+          '#items' => array(
+            l(t('View'), $path, array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+            l(t('Quick edit'), $path, array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          ),
+        ),
+        '#attached' => array(
+          'library' => array(
+            array('edit', 'edit'),
+          ),
+        ),
+        '#post_render' => array(
+          'edit_editbar_post_render',
+        ),
+      );
+    }
+    $block['content'] = $content;
+  }
+
+  return $block;
+}
+
 
 /**
  * Post-render function to remove the editbar if nothing editable is present.
  */
 function edit_editbar_post_render($html) {
-  global $editbar;
-  return ($editbar !== TRUE) ? '' : $html;
+  return (!empty($GLOBALS['editbar']) && $GLOBALS['editbar'] !== TRUE) ? '' : $html;
 }
 
 /**
@@ -118,101 +138,112 @@ function edit_theme() {
 function edit_library() {
   // Figure out which library dependency to set for WYSIWYG editor integration.
   $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-
   $path = drupal_get_path('module', 'edit');
-
+  $options = array(
+    'scope' => 'footer',
+    'attributes' => array('defer' => TRUE),
+  );
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
     'website' => 'http://drupal.org/project/edit',
-    'version' => NULL, // @TODO Figure out the correct way to do this.
+    'version' => VERSION,
     'js' => array(
-      $path . '/js/edit.js' => array(
-        // @TODO Make sure that a subset of the JavaScript is loaded ASAP, so
-        // that the view/edit mode toggle works immediately.
-        'defer' => TRUE,
-      ),
-      $path . '/js/util.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/ui-editables.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/theme.js' => array(
-        'defer' => TRUE,
-      ),
-      $path . '/js/ajax.js' => array(
-        'defer' => TRUE,
-      ),
+      // Core.
+      $path . '/js/app.js' => $options,
+      $path . '/js/edit.js' => $options,
+      // Routers.
+      $path . '/js/routers/edit-router.js' => $options,
+      // Models.
+      $path . '/js/models/edit-app-model.js' => $options,
+      // Views.
+      $path . '/js/views/propertyeditordecoration-view.js' => $options,
+      $path . '/js/views/menu-view.js' => $options,
+      $path . '/js/views/modal-view.js' => $options,
+      $path . '/js/views/overlay-view.js' => $options,
+      $path . '/js/views/toolbar-view.js' => $options,
+      // Backbone.sync implementation on top of Drupal forms.
+      $path . '/js/backbone.drupalform.js' => $options,
+      // VIE service.
+      $path . '/js/viejs/EditService.js' => $options,
+      // Create.js subclasses.
+      $path . '/js/createjs/editable.js' => $options,
+      $path . '/js/createjs/storage.js' => $options,
+      $path . '/js/createjs/editingWidgets/formwidget.js' => $options,
+      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => $options,
+      // Other.
+      $path . '/js/util.js' => $options,
+      $path . '/js/theme.js' => $options,
       // Basic settings.
       array(
         'data' => array('edit' => array(
-          'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name'),
-          'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name'),
+          'metadataURL' => url('edit/metadata'),
+          'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+          'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
           'context' => 'body',
         )),
         'type' => 'setting',
       ),
     ),
     'css' => array(
-      $path . '/css/edit.css',
+      $path . '/css/edit.css' => array(),
     ),
     'dependencies' => array(
+      array('system', 'jquery'),
+      array('edit', 'underscore'),
+      array('edit', 'backbone'),
+      array('edit', 'vie.core'),
+      array('edit', 'create.editonly'),
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
-      array('edit', 'edit.createjs'),
     ),
   );
 
-  $libraries['edit.createjs'] = array(
+  $libraries['create.editonly'] = array(
     'title' => 'CreateJS and deps',
     'website' => 'http://createjs.org',
     'version' => NULL,
     'js' => array(
       drupal_get_path('module', 'jquery_update') . '/replace/ui/ui/jquery.ui.widget.js' => array(),
-      $path . '/js/lib/create.js' => array('defer' => TRUE),
-      $path . '/js/SparkEditService.js' => array('defer' => TRUE),
-      $path . '/js/editable.js' => array('defer' => TRUE),
-      $path . '/js/formwidget.js' => array('defer' => TRUE),
-      $path . '/js/views.js' => array('defer' => TRUE),
+      $path . '/vendor/create/create-editonly.js' => array(/*'defer' => TRUE*/),
     ),
     'dependencies' => array(
-      array('edit', 'edit.vie'),
+      array('edit', 'vie.core'),
     ),
   );
 
-  $libraries['edit.vie'] = array(
+  $libraries['vie.core'] = array(
     'title' => 'Vienna IKS Editables',
     'website' => 'http://wiki.iks-project.eu/index.php/VIE',
     'version' => '2.0',
     'js' => array(
-      $path . '/js/lib/vie.js' => array('defer' => TRUE),
+      $path . '/vendor/vie/vie-core.js' => array(/*'defer' => TRUE*/),
     ),
     'dependencies' => array(
-      array('edit', 'edit.backbone'),
+      array('edit', 'backbone'),
     ),
   );
 
   // Register underscore as a library.
-  $libraries['edit.underscore'] = array(
+  $libraries['underscore'] = array(
     'title' => 'Underscore.js',
     'website' => 'http://underscorejs.org',
     'version' => '1.4.2',
     'js' => array(
-      $path . '/js/lib/underscore.js' => array(),
+      $path . '/vendor/underscore/underscore.js' => array(),
     ),
   );
 
   // Register backbone as a library.
-  $libraries['edit.backbone'] = array(
+  $libraries['backbone'] = array(
     'title' => 'Backbone.js',
     'website' => 'http://backbonejs.org',
     'version' => '0.9.2',
     'js' => array(
-      $path . '/js/lib/backbone.js' => array(),
+      $path . '/vendor/backbone/backbone.js' => array(),
     ),
     'dependencies' => array(
-      array('edit', 'edit.underscore'),
+      array('edit', 'underscore'),
     ),
   );
 
@@ -234,7 +265,8 @@ function edit_field_attach_view_alter(&$output, $context) {
 
   // Special case for this special mode.
   if ($context['display'] == 'edit-render-without-transformation-filters') {
-    $field = reset(element_children($output));
+    $children = element_children($output);
+    $field = reset($children);
     $langcode = $output[$field]['#language'];
     foreach (array_keys($output[$field]['#items']) as $item) {
       $text      = $output[$field]['#items'][$item]['value'];
@@ -368,12 +400,14 @@ function edit_preprocess_panels_pane(&$variables) {
   }
 
   $node = $variables['content']['#node'];
+  $language = $node->language;
+  // @todo make it work
+  $view_mode = 'default';
 
   // Ensure the user has access to update the node.
   if (entity_access('update', 'node', $node)) {
     // Make sure the editbar is created.
-    global $editbar;
-    $editbar = TRUE;
+    $GLOBALS['editbar'] = TRUE;
 
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
@@ -382,7 +416,7 @@ function edit_preprocess_panels_pane(&$variables) {
       $variables['title_attributes_array']['class'][] = 'edit-allowed';
       $variables['title_attributes_array']['class'][] = 'edit-type-direct';
       $variables['title_attributes_array']['data-edit-field-label'] = $node_type->title_label;
-      $variables['title_attributes_array']['data-edit-id'] = "node:$node->nid:title";
+      $variables['title_attributes_array']['data-edit-id'] = "node:$node->nid:title:$language:$view_mode";
     }
   }
 }
@@ -408,21 +442,9 @@ function edit_preprocess_page(&$variables) {
 
     if ($node_type->has_title) {
       // Make sure the editbar is created.
-      global $editbar;
-      $editbar = TRUE;
+      $GLOBALS['editbar'] = TRUE;
 
-      $attributes = array(
-        'class' => array(
-          'edit-pseudofield',
-          'edit-field',
-          'edit-allowed',
-          'edit-type-direct',
-        ),
-        'data-edit-field-label' => $node_type->title_label,
-        'data-edit-id' => 'node:' . $node->nid . ':title',
-      );
-      $variables['title_prefix']['edit']['#markup'] = '<div' . drupal_attributes($attributes) . '>';
-      $variables['title_suffix']['edit']['#markup'] = '</div>';
+      $variables['title'] = edit_page_title_render(drupal_get_title(), $node_type->title_label, $node->nid);
     }
   }
 }
@@ -432,15 +454,15 @@ function edit_preprocess_page(&$variables) {
  */
 function edit_preprocess_node(&$variables) {
   $entity_type = $variables['elements']['#entity_type'];
-  $entity      = $variables['elements']['#node'];
+  $entity = $variables['elements']['#node'];
+  $view_mode = $variables['elements']['#view_mode'];
 
   if (entity_access('update', $entity_type, $entity)) {
     // Make sure the editbar is created.
-    global $editbar;
-    $editbar = TRUE;
+    $GLOBALS['editbar'] = TRUE;
 
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
+    $language = $entity->language;
     // Pseudo-field: title.
     $node_type = node_type_get_type($bundle);
     if ($node_type->has_title) {
@@ -449,14 +471,14 @@ function edit_preprocess_node(&$variables) {
       $variables['title_attributes_array']['class'][] = 'edit-allowed';
       $variables['title_attributes_array']['class'][] = 'edit-type-direct';
       $variables['title_attributes_array']['data-edit-field-label'] = $node_type->title_label;
-      $variables['title_attributes_array']['data-edit-id'] = "node:$id:title";
+      $variables['title_attributes_array']['data-edit-id'] = "node:$id:title:$language:$view_mode";
     }
 
     // Pseudo-fields: author (name) and created date (authoring date).
     if ($variables['display_submitted']) {
-      $variables['name'] = edit_node_wrap_name($variables['name'], $id);
-      $variables['date'] = edit_node_wrap_date($variables['date'], $id);
-      $variables['submitted'] = edit_node_render_submitted($variables['name'], $variables['date']);
+      $variables['name'] = edit_node_wrap_name($variables['name'], $id, $language, $view_mode);
+      $variables['date'] = edit_node_wrap_date($variables['date'], $id, $language, $view_mode);
+      $variables['submitted'] = edit_node_render_submitted($variables['name'], $variables['date'], $language, $view_mode);
     }
   }
 }
@@ -472,11 +494,11 @@ function edit_preprocess_node(&$variables) {
  * @return
  *   The fully-themed HTML output for the wrapped "name" pseudo-field.
  */
-function edit_node_wrap_name($name, $node_id) {
+function edit_node_wrap_name($name, $node_id, $language, $view_mode) {
   return theme('edit_spanned_field', array(
     'value' => $name,
     'label' => t('Author'),
-    'edit_id' => "node:$node_id:author",
+    'edit_id' => "node:$node_id:author:$language:$view_mode",
     'attributes' => array(
       'class' => array(
         'edit-pseudofield',
@@ -499,11 +521,11 @@ function edit_node_wrap_name($name, $node_id) {
  * @return
  *   The fully-themed HTML output for the wrapped "date" pseudo-field.
  */
-function edit_node_wrap_date($date, $node_id) {
+function edit_node_wrap_date($date, $node_id, $language, $view_mode) {
   return theme('edit_spanned_field', array(
     'value' => $date,
     'label' => t('Authoring date'),
-    'edit_id' => "node:$node_id:created",
+    'edit_id' => "node:$node_id:created:$language:$view_mode",
     'attributes' => array(
       'class' => array(
         'edit-pseudofield',
@@ -516,120 +538,55 @@ function edit_node_wrap_date($date, $node_id) {
 }
 
 /**
+ * Wraps the "title" pseudo-field for a page.
+ *
+ * @param $title
+ *   The existing date value.
+ * @param $label
+ *   The Label name for the content type.
+ * @param $node_id
+ *   The node ID.
+ *
+ * @return
+ *   The fully-themed HTML output for the wrapped "date" pseudo-field.
+ */
+function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_NONE) {
+  return theme('edit_spanned_field', array(
+    'value' => $title,
+    'label' => $label,
+    'edit_id' => 'node:' . $node_id . ':title:' . $language .':full',
+    'attributes' => array(
+      'class' => array(
+        'edit-pseudofield',
+        'edit-field',
+        'edit-allowed',
+        'edit-type-direct',
+      ),
+    ),
+  ));
+}
+
+/**
  * Renders the author and created date pseudo-fields.
  */
-function edit_node_render_submitted($author, $created) {
+function edit_node_render_submitted($author, $created, $language, $view_mode) {
   // @todo Consider using template_preprocess_node() or theme_preprocess_node()
   // instead so this may be more easily overridden.
-  return t(
-    'Submitted by !username on !datetime',
-    array('!username' => $author, '!datetime' => $created)
-  );
+  return t('Submitted by !username on !datetime', array('!username' => $author, '!datetime' => $created));
 }
 
 /**
  * Implements hook_preprocess_field().
  */
 function edit_preprocess_field(&$variables) {
-  $entity_type = $variables['element']['#entity_type'];
-  $entity      = $variables['element']['#object'];
-  $field_name  = $variables['element']['#field_name'];
-  $formatter   = $variables['element']['#formatter'];
+  $element = $variables['element'];
 
-  $formatter_info = field_info_formatter_types($formatter);
+  $entity_type = $element['#entity_type'];
+  $field_name = $element['#field_name'];
+  $language = $element['#language'];
+  $view_mode = $element['#view_mode'];
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
 
-  // If the formatter doesn't contain the edit property, assume that it is not
-  // yet compatible with the Edit module and return early.
-  if (empty($formatter_info['settings']['edit']['editability'])) {
-    return;
-  }
-
-  $editability = $formatter_info['settings']['edit']['editability'];
-  $wysiwyg     = $formatter_info['settings']['edit']['wysiwyg'];
-
-  // If editing is explicitly disabled for this field, return early to avoid
-  // any further processing.
-  if ($editability == 'disabled') {
-    return;
-  }
-
-  // If directly editable, check the cardinality. If the cardinality is greater
-  // than 1, use a form to edit the field.
-  if ($editability == 'direct') {
-    $field_info = field_info_field($field_name);
-    if ($field_info['cardinality'] != 1) {
-      $editability = 'form';
-    }
-  }
-
-  // Only perform the necessary checks (in the next if-test) to see whether
-  // direct, WYSIWYG-based editing is possible if the filter_true_wysiwyg module
-  // and the indicated WYSIWYG module are installed.
-  if ($editability == 'direct' && $wysiwyg) {
-    $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-    if (module_exists('filter_true_wysiwyg') && !module_exists($wysiwyg_module)) {
-      $editability = 'form';
-    }
-  }
-
-  // If still directly editable and the formatter is marked to support WYSIWYG,
-  // then check whether we can actually use WYSIWYG.
-  if ($editability == 'direct' && $wysiwyg) {
-    $field     = $variables['element']['#object']->$field_name;
-    $language  = $variables['element']['#language'];
-    $format_id = $field[$language][0]['format'];
-
-    // Update the editability based on the field's settings and the text format.
-    module_load_include('inc', 'edit', 'includes/wysiwyg');
-    $editability = edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_name, $format_id);
-    if ($editability == 'disabled') {
-      return;
-    }
-  }
-
-  $entity_access = entity_access('update', $entity_type, $entity);
-  $field_access = field_access('edit', $field_name, $entity_type, $entity);
-  if ($entity_access && $field_access) {
-    // Make sure the editbar is created.
-    global $editbar;
-    $editbar = TRUE;
-
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-    $instance_info = field_info_instance($entity_type, $field_name, $bundle);
-
-    if (empty($variables['attributes_array'])) {
-      $variables['attributes_array'] = array();
-    }
-
-    // Provide metadata through data- attributes.
-    $variables['attributes_array']['data-edit-field-label'] = $instance_info['label'];
-    $variables['attributes_array']['data-edit-id'] = "$entity_type:$id:$field_name";
-    if ($editability == 'direct' && $wysiwyg) {
-      $field     = $variables['element']['#object']->$field_name;
-      $language  = $variables['element']['#language'];
-      $format_id = $field[$language][0]['format'];
-
-      // Let the WYSIWYG editor know the allowed tags.
-      $allowed_tags = filter_get_allowed_tags_by_format($format_id);
-      $variables['attributes_array']['data-allowed-tags'] = ($allowed_tags === TRUE) ? '' : implode(',', $allowed_tags);
-
-      // Let the JavaScript logic know whether transformation filters are used
-      // in this format, so it can decide whether to re-render the text or not.
-      $filter_types = filter_get_filter_types_by_format($format_id);
-      if (count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types))) {
-        $variables['classes_array'][] = 'edit-text-with-transformation-filters';
-      }
-      else {
-        $variables['classes_array'][] = 'edit-text-without-transformation-filters';
-      }
-    }
-    // Mark this field as editable.
-    $variables['classes_array'][] = 'edit-field';
-    $variables['classes_array'][] = 'edit-allowed';
-    $variables['classes_array'][] = 'edit-type-' . $editability;
-    if ($editability == 'direct' && $wysiwyg) {
-      $variables['classes_array'][] = 'edit-type-direct-with-wysiwyg';
-    }
-  }
+  // Provide metadata through data- attributes.
+  $variables['attributes_array']['data-edit-id'] = "$entity_type:$id:$field_name:$language:$view_mode";
 }
