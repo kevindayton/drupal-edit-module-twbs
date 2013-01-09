@@ -24,9 +24,9 @@ function edit_menu() {
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
-    'access callback'  => TRUE,
-    'page callback'    => 'edit_metadata',
-    'file'             => 'includes/pages.inc',
+    'access callback' => TRUE,
+    'page callback' => 'edit_metadata',
+    'file' => 'includes/pages.inc',
     //'delivery callback'=> 'ajax_deliver',
     //'theme callback'   => 'ajax_base_page_theme',
   );
@@ -34,23 +34,23 @@ function edit_menu() {
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
-    'access callback'  => TRUE,
-    'page callback'    => 'edit_field_edit',
-    'page arguments'   => array(3, 4, 5, 6, 7),
-    'file'             => 'includes/pages.inc',
-    'delivery callback'=> 'ajax_deliver',
-    'theme callback'   => 'ajax_base_page_theme',
+    'access callback' => TRUE,
+    'page callback' => 'edit_field_edit',
+    'page arguments' => array(3, 4, 5, 6, 7),
+    'file' => 'includes/pages.inc',
+    'delivery callback' => 'ajax_deliver',
+    'theme callback' => 'ajax_base_page_theme',
   );
   $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
-    'access callback'  => TRUE,
-    'page callback'    => 'edit_text_field_render_without_transformation_filters',
-    'page arguments'   => array(3, 4, 5, 6, 7),
-    'file'             => 'includes/pages.inc',
-    'delivery callback'=> 'ajax_deliver',
-    'theme callback'   => 'ajax_base_page_theme',
+    'access callback' => TRUE,
+    'page callback' => 'edit_text_field_render_without_transformation_filters',
+    'page arguments' => array(3, 4, 5, 6, 7),
+    'file' => 'includes/pages.inc',
+    'delivery callback' => 'ajax_deliver',
+    'theme callback' => 'ajax_base_page_theme',
   );
 
   return $items;
@@ -63,7 +63,7 @@ function edit_block_info() {
   $blocks['edit'] = array(
     'info' => t('Quick edit'),
     'status' => TRUE,
-    'region' => 'sidebar_first',  // Not usually provided.
+    'region' => 'sidebar_first', // Not usually provided.
   );
 
   return $blocks;
@@ -106,7 +106,6 @@ function edit_block_view($delta = '') {
 
   return $block;
 }
-
 
 /**
  * Post-render function to remove the editbar if nothing editable is present.
@@ -175,12 +174,14 @@ function edit_library() {
       $path . '/js/theme.js' => $options,
       // Basic settings.
       array(
-        'data' => array('edit' => array(
-          'metadataURL' => url('edit/metadata'),
-          'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
-          'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
-          'context' => 'body',
-        )),
+        'data' => array(
+          'edit' => array(
+            'metadataURL' => url('edit/metadata'),
+            'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+            'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+            'context' => 'body',
+          )
+        ),
         'type' => 'setting',
       ),
     ),
@@ -205,7 +206,7 @@ function edit_library() {
     'version' => NULL,
     'js' => array(
       drupal_get_path('module', 'jquery_update') . '/replace/ui/ui/jquery.ui.widget.js' => array(),
-      $path . '/vendor/create/create-editonly.js' => array(/*'defer' => TRUE*/),
+      $path . '/vendor/create/create-editonly.js' => array( /*'defer' => TRUE*/),
     ),
     'dependencies' => array(
       array('edit', 'vie.core'),
@@ -217,7 +218,7 @@ function edit_library() {
     'website' => 'http://wiki.iks-project.eu/index.php/VIE',
     'version' => '2.0',
     'js' => array(
-      $path . '/vendor/vie/vie-core.js' => array(/*'defer' => TRUE*/),
+      $path . '/vendor/vie/vie-core.js' => array( /*'defer' => TRUE*/),
     ),
     'dependencies' => array(
       array('edit', 'backbone'),
@@ -269,73 +270,12 @@ function edit_field_attach_view_alter(&$output, $context) {
     $field = reset($children);
     $langcode = $output[$field]['#language'];
     foreach (array_keys($output[$field]['#items']) as $item) {
-      $text      = $output[$field]['#items'][$item]['value'];
+      $text = $output[$field]['#items'][$item]['value'];
       $format_id = $output[$field]['#items'][$item]['format'];
       $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
       $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
     }
   }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- *
- * Simplifies simple field forms that contain only one form item by hiding the
- * form element title (which is already displayed in the toolbar).
- */
-function edit_form_fape_field_edit_form_alter(&$form, &$form_state) {
-  // Only alter this form when it's being built by the Edit module.
-  if (empty($form_state['editability'])) {
-    return;
-  }
-
-  $elements = element_children($form);
-
-  // Required internal form properties.
-  $internal_elements = array('actions', 'form_build_id', 'form_token', 'form_id');
-
-  // Calculate the remaining form elements.
-  $remaining_elements = array_diff($elements, $internal_elements);
-
-  // Only simplify the form if there is a single element remaining.
-  if (count($remaining_elements) === 1) {
-    $element = $remaining_elements[0];
-
-    if ($form[$element]['#type'] == 'container') {
-      $language = $form[$element]['#language'];
-      $children = element_children($form[$element][$language]);
-
-      // Certain fields require different processing depending on the form
-      // structure.
-      if (count($children) == 0) {
-        // Checkbox elements don't have a title.
-        if ($form[$element][$language]['#type'] != 'checkbox') {
-          $form[$element][$language]['#title_display'] = 'invisible';
-        }
-      }
-      elseif (count($children) == 1) {
-        $form[$element][$language][0]['value']['#title_display'] = 'invisible';
-
-        // UX improvement: make the number of rows of textarea form elements
-        // fit the content. (i.e. no wads of whitespace)
-        if (isset($form[$element][$language][0]['value']['#type'])
-            && $form[$element][$language][0]['value']['#type'] == 'textarea')
-        {
-          $lines = count(explode("\n", $form[$element][$language][0]['value']['#default_value']));
-          $form[$element][$language][0]['value']['#rows'] = $lines + 1;
-        }
-      }
-    }
-
-    // Handle pseudo-fields that are language-independent, such as title,
-    // author, and creation date.
-    elseif (empty($form[$element]['#language'])) {
-      $form[$element]['#title_display'] = 'invisible';
-    }
-  }
-
-  // Make it easy for the JavaScript to identify the submit button.
-  $form['actions']['submit']['#attributes'] = array('class' => array('edit-form-submit'));
 }
 
 /**
@@ -353,23 +293,23 @@ function edit_field_formatter_info_alter(&$info) {
   //   * 'wysiwyg', with boolean values
   $editability_metadata = array(
     // @todo Implement file and image editability.
-    'file_default'   => 'form',
-    'file_table'     => 'form',
+    'file_default' => 'form',
+    'file_table' => 'form',
     'file_url_plain' => 'disabled',
-    'image'          => 'form',
-    'list_default'   => 'form',
-    'list_key'       => 'form',
-    'number_integer'     => 'form',
-    'number_decimal'     => 'form',
+    'image' => 'form',
+    'list_default' => 'form',
+    'list_key' => 'form',
+    'number_integer' => 'form',
+    'number_decimal' => 'form',
     'number_unformatted' => 'form',
-    'taxonomy_term_reference_link'         => 'form',
-    'taxonomy_term_reference_plain'        => 'form',
+    'taxonomy_term_reference_link' => 'form',
+    'taxonomy_term_reference_plain' => 'form',
     'taxonomy_term_reference_rss_category' => 'disabled',
-    'text_default'            => 'direct',
-    'text_plain'              => 'form',
-    'text_trimmed'            => 'disabled',
+    'text_default' => 'direct',
+    'text_plain' => 'form',
+    'text_trimmed' => 'disabled',
     'text_summary_or_trimmed' => 'disabled',
-    'text_textarea'           => 'direct',
+    'text_textarea' => 'direct',
   );
   $wysiwyg_metadata = array(
     'text_default' => TRUE,
@@ -379,7 +319,7 @@ function edit_field_formatter_info_alter(&$info) {
     if (!empty($info[$formatter])) {
       $info[$formatter]['settings']['edit'] = array(
         'editability' => $editability,
-        'wysiwyg'     => (isset($wysiwyg_metadata[$formatter])) ? $wysiwyg_metadata[$formatter] : FALSE,
+        'wysiwyg' => (isset($wysiwyg_metadata[$formatter])) ? $wysiwyg_metadata[$formatter] : FALSE,
       );
     }
   }
@@ -554,7 +494,7 @@ function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_N
   return theme('edit_spanned_field', array(
     'value' => $title,
     'label' => $label,
-    'edit_id' => 'node:' . $node_id . ':title:' . $language .':full',
+    'edit_id' => 'node:' . $node_id . ':title:' . $language . ':full',
     'attributes' => array(
       'class' => array(
         'edit-pseudofield',
@@ -572,7 +512,10 @@ function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_N
 function edit_node_render_submitted($author, $created, $language, $view_mode) {
   // @todo Consider using template_preprocess_node() or theme_preprocess_node()
   // instead so this may be more easily overridden.
-  return t('Submitted by !username on !datetime', array('!username' => $author, '!datetime' => $created));
+  return t('Submitted by !username on !datetime', array(
+    '!username' => $author,
+    '!datetime' => $created
+  ));
 }
 
 /**

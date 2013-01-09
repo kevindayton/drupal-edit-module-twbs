@@ -178,6 +178,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 
   // This allows us to have limited support for non-field API fields. Currently,
   // we only have support for node:title, node:author and node:created.
+  $subform_id = 'edit_field_edit_form';
   $subforms = array(
     'title' => 'fape_field_edit_node_title_form',
     'author' => 'editfape_field_edit_node_author_form',
@@ -196,7 +197,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     if (array_key_exists($view_mode, $field_instance['display'])) {
       $display = $field_instance['display'][$view_mode];
     }
-    $subform_id = 'fape_field_edit_field_form';
   }
 
   if (empty($field_instance)) {
@@ -213,20 +213,11 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     'field_instance' => $field_instance,
     'bundle' => $bundle,
     'subform_id' => $subform_id,
-    // We use this in our hook_form_alter() implementation so that we don't
-    // alter FAPE's forms when it's used by FAPE itself.
-    'editability' => TRUE,
   );
 
-  if (in_array($field_name, array('author', 'created'))) {
-    // @todo For some unknown, weird reason, form_load_include() breaks the
-    // code.
-    //form_load_include($form_state, 'inc', 'edit', 'includes/fape');
-    module_load_include('inc', 'edit', 'includes/fape');
-  }
+  $form = drupal_build_form('edit_field_form', $form_state);
 
   $commands = array();
-  $form = drupal_build_form('fape_field_edit_form', $form_state);
 
   if (!empty($form_state['executed'])) {
     entity_save($entity_type, $form_state['entity']);
@@ -341,4 +332,57 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
   );
 
   return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function edit_field_form($form, &$form_state) {
+  $form['#parents'] = array();
+
+  form_load_include($form_state, 'inc', 'edit', 'includes/fape');
+
+  if ($form_state['subform_id']) {
+    $form_state['subform_id']($form, $form_state);
+  }
+
+  // Add a submit button. Give it a class for easy JavaScript targeting.
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#attributes' => array('class' => array('edit-form-submit')),
+  );
+
+  // Simplify it for optimal in-place use.
+  edit_field_form_simplify($form, $form_state);
+  return $form;
+}
+
+
+function edit_field_form_simplify(&$form, &$form_state) {
+  $field_name = $form_state['field_name'];
+  $langcode = $form_state['langcode'];
+
+  $widget_element =& $form[$field_name][$langcode];
+
+  // Hide the field label from displaying within the form, because JavaScript
+  // displays the equivalent label that was provided within an HTML data
+  // attribute of the field's display element outside of the form. Do this for
+  // widgets without child elements (like Option widgets) as well as for ones
+  // with per-delta elements. Skip single checkboxes, because their title is
+  // key to their UI. Also skip widgets with multiple subelements, because in
+  // that case, per-element labeling is informative.
+  $num_children = count(element_children($widget_element));
+  if ($num_children == 0 && $widget_element['#type'] != 'checkbox') {
+    $widget_element['#title_display'] = 'invisible';
+  }
+  if ($num_children == 1 && isset($widget_element[0]['value'])) {
+    // @todo While most widgets name their primary element 'value', not all
+    //   do, so generalize this.
+    $widget_element[0]['value']['#title_display'] = 'invisible';
+  }
+
+  // Adjust textarea elements to fit their content.
+  if (isset($widget_element[0]['value']['#type']) && $widget_element[0]['value']['#type'] == 'textarea') {
+    $lines = count(explode("\n", $widget_element[0]['value']['#default_value']));
+    $widget_element[0]['value']['#rows'] = $lines + 1;
+  }
 }

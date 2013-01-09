@@ -3,6 +3,56 @@
 //-----------------------------------------------------------------------------
 // This will hopefully be accepted into the FAPE module: http://drupal.org/node/1650442.
 
+
+
+function edit_field_edit_form(&$form, &$form_state) {
+
+  $entity_type = $form_state['entity_type'];
+  $entity = $form_state['entity'];
+  $field_name = $form_state['field_name'];
+  $field_instance = $form_state['field_instance'];
+  $langcode = $form_state['langcode'];
+  $bundle = $form_state['bundle'];
+
+  $options = array(
+    'field_name' => $field_name,
+    'language' => field_valid_language($langcode),
+    'default' => TRUE,
+  );
+
+  field_attach_form($entity_type, $entity, $form, $form_state, $langcode, $options);
+
+  $form['#validate'][] = 'edit_field_edit_form_validate';
+  $form['#submit'][] = 'edit_field_edit_form_submit';
+}
+
+function edit_build_entity($form, &$form_state) {
+  $entity = clone $form_state['entity'];
+  field_attach_submit($form_state['entity_type'], $entity, $form, $form_state, array('field_name' =>  $form_state['field_name']));
+
+  // @todo Refine automated log messages and abstract them to all entity
+  //   types: http://drupal.org/node/1678002.
+  //if ($entity->entityType == 'node' && $entity->isNewRevision() && !isset($entity->log)) {
+  //  $instance = field_info_instance($entity->entityType(), $form_state['field_name'], $entity->bundle());
+  //  $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
+  //}
+  return $entity;
+}
+
+function edit_field_edit_form_validate($form, &$form_state) {
+  $entity = edit_build_entity($form, $form_state);
+  field_attach_form_validate($form_state['entity_type'], $entity, $form, $form_state, array('field_name' =>  $form_state['field_name']));
+}
+
+function edit_field_edit_form_submit(&$form, &$form_state) {
+  $entity = edit_build_entity($form, $form_state);
+  entity_save($form_state['entity_type'], $entity);
+  // This is needed to refresh the output.
+  $form_state['entity'] = $entity;
+}
+
+
+
 /**
  * Subform to edit the entity 'author' field.
  *
@@ -80,4 +130,29 @@ function editfape_field_edit_node_created_form_validate($form, &$form_state) {
 function editfape_field_edit_node_created_form_submit($form, &$form_state) {
   $date = $form_state['values']['date'];
   $form_state['entity']->created = !empty($date) ? strtotime($date) : REQUEST_TIME;
+}
+
+
+/**
+ * Subform to edit the entity 'title' field.
+ *
+ * This isn't a true form. As such it modifies the $form by reference.
+ */
+function fape_field_edit_node_title_form(&$form, &$form_state) {
+  $node = $form_state['entity'];
+  $type = node_type_get_type($node);
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#default_value' => !empty($node->title) ? $node->title : '',
+    '#required' => TRUE,
+    '#weight' => -5,
+  );
+
+  $form['#submit'][] = 'fape_field_edit_node_title_form_submit';
+}
+
+function fape_field_edit_node_title_form_submit($form, &$form_state) {
+  $form_state['entity']->title = $form_state['values']['title'];
 }
