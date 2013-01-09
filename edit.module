@@ -27,27 +27,25 @@ function edit_menu() {
     'access callback' => TRUE,
     'page callback' => 'edit_metadata',
     'file' => 'includes/pages.inc',
-    //'delivery callback'=> 'ajax_deliver',
-    //'theme callback'   => 'ajax_base_page_theme',
   );
-  $items['admin/edit/field/%/%/%/%/%'] = array(
+  $items['edit/form/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback' => TRUE,
     'page callback' => 'edit_field_edit',
-    'page arguments' => array(3, 4, 5, 6, 7),
+    'page arguments' => array(2, 3, 4, 5, 6),
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
     'theme callback' => 'ajax_base_page_theme',
   );
-  $items['admin/render-without-transformations/field/%/%/%/%/%'] = array(
+  $items['edit/text/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
     // easily happen until after the callback.
     'access arguments' => array(TRUE),
     'access callback' => TRUE,
     'page callback' => 'edit_text_field_render_without_transformation_filters',
-    'page arguments' => array(3, 4, 5, 6, 7),
+    'page arguments' => array(2, 3, 4, 5, 6),
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
     'theme callback' => 'ajax_base_page_theme',
@@ -63,7 +61,7 @@ function edit_block_info() {
   $blocks['edit'] = array(
     'info' => t('Quick edit'),
     'status' => TRUE,
-    'region' => 'sidebar_first', // Not usually provided.
+    'region' => 'sidebar_first',
   );
 
   return $blocks;
@@ -177,8 +175,8 @@ function edit_library() {
         'data' => array(
           'edit' => array(
             'metadataURL' => url('edit/metadata'),
-            'fieldFormURL' => url('admin/edit/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
-            'rerenderProcessedTextURL' => url('admin/render-without-transformations/field/!entity_type/!id/!field_name/!langcode/!view_mode'),
+            'fieldFormURL' => url('edit/form/!entity_type/!id/!field_name/!langcode/!view_mode'),
+            'rerenderProcessedTextURL' => url('edit/text/!entity_type/!id/!field_name/!langcode/!view_mode'),
             'context' => 'body',
           )
         ),
