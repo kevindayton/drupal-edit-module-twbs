@@ -399,7 +399,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     // Remove after animation.
     var that = this;
     var $el = this.$el;
-    this.$el
+    this.$el.remove()
       .addClass('edit-animate-invisible')
       // Prevent this toolbar from being detected *while* it is being removed.
       .removeAttr('id')

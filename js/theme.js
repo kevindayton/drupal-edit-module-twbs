@@ -15,7 +15,7 @@
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editOverlay = function(settings) {
+Drupal.theme.prototype.editOverlay = function(settings) {
   var html = '';
   html += '<div id="edit_overlay" />';
   return html;
@@ -30,7 +30,7 @@ Drupal.theme.editOverlay = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editBackstage = function(settings) {
+Drupal.theme.prototype.editBackstage = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" />';
   return html;
@@ -45,7 +45,7 @@ Drupal.theme.editBackstage = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editModal = function(settings) {
+Drupal.theme.prototype.editModal = function(settings) {
   var classes = 'edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
   var html = '';
   html += '<div id="edit_modal" class="' + classes + '" role="dialog">';
@@ -64,7 +64,7 @@ Drupal.theme.editModal = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editToolbarContainer = function(settings) {
+Drupal.theme.prototype.editToolbarContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-toolbar-container edit-animate-invisible edit-animate-only-visibility">';
   html += '  <div class="edit-toolbar-heightfaker edit-animate-fast">';
@@ -86,7 +86,7 @@ Drupal.theme.editToolbarContainer = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editToolgroup = function(settings) {
+Drupal.theme.prototype.editToolgroup = function(settings) {
   var classes = 'edit-toolgroup edit-animate-slow edit-animate-invisible edit-animate-delay-veryfast';
   var html = '';
   html += '<div class="' + classes + ' ' + settings.classes + '"';
@@ -114,7 +114,7 @@ Drupal.theme.editToolgroup = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editButtons = function(settings) {
+Drupal.theme.prototype.editButtons = function(settings) {
   var html = '';
   for (var i = 0; i < settings.buttons.length; i++) {
     var button = settings.buttons[i];
@@ -141,7 +141,7 @@ Drupal.theme.editButtons = function(settings) {
  * @return
  *   The corresponding HTML.
  */
-Drupal.theme.editFormContainer = function(settings) {
+Drupal.theme.prototype.editFormContainer = function(settings) {
   var html = '';
   html += '<div id="' + settings.id + '" class="edit-form-container">';
   html += '  <div class="edit-form">';
@@ -159,7 +159,7 @@ Drupal.theme.editFormContainer = function(settings) {
  * @return {String}
  *   A string representing a DOM fragment.
  */
-Drupal.theme.editMessageBox = function() {
+Drupal.theme.prototype.editMessageBox = function() {
   return '<div id="edit-messages" class="element-invisible" role="region" aria-live="polite"></div>';
 };
 
@@ -169,7 +169,7 @@ Drupal.theme.editMessageBox = function() {
  * @return {String}
  *   A string representing a DOM fragment.
  */
-Drupal.theme.editMessage = function() {
+Drupal.theme.prototype.editMessage = function() {
   var messages = Array.prototype.slice.call(arguments);
   var output = '';
   for (var i = 0; i < messages.length; i++) {
