@@ -143,7 +143,7 @@ function editfape_field_edit_node_created_form_submit($form, &$form_state) {
  *
  * This isn't a true form. As such it modifies the $form by reference.
  */
-function fape_field_edit_node_title_form(&$form, &$form_state) {
+function editfape_field_edit_node_title_form(&$form, &$form_state) {
   $node = $form_state['entity'];
   $type = node_type_get_type($node);
 
@@ -155,9 +155,9 @@ function fape_field_edit_node_title_form(&$form, &$form_state) {
     '#weight' => -5,
   );
 
-  $form['#submit'][] = 'fape_field_edit_node_title_form_submit';
+  $form['#submit'][] = 'editfape_field_edit_node_title_form_submit';
 }
 
-function fape_field_edit_node_title_form_submit($form, &$form_state) {
+function editfape_field_edit_node_title_form_submit($form, &$form_state) {
   $form_state['entity']->title = $form_state['values']['title'];
 }

@@ -179,7 +179,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   // we only have support for node:title, node:author and node:created.
   $subform_id = 'edit_field_edit_form';
   $subforms = array(
-    'title' => 'fape_field_edit_node_title_form',
+    'title' => 'editfape_field_edit_node_title_form',
     'author' => 'editfape_field_edit_node_author_form',
     'created' => 'editfape_field_edit_node_created_form',
   );
