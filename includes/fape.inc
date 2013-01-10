@@ -20,6 +20,11 @@ function edit_field_edit_form(&$form, &$form_state) {
     'default' => TRUE,
   );
 
+  if ($entity_type == 'node') {
+    $entity->revision = in_array('revision', variable_get('node_options_' . $bundle, array()));
+    $entity->log = NULL;
+  }
+
   field_attach_form($entity_type, $entity, $form, $form_state, $langcode, $options);
 
   $form['#validate'][] = 'edit_field_edit_form_validate';
@@ -32,10 +37,10 @@ function edit_build_entity($form, &$form_state) {
 
   // @todo Refine automated log messages and abstract them to all entity
   //   types: http://drupal.org/node/1678002.
-  //if ($entity->entityType == 'node' && $entity->isNewRevision() && !isset($entity->log)) {
-  //  $instance = field_info_instance($entity->entityType(), $form_state['field_name'], $entity->bundle());
-  //  $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
-  //}
+  if ($form_state['entity_type'] == 'node' && $entity->revision && !isset($entity->log)) {
+    $instance = field_info_instance($form_state['entity_type'], $form_state['field_name'], $form_state['bundle']);
+    $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $instance['label']));
+  }
   return $entity;
 }
 

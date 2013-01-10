@@ -219,7 +219,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $commands = array();
 
   if (!empty($form_state['executed'])) {
-    entity_save($entity_type, $form_state['entity']);
     // Reload the entity. This is necessary for some fields; otherwise we'd
     // render the field without the updated values.
     $entity = entity_load($entity_type, array($entity_id));
