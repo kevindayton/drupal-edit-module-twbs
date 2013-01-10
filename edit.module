@@ -11,10 +11,6 @@
  * entities, enabling them for in-place editing.
  */
 
-define('EDIT_WYSIWYG_VARIABLE', 'edit_wysiwyg');
-// @TODO: provide a UI so users can switch to
-define('EDIT_WYSIWYG_DEFAULT', 'ckeditor');
-
 /**
  * Implements hook_menu()
  */
@@ -52,6 +48,55 @@ function edit_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Discovers all available editors by invoking hook_edit_editor_info().
+ *
+ * @param bool $reset
+ *   Reset the editor info static cache.
+ *
+ * @return array
+ *   An associative array keyed on editor ID.
+ *
+ * @see Drupal 8's Edit's EditorManager
+ */
+function edit_editor_list($reset = FALSE) {
+  $editors = &drupal_static(__FUNCTION__);
+  if (!isset($editors) || $reset) {
+    $editors = module_invoke_all('edit_editor_info');
+    drupal_alter('edit_editor_info', $editors);
+  }
+
+  return $editors;
+}
+
+/**
+ * Implements hook_edit_editor_info().
+ *
+ * @see Drupal 8's Edit's FormEditor and DirectEditor.
+ */
+function edit_edit_editor_info() {
+  $editors = array();
+
+  $path = drupal_get_path('module', 'edit');
+
+  $editors['form'] = array(
+    'jsClassName' => 'drupalFormWidget',
+    'file' => $path . '/includes/editor.form.inc',
+    'compatibility check callback' => '_edit_editor_form_is_compatible',
+    'metadata callback' => '_edit_editor_form_metadata',
+    'attachments callback' => '_edit_editor_form_attachments',
+  );
+  $editors['direct'] = array(
+    'jsClassName' => 'drupalContentEditableWidget',
+    'file' => $path . '/includes/editor.direct.inc',
+    'compatibility check callback' => '_edit_editor_direct_is_compatible',
+    'metadata callback' => '_edit_editor_direct_metadata',
+    'attachments callback' => '_edit_editor_direct_attachments',
+  );
+
+  return $editors;
 }
 
 /**
@@ -98,11 +143,52 @@ function edit_block_view($delta = '') {
           'edit_editbar_post_render',
         ),
       );
+
+      // Include the attachments and settings for all available editors.
+      $content['#attached'] = array_merge_recursive($content['#attached'], edit_get_all_editor_attachments());
     }
     $block['content'] = $content;
   }
 
   return $block;
+}
+
+/**
+ * Returns all editor attachments, ready for use with #attached.
+ *
+ * @return array
+ *   The attachments.
+ *
+ * @see drupal_process_attached()
+ * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
+ */
+function edit_get_all_editor_attachments() {
+    $attachments = array();
+    $editors = edit_editor_list();
+
+    // Editor plugins' attachments.
+    foreach ($editors as $editor_id => $editor) {
+      require_once($editor['file']);
+      $get_attachments = $editor['attachments callback'];
+      $attachments[] = $get_attachments();
+    }
+
+    // JavaScript settings for Edit.
+    foreach ($editors as $editor_id => $editor) {
+      $attachments[] = array(
+        // This will be used in Create.js' propertyEditorWidgetsConfiguration.
+        'js' => array(
+          array(
+            'type' => 'setting',
+            'data' => array('edit' => array('editors' => array(
+              $editor_id => array('widget' => $editor['jsClassName'])
+            )))
+          )
+        )
+      );
+    }
+
+    return drupal_array_merge_deep_array($attachments);
 }
 
 /**
@@ -133,8 +219,6 @@ function edit_theme() {
  * Implements hook_library().
  */
 function edit_library() {
-  // Figure out which library dependency to set for WYSIWYG editor integration.
-  $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
   $path = drupal_get_path('module', 'edit');
   $options = array(
     'scope' => 'footer',
@@ -165,8 +249,6 @@ function edit_library() {
       // Create.js subclasses.
       $path . '/js/createjs/editable.js' => $options,
       $path . '/js/createjs/storage.js' => $options,
-      $path . '/js/createjs/editingWidgets/formwidget.js' => $options,
-      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => $options,
       // Other.
       $path . '/js/util.js' => $options,
       $path . '/js/theme.js' => $options,
@@ -195,6 +277,27 @@ function edit_library() {
       array('system', 'jquery.form'),
       array('system', 'drupal.form'),
       array('system', 'drupal.ajax'),
+    ),
+  );
+
+  $libraries['edit.editor.form'] = array(
+    'title' => '"Form" Create.js PropertyEditor widget',
+    'version' => VERSION,
+    'js' => array(
+      $path . '/js/createjs/editingWidgets/formwidget.js' => $options,
+    ),
+    'dependencies' => array(
+      array('edit', 'edit'),
+    ),
+  );
+  $libraries['edit.editor.direct'] = array(
+    'title' => '"Direct" Create.js PropertyEditor widget',
+    'version' => VERSION,
+    'js' => array(
+      $path . '/js/createjs/editingWidgets/drupalcontenteditablewidget.js' => $options,
+    ),
+    'dependencies' => array(
+      array('edit', 'edit'),
     ),
   );
 
@@ -245,11 +348,6 @@ function edit_library() {
       array('edit', 'underscore'),
     ),
   );
-
-  // Only add dependencies on the WYSIWYG editor when it's actually available.
-  if (module_exists($wysiwyg_module)) {
-    $libraries['edit']['dependencies'][] = array($wysiwyg_module, "$wysiwyg_module.edit");
-  }
 
   return $libraries;
 }
@@ -316,46 +414,12 @@ function edit_field_attach_view_alter(&$output, $context) {
  * Implements hook_field_formatter_info_alter().
  */
 function edit_field_formatter_info_alter(&$info) {
-  // @todo Create a UI that allows users to override these defaults.
-
-  // Add a new "edit" property to each formatter, which contains metadata for
-  // the Edit module depending on the formatter. It contains the following keys:
-  //   * 'editability', with one of the following values:
-  //     - 'editable': these fields will be immediately editable.
-  //     - 'form': these fields will load the field's form through AJAX.
-  //     - 'disabled': these fields will not be editable inline.
-  //   * 'wysiwyg', with boolean values
-  $editability_metadata = array(
-    // @todo Implement file and image editability.
-    'file_default' => 'form',
-    'file_table' => 'form',
-    'file_url_plain' => 'disabled',
-    'image' => 'form',
-    'list_default' => 'form',
-    'list_key' => 'form',
-    'number_integer' => 'form',
-    'number_decimal' => 'form',
-    'number_unformatted' => 'form',
-    'taxonomy_term_reference_link' => 'form',
-    'taxonomy_term_reference_plain' => 'form',
-    'taxonomy_term_reference_rss_category' => 'disabled',
-    'text_default' => 'direct',
-    'text_plain' => 'form',
-    'text_trimmed' => 'disabled',
-    'text_summary_or_trimmed' => 'disabled',
-    'text_textarea' => 'direct',
-  );
-  $wysiwyg_metadata = array(
-    'text_default' => TRUE,
-    'text_plain' => FALSE,
-  );
-  foreach ($editability_metadata as $formatter => $editability) {
-    if (!empty($info[$formatter])) {
-      $info[$formatter]['settings']['edit'] = array(
-        'editability' => $editability,
-        'wysiwyg' => (isset($wysiwyg_metadata[$formatter])) ? $wysiwyg_metadata[$formatter] : FALSE,
-      );
-    }
+  // Every field can use the 'form' editor, but non-rich text fields can use the
+  // 'direct' editor, so we enrich the field formatter info metadata to indicate
+  // this.
+  if (module_exists('text')) {
+    $info['text_default']['settings']['edit']['editor'] = 'direct';
+    $info['text_plain']['settings']['edit']['editor'] = 'direct';
   }
 }
 
@@ -385,12 +449,7 @@ function edit_preprocess_panels_pane(&$variables) {
 
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
-      $variables['title_attributes_array']['class'][] = 'edit-pseudofield';
-      $variables['title_attributes_array']['class'][] = 'edit-field';
-      $variables['title_attributes_array']['class'][] = 'edit-allowed';
-      $variables['title_attributes_array']['class'][] = 'edit-type-direct';
-      $variables['title_attributes_array']['data-edit-field-label'] = $node_type->title_label;
-      $variables['title_attributes_array']['data-edit-id'] = "node:$node->nid:title:$language:$view_mode";
+      $variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$language/$view_mode";
     }
   }
 }
@@ -440,12 +499,7 @@ function edit_preprocess_node(&$variables) {
     // Pseudo-field: title.
     $node_type = node_type_get_type($bundle);
     if ($node_type->has_title) {
-      $variables['title_attributes_array']['class'][] = 'edit-pseudofield';
-      $variables['title_attributes_array']['class'][] = 'edit-field';
-      $variables['title_attributes_array']['class'][] = 'edit-allowed';
-      $variables['title_attributes_array']['class'][] = 'edit-type-direct';
-      $variables['title_attributes_array']['data-edit-field-label'] = $node_type->title_label;
-      $variables['title_attributes_array']['data-edit-id'] = "node:$id:title:$language:$view_mode";
+      $variables['title_attributes_array']['data-edit-id'] = "node/$id/title/$language/$view_mode";
     }
 
     // Pseudo-fields: author (name) and created date (authoring date).
@@ -471,16 +525,7 @@ function edit_preprocess_node(&$variables) {
 function edit_node_wrap_name($name, $node_id, $language, $view_mode) {
   return theme('edit_spanned_field', array(
     'value' => $name,
-    'label' => t('Author'),
-    'edit_id' => "node:$node_id:author:$language:$view_mode",
-    'attributes' => array(
-      'class' => array(
-        'edit-pseudofield',
-        'edit-field',
-        'edit-allowed',
-        'edit-type-form',
-      ),
-    ),
+    'edit_id' => "node/$node_id/author/$language/$view_mode",
   ));
 }
 
@@ -498,16 +543,7 @@ function edit_node_wrap_name($name, $node_id, $language, $view_mode) {
 function edit_node_wrap_date($date, $node_id, $language, $view_mode) {
   return theme('edit_spanned_field', array(
     'value' => $date,
-    'label' => t('Authoring date'),
-    'edit_id' => "node:$node_id:created:$language:$view_mode",
-    'attributes' => array(
-      'class' => array(
-        'edit-pseudofield',
-        'edit-field',
-        'edit-allowed',
-        'edit-type-form',
-      ),
-    ),
+    'edit_id' => "node/$node_id/created/$language/$view_mode",
   ));
 }
 
@@ -527,16 +563,7 @@ function edit_node_wrap_date($date, $node_id, $language, $view_mode) {
 function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_NONE) {
   return theme('edit_spanned_field', array(
     'value' => $title,
-    'label' => $label,
-    'edit_id' => 'node:' . $node_id . ':title:' . $language . ':full',
-    'attributes' => array(
-      'class' => array(
-        'edit-pseudofield',
-        'edit-field',
-        'edit-allowed',
-        'edit-type-direct',
-      ),
-    ),
+    'edit_id' => 'node/' . $node_id . '/title/' . $language . '/full',
   ));
 }
 
@@ -565,5 +592,5 @@ function edit_preprocess_field(&$variables) {
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
 
   // Provide metadata through data- attributes.
-  $variables['attributes_array']['data-edit-id'] = "$entity_type:$id:$field_name:$language:$view_mode";
+  $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
 }

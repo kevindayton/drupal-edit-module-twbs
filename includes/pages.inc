@@ -5,7 +5,16 @@
  */
 
 /**
- * Implements hook_preprocess_field().
+ * Returns the metadata for a set of fields.
+ *
+ * Given a list of field edit IDs as POST parameters, run access checks on the
+ * entity and field level to determine whether the current user may edit them.
+ * Also retrieves other metadata.
+ *
+ * @return
+ *   The JSON response.
+ *
+ * @see Drupal 8's Edit's EditController::metadata()
  */
 function edit_metadata() {
   $fields = $_POST['fields'];
@@ -15,7 +24,7 @@ function edit_metadata() {
   }
 
   foreach ($fields as $field) {
-    list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode(':', $field);
+    list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode('/', $field);
 
     // Load the entity.
     if (!$entity_type || !entity_get_info($entity_type)) {
@@ -28,115 +37,182 @@ function edit_metadata() {
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
     // Validate the field name and language.
-    if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
-      return MENU_NOT_FOUND;
+    if (!_edit_is_special_field($entity_type, $field_name)) {
+      if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
+        return MENU_NOT_FOUND;
+      }
     }
     if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
       return MENU_NOT_FOUND;
     }
 
-    $metadata[$field] = edit_metadata_genarator($field);
+    $metadata[$field] = edit_metadata_generator($field);
   }
 
   drupal_json_output($metadata);
   drupal_exit();
 }
 
-function edit_metadata_genarator($field) {
-  $metadata = array('access' => FALSE);
+function _edit_is_special_field($entity_type, $field_name) {
+  return ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
+}
 
-  list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode(':', $field);
+/**
+ * Generates in-place editing metadata for an entity field.
+ *
+ * @param $field
+ *   The edit ID of the field being edited.
+ * @return array
+ *   An array containing metadata with the following keys:
+ *   - label: the user-visible label for the field.
+ *   - access: whether the current user may edit the field or not.
+ *   - editor: which editor should be used for the field.
+ *   - aria: the ARIA label.
+ *   - custom: (optional) any additional metadata that the editor provides.
+ *
+ * @see Drupal 8's Edit's MetadataGenerator::generate()
+ */
+function edit_metadata_generator($field) {
+  list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode('/', $field);
 
   $entity = entity_load_single($entity_type, $entity_id);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  $instance_info = field_info_instance($entity_type, $field_name, $bundle);
-  $display = $instance_info['display']['default'];
-  if (array_key_exists($view_mode, $instance_info['display'])) {
-    $display = $instance_info['display'][$view_mode];
-  }
-  $formatter_info = field_info_formatter_types($display['type']);
-
-  $editor = $formatter_info['settings']['edit']['editability'];
-  $wysiwyg = $formatter_info['settings']['edit']['wysiwyg'];
-
-  // If directly editable, check the cardinality. If the cardinality is greater
-  // than 1, use a form to edit the field.
-  if ($editor == 'direct') {
-    $field_info = field_info_field($field_name);
-    if ($field_info['cardinality'] != 1) {
-      $editor = 'form';
-    }
-
-    // Only perform the necessary checks (in the next if-test) to see whether
-    // direct, WYSIWYG-based editing is possible if the filter_true_wysiwyg module
-    // and the indicated WYSIWYG module are installed.
-    if ($wysiwyg) {
-      $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-      if (module_exists('filter_true_wysiwyg') && !module_exists($wysiwyg_module)) {
-        $editor = 'form';
-      }
-      // If still directly editable and the formatter is marked to support WYSIWYG,
-      // then check whether we can actually use WYSIWYG.
-      else {
-        $field = $entity->$field_name;
-        $format_id = $field[$language][0]['format'];
-
-        // Update the editability based on the field's settings and the text format.
-        module_load_include('inc', 'edit', 'includes/wysiwyg');
-        $editor = edit_wysiwyg_analyze_field_editability($entity_type, $entity, $field_name, $format_id);
-      }
-    }
-  }
-
-  // If the formatter doesn't contain the edit property, assume that it is not
-  // yet compatible with the Edit module and return early.
-  // If editing is explicitly disabled for this field, return early to avoid
-  // any further processing.
-  if (empty($editor) || $editor == 'disabled') {
+  // Early-return if user does not have access.
+  $entity_access = entity_access('update', $entity_type, $entity);
+  $field_access = (_edit_is_special_field($entity_type, $field_name)) ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
+  if (!$entity_access || !$field_access) {
     return array('access' => FALSE);
   }
 
-  $entity_access = entity_access('update', $entity_type, $entity);
-  $field_access = field_access('edit', $field_name, $entity_type, $entity);
-  if ($entity_access && $field_access) {
-
-    // Provide metadata through data- attributes.
-    $label = $instance_info['label'];
-    $metadata['access'] = TRUE;
-    $metadata['label'] = $label;
-    $metadata['aria'] = t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $entity_id, '@field' => $label));
-
-    if ($editor == 'direct' && $wysiwyg) {
-      $editor = 'direct-with-wysiwyg';
-      $field = $entity->$field_name;
-      $format_id = $field[$language][0]['format'];
-      $metadata['format'] = $format_id;
-
-      $GLOBALS['editbar'] = TRUE;
-
-      // Let the WYSIWYG editor know the allowed tags.
-      $allowed_tags = filter_get_allowed_tags_by_format($format_id);
-      $metadata['allowed_tags'] = ($allowed_tags === TRUE) ? '' : implode(',', $allowed_tags);
-
-      // Ensure the WYSIWYG editor has the necessary text format related
-      // metadata.
-      // @todo: research a more elegant solution, at least document this.
-      $wysiwyg_module = variable_get(EDIT_WYSIWYG_VARIABLE, EDIT_WYSIWYG_DEFAULT);
-      if (function_exists($function = $wysiwyg_module . '_add_format_settings')) {
-        $function();
-      }
-
-      // Let the JavaScript logic know whether transformation filters are used
-      // in this format, so it can decide whether to re-render the text or not.
-      $filter_types = filter_get_filter_types_by_format($format_id);
-      $metadata['formatHasTransformations'] = (bool) count(array_intersect(array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT), $filter_types));
-
+  // Early-return if no editor is available.
+  if (!_edit_is_special_field($entity_type, $field_name)) {
+    $instance_info = field_info_instance($entity_type, $field_name, $bundle);
+    $display = $instance_info['display']['default'];
+    if (array_key_exists($view_mode, $instance_info['display'])) {
+      $display = $instance_info['display'][$view_mode];
     }
-    $metadata['editor'] = $editor;
+    $formatter_type = field_info_formatter_types($display['type']);
+    $items = field_get_items($entity_type, $entity, $field_name, $language);
+    $editor_id = edit_select_editor($formatter_type, $instance_info, $items, $entity_type, $field_name);
+  }
+  // Node title/author/date are not fields, so we have to hard code their editor
+  // mapping instead of selecting the editor dynamically.
+  else {
+    $editor_id = edit_select_editor(array(), array(), array(), $entity_type, $field_name);
+  }
+  if (!isset($editor_id)) {
+    return array('access' => FALSE);
+  }
+
+  // Gather metadata, allow the editor to add additional metadata of its own.
+  if (!_edit_is_special_field($entity_type, $field_name)) {
+    $label = $instance_info['label'];
+  }
+  else {
+    if ($field_name === 'title') {
+      $label = t('Title');
+    }
+    else if ($field_name === 'author') {
+      $label = t('Author');
+    }
+    else if ($field_name === 'created') {
+      $label = t('Date');
+    }
+  }
+  $metadata = array(
+    'label' => $label,
+    'access' => TRUE,
+    'editor' => $editor_id,
+    'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
+  );
+  if (!_edit_is_special_field($entity_type, $field_name)) {
+    $editors = edit_editor_list();
+    $editor = $editors[$editor_id];
+    require_once($editor['file']);
+    $get_metadata = $editor['metadata callback'];
+    $custom_metadata = $get_metadata($instance_info, $items);
+    if (count($custom_metadata)) {
+      $metadata['custom'] = $custom_metadata;
+    }
   }
 
   return $metadata;
+}
+
+/**
+ * Returns the in-place editor to use for a given field instance.
+ *
+ * @param array $formatter_type
+ *   The field's formatter type, as returned by field_info_formatter_types().
+ * @param array $instance
+ *   The field's instance info, as returned by field_info_instance().
+ * @param array $items
+ *   The field's item values.
+ * @param string $entity_type
+ *   The entity type. Only necessary for node title/author/date.
+ * @param string $field_name
+ *   The field's name. Only necessary for node title/author/date.
+ *
+ * @return string|NULL
+ *   The editor to use, or NULL to not enable in-place editing.
+ *
+ * @see Drupal 8's Edit's EditorSelector::getEditor()
+ */
+function edit_select_editor(array $formatter_type, array $instance, array $items, $entity_type, $field_name) {
+  // Node title/author/date are not fields, so we have to hard code their editor
+  // mapping instead of selecting the editor dynamically.
+  if (_edit_is_special_field($entity_type, $field_name)) {
+    return ($field_name === 'title') ? 'direct' : 'form';
+  }
+
+  static $alternatives;
+
+  // Build a static cache of the editors that have registered themselves as
+  // alternatives to a certain editor.
+  if (!isset($alternatives)) {
+    $editors = edit_editor_list();
+    foreach ($editors as $alternative_editor_id => $editor) {
+      if (isset($editor['alternativeTo'])) {
+        foreach ($editor['alternativeTo'] as $original_editor_id) {
+          $alternatives[$original_editor_id][] = $alternative_editor_id;
+        }
+      }
+    }
+  }
+
+  // Check if the formatter defines an appropriate in-place editor. For
+  // example, text formatters displaying untrimmed text can choose to use the
+  // 'direct' editor. If the formatter doesn't specify, fall back to the
+  // 'form' editor, since that can work for any field. Formatter definitions
+  // can use 'disabled' to explicitly opt out of in-place editing.
+  $editor_id = isset($formatter_type['edit']['editor']) ? $formatter_type['edit']['editor'] : 'form';
+  if ($editor_id === 'disabled') {
+    return;
+  }
+  elseif ($editor_id === 'form') {
+    return 'form';
+  }
+
+  // No early return, so create a list of all choices.
+  $editor_choices = array($editor_id);
+  if (isset($this->alternatives[$editor_id])) {
+    $editor_choices = array_merge($editor_choices, $alternatives[$editor_id]);
+  }
+
+  // Make a choice.
+  $editors = edit_editor_list();
+  foreach ($editor_choices as $editor_id) {
+    $editor = $editors[$editor_id];
+    require_once($editor['file']);
+    $is_compatible = $editor['compatibility check callback'];
+    if ($is_compatible($instance, $items)) {
+      return $editor_id;
+    }
+  }
+
+  // We still don't have a choice, so fall back to the default 'form' editor.
+  return 'form';
 }
 
 /**
@@ -229,7 +305,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
       $node_type = node_type_get_type($entity->type);
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
         'data' => edit_page_title_render($entity->title, $node_type->title_label, $id),
       );
     }
@@ -237,14 +312,12 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     elseif ($entity_type == 'node' && $field_name == 'author') {
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
         'data' => edit_node_wrap_name(theme('username', array('account' => $entity)), $id, $langcode, $view_mode),
       );
     }
     elseif ($entity_type == 'node' && $field_name == 'created') {
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
         'data' => edit_node_wrap_date(format_date($entity->created), $id, $langcode, $view_mode),
       );
     }
@@ -253,7 +326,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
       $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
         'data' => drupal_render($field),
       );
     }
@@ -261,7 +333,6 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   else {
     $commands[] = array(
       'command' => 'editFieldForm',
-      'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
       'data' => drupal_render($form),
     );
 

@@ -2,7 +2,7 @@
  * @file
  * Determines which editor to use based on a class attribute.
  */
-(function (jQuery, drupalSettings) {
+(function (jQuery, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -13,31 +13,19 @@
       this.options.domService = 'edit';
       this.options.predicateSelector = '*'; //'.edit-field.edit-allowed';
 
-      this.options.editors.direct = {
-        widget: 'drupalContentEditableWidget',
-        options: {}
-      };
-      this.options.editors['direct-with-wysiwyg'] = {
-        widget: drupalSettings.edit.wysiwygEditorWidgetName,
-        options: {}
-      };
-      this.options.editors.form = {
-        widget: 'drupalFormWidget',
-        options: {}
-      };
+      this.options.propertyEditorWidgetsConfiguration = drupalSettings.edit.editors;
 
       jQuery.Midgard.midgardEditable.prototype._create.call(this);
     },
 
     _propertyEditorName: function(data) {
-      if (jQuery(this.element).hasClass('edit-type-direct')) {
-        if (jQuery(this.element).hasClass('edit-type-direct-with-wysiwyg')) {
-          return 'direct-with-wysiwyg';
-        }
+      // Pick a PropertyEditor widget for a property depending on its metadata.
+      var propertyID = Drupal.edit.util.calcPropertyID(data.entity, data.property);
+      if (typeof Drupal.edit.metadataCache[propertyID] === 'undefined') {
         return 'direct';
       }
-      return 'form';
+      return Drupal.edit.metadataCache[propertyID].editor;
     }
   });
 
-})(jQuery, Drupal.settings);
+})(jQuery, Drupal, Drupal.settings);
