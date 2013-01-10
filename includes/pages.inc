@@ -404,7 +404,7 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
 
   $commands[] = array(
     'command' => 'editFieldRenderedWithoutTransformationFilters',
-    'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
+    'id' => "$entity_type/$id/$field_name/$langcode/$view_mode",
     'data' => $output,
   );
 
