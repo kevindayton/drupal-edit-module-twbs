@@ -264,6 +264,14 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
       'id' => "$entity_type:$id:$field_name:$langcode:$view_mode",
       'data' => drupal_render($form),
     );
+
+    $errors = form_get_errors();
+    if (count($errors)) {
+      $commands[] = array(
+        'command' => 'editFieldFormValidationErrors',
+        'data' => theme('status_messages'),
+      );
+    }
   }
 
   // When working with a hidden form, we don't want any CSS or JS to be loaded.
