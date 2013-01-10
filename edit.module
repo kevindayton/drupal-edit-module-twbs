@@ -451,7 +451,7 @@ function edit_preprocess_panels_pane(&$variables) {
       // Title needs some special handling only show things if title is not overriden
       // and you don't have a link on the node title.
       $configuration = $variables['pane']->configuration;
-      if (!$configuration['override_title'] && !$configuration['link_node_title']) {
+      if (!$configuration['override_title']) {
         $variables['title'] = edit_page_title_render($variables['title'], $node_type->title_label, $node->nid, $language, $view_mode);
       }
     }
