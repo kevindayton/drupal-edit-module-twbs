@@ -438,7 +438,7 @@ function edit_preprocess_panels_pane(&$variables) {
   }
 
   $node = $variables['content']['#node'];
-  $language = $node->language;
+  $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
   // @todo make it work
   $view_mode = 'default';
 
@@ -495,7 +495,7 @@ function edit_preprocess_node(&$variables) {
     $GLOBALS['editbar'] = TRUE;
 
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-    $language = $entity->language;
+    $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
     // Pseudo-field: title.
     $node_type = node_type_get_type($bundle);
     if ($node_type->has_title) {

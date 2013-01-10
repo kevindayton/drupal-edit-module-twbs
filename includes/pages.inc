@@ -240,7 +240,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
 
   if (!isset($langcode) && isset($entity->language)) {
-    $langcode = $entity->language;
+    $langcode = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
   }
 
   // Ensure access to update this particular field is granted.
@@ -379,7 +379,7 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
   }
 
   if (!isset($langcode) && isset($entity->language)) {
-    $langcode = $entity->language;
+    $langcode = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
   }
 
   // Ensure access to update this particular field is granted.
