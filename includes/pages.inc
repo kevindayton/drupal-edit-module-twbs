@@ -94,7 +94,7 @@ function edit_metadata_genarator($field) {
   // If editing is explicitly disabled for this field, return early to avoid
   // any further processing.
   if (empty($editor) || $editor == 'disabled') {
-    return;
+    return array('access' => FALSE);
   }
 
   $entity_access = entity_access('update', $entity_type, $entity);
@@ -113,8 +113,7 @@ function edit_metadata_genarator($field) {
       $format_id = $field[$language][0]['format'];
       $metadata['format'] = $format_id;
 
-      global $editbar;
-      $editbar = TRUE;
+      $GLOBALS['editbar'] = TRUE;
 
       // Let the WYSIWYG editor know the allowed tags.
       $allowed_tags = filter_get_allowed_tags_by_format($format_id);
