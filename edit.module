@@ -203,10 +203,10 @@ function edit_library() {
     'website' => 'http://createjs.org',
     'version' => NULL,
     'js' => array(
-      drupal_get_path('module', 'jquery_update') . '/replace/ui/ui/jquery.ui.widget.js' => array(),
       $path . '/vendor/create/create-editonly.js' => array( /*'defer' => TRUE*/),
     ),
     'dependencies' => array(
+      array('system', 'ui.widget'),
       array('edit', 'vie.core'),
     ),
   );
