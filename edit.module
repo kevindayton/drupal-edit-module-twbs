@@ -255,6 +255,42 @@ function edit_library() {
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ *
+ * Make sure our alter hook is run after jquery update (and after all the others
+ * for that matter).
+ */
+function edit_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'library_alter') {
+    // Move our hook implementation to the bottom.
+    $group = $implementations['edit'];
+    unset($implementations['edit']);
+    $implementations['edit'] = $group;
+  }
+}
+
+/**
+ * Implements hook_library_alter().
+ */
+function edit_library_alter(&$libraries, $module) {
+  $jquery_version = &drupal_static(__FUNCTION__, NULL);
+  if ($module == 'system') {
+    $jquery_version = $libraries['jquery']['version'];
+  }
+  if ($jquery_version && $module == 'edit') {
+    $path = drupal_get_path('module', 'edit');
+    // Adds the minimum event API createjs needs
+    if ($jquery_version < '1.7') {
+      $libraries['edit']['js'][$path . '/js/ducktape.events.js'] = array('group' => JS_LIBRARY);
+    }
+    // If the version of jQuery is old, we need to add deferred to jquery 1.4
+    if ($jquery_version < '1.5') {
+      $libraries['edit']['js'][$path . '/js/ducktape.deferred.js'] = array('group' => JS_LIBRARY);
+    }
+  }
+}
+
+/**
  * Implements hook_field_attach_view_alter().
  */
 function edit_field_attach_view_alter(&$output, $context) {
