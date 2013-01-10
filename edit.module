@@ -121,11 +121,9 @@ function edit_block_view($delta = '') {
     $content = '';
 
     $path = current_path();
-    // @todo: fix http://drupal.org/node/1798458, this is a stopgap measure
-    $node_only = arg(0) == 'node' && is_numeric(arg(1));
 
     // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
-    if (!path_is_admin($path) && $node_only) {
+    if (!path_is_admin($path)) {
       $content = array(
         'content' => array(
           '#theme' => 'item_list',
@@ -439,8 +437,7 @@ function edit_preprocess_panels_pane(&$variables) {
 
   $node = $variables['content']['#node'];
   $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
-  // @todo make it work
-  $view_mode = 'default';
+  $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
 
   // Ensure the user has access to update the node.
   if (entity_access('update', 'node', $node)) {
@@ -450,6 +447,13 @@ function edit_preprocess_panels_pane(&$variables) {
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
       $variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$language/$view_mode";
+
+      // Title needs some special handling only show things if title is not overriden
+      // and you don't have a link on the node title.
+      $configuration = $variables['pane']->configuration;
+      if (!$configuration['override_title'] && !$configuration['link_node_title']) {
+        $variables['title'] = edit_page_title_render($variables['title'], $node_type->title_label, $node->nid, $language, $view_mode);
+      }
     }
   }
 }
@@ -500,6 +504,7 @@ function edit_preprocess_node(&$variables) {
     $node_type = node_type_get_type($bundle);
     if ($node_type->has_title) {
       $variables['title_attributes_array']['data-edit-id'] = "node/$id/title/$language/$view_mode";
+      $variables['title'] = edit_page_title_render($entity->title, $node_type->title_label, $id, $language, $view_mode);
     }
 
     // Pseudo-fields: author (name) and created date (authoring date).
@@ -560,10 +565,10 @@ function edit_node_wrap_date($date, $node_id, $language, $view_mode) {
  * @return
  *   The fully-themed HTML output for the wrapped "date" pseudo-field.
  */
-function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_NONE) {
+function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_NONE, $view_mode = 'full') {
   return theme('edit_spanned_field', array(
     'value' => $title,
-    'edit_id' => 'node/' . $node_id . '/title/' . $language . '/full',
+    'edit_id' => 'node/' . $node_id . '/title/' . $language . '/' . $view_mode,
   ));
 }
 

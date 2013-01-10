@@ -99,6 +99,7 @@ function editfape_field_edit_node_author_form_submit($form, &$form_state) {
   else {
     $form_state['entity']->uid = 0;
   }
+  entity_save($form_state['entity_type'], $form_state['entity']);
 }
 
 /**
@@ -135,6 +136,7 @@ function editfape_field_edit_node_created_form_validate($form, &$form_state) {
 function editfape_field_edit_node_created_form_submit($form, &$form_state) {
   $date = $form_state['values']['date'];
   $form_state['entity']->created = !empty($date) ? strtotime($date) : REQUEST_TIME;
+  entity_save($form_state['entity_type'], $form_state['entity']);
 }
 
 
@@ -160,4 +162,5 @@ function editfape_field_edit_node_title_form(&$form, &$form_state) {
 
 function editfape_field_edit_node_title_form_submit($form, &$form_state) {
   $form_state['entity']->title = $form_state['values']['title'];
+  entity_save($form_state['entity_type'], $form_state['entity']);
 }

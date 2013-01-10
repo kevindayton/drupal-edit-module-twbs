@@ -99,7 +99,7 @@ function edit_metadata_generator($field) {
   // Node title/author/date are not fields, so we have to hard code their editor
   // mapping instead of selecting the editor dynamically.
   else {
-    $editor_id = edit_select_editor(array(), array(), array(), $entity_type, $field_name);
+    $editor_id = edit_select_editor(array(), array(), array(), $entity_type, $field_name, $view_mode);
   }
   if (!isset($editor_id)) {
     return array('access' => FALSE);
@@ -159,11 +159,12 @@ function edit_metadata_generator($field) {
  *
  * @see Drupal 8's Edit's EditorSelector::getEditor()
  */
-function edit_select_editor(array $formatter_type, array $instance, array $items, $entity_type, $field_name) {
+function edit_select_editor(array $formatter_type, array $instance, array $items, $entity_type, $field_name, $view_mode) {
   // Node title/author/date are not fields, so we have to hard code their editor
   // mapping instead of selecting the editor dynamically.
   if (_edit_is_special_field($entity_type, $field_name)) {
-    return ($field_name === 'title') ? 'direct' : 'form';
+    $is_full_title = $field_name === 'title' && $view_mode === 'full';
+    return $is_full_title ? 'direct' : 'form';
   }
 
   static $alternatives;
@@ -305,7 +306,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
       $node_type = node_type_get_type($entity->type);
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'data' => edit_page_title_render($entity->title, $node_type->title_label, $id),
+        'data' => edit_page_title_render($entity->title, $node_type->title_label, $id, $langcode, $view_mode),
       );
     }
     // Pseudo-fields: name and date.
@@ -438,7 +439,18 @@ function edit_field_form_simplify(&$form, &$form_state) {
   $field_name = $form_state['field_name'];
   $langcode = $form_state['langcode'];
 
-  $widget_element =& $form[$field_name][$langcode];
+  if (_edit_is_special_field($form_state['entity_type'], $field_name)) {
+    // This is needed to hide the title properly.
+    $field_mapping = array(
+      'title' => 'title',
+      'author' => 'name',
+      'created' => 'date',
+    );
+    $widget_element =& $form[$field_mapping[$field_name]];
+  }
+  else {
+    $widget_element =& $form[$field_name][$langcode];
+  }
 
   // Hide the field label from displaying within the form, because JavaScript
   // displays the equivalent label that was provided within an HTML data
