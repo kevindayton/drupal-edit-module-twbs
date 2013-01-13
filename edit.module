@@ -51,164 +51,12 @@ function edit_menu() {
 }
 
 /**
- * Discovers all available editors by invoking hook_edit_editor_info().
- *
- * @param bool $reset
- *   Reset the editor info static cache.
- *
- * @return array
- *   An associative array keyed on editor ID.
- *
- * @see Drupal 8's Edit's EditorManager
- */
-function edit_editor_list($reset = FALSE) {
-  $editors = &drupal_static(__FUNCTION__);
-  if (!isset($editors) || $reset) {
-    $editors = module_invoke_all('edit_editor_info');
-    drupal_alter('edit_editor_info', $editors);
-  }
-
-  return $editors;
-}
-
-/**
- * Implements hook_edit_editor_info().
- *
- * @see Drupal 8's Edit's FormEditor and DirectEditor.
- */
-function edit_edit_editor_info() {
-  $editors = array();
-
-  $path = drupal_get_path('module', 'edit');
-
-  $editors['form'] = array(
-    'jsClassName' => 'drupalFormWidget',
-    'file' => $path . '/includes/editor.form.inc',
-    'compatibility check callback' => '_edit_editor_form_is_compatible',
-    'metadata callback' => '_edit_editor_form_metadata',
-    'attachments callback' => '_edit_editor_form_attachments',
-  );
-  $editors['direct'] = array(
-    'jsClassName' => 'drupalContentEditableWidget',
-    'file' => $path . '/includes/editor.direct.inc',
-    'compatibility check callback' => '_edit_editor_direct_is_compatible',
-    'metadata callback' => '_edit_editor_direct_metadata',
-    'attachments callback' => '_edit_editor_direct_attachments',
-  );
-
-  return $editors;
-}
-
-/**
- * Implements hook_block_info().
- */
-function edit_block_info() {
-  $blocks['edit'] = array(
-    'info' => t('Quick edit'),
-    'status' => TRUE,
-    'region' => 'sidebar_first',
-  );
-
-  return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function edit_block_view($delta = '') {
-  if ($delta === 'edit') {
-    $block['subject'] = t('In-place edit operations');
-    $content = '';
-
-    $path = current_path();
-
-    // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
-    if (!path_is_admin($path)) {
-      $content = array(
-        'content' => array(
-          '#theme' => 'item_list',
-          '#items' => array(
-            l(t('View'), $path, array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
-            l(t('Quick edit'), $path, array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit')))),
-          ),
-        ),
-        '#attached' => array(
-          'library' => array(
-            array('edit', 'edit'),
-          ),
-        ),
-        '#post_render' => array(
-          'edit_editbar_post_render',
-        ),
-      );
-
-      // Include the attachments and settings for all available editors.
-      $content['#attached'] = array_merge_recursive($content['#attached'], edit_get_all_editor_attachments());
-    }
-    $block['content'] = $content;
-  }
-
-  return $block;
-}
-
-/**
- * Returns all editor attachments, ready for use with #attached.
- *
- * @return array
- *   The attachments.
- *
- * @see drupal_process_attached()
- * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
- */
-function edit_get_all_editor_attachments() {
-    $attachments = array();
-    $editors = edit_editor_list();
-
-    // Editor plugins' attachments.
-    foreach ($editors as $editor_id => $editor) {
-      require_once($editor['file']);
-      $get_attachments = $editor['attachments callback'];
-      $attachments[] = $get_attachments();
-    }
-
-    // JavaScript settings for Edit.
-    foreach ($editors as $editor_id => $editor) {
-      $attachments[] = array(
-        // This will be used in Create.js' propertyEditorWidgetsConfiguration.
-        'js' => array(
-          array(
-            'type' => 'setting',
-            'data' => array('edit' => array('editors' => array(
-              $editor_id => array('widget' => $editor['jsClassName'])
-            )))
-          )
-        )
-      );
-    }
-
-    return drupal_array_merge_deep_array($attachments);
-}
-
-/**
- * Post-render function to remove the editbar if nothing editable is present.
- */
-function edit_editbar_post_render($html) {
-  return (!empty($GLOBALS['editbar']) && $GLOBALS['editbar'] !== TRUE) ? '' : $html;
-}
-
-/**
  * Implements hook_theme().
  */
 function edit_theme() {
   return array(
-    'edit_spanned_field' => array(
-      'file' => 'includes/theme.inc',
-      'variables' => array(
-        'value' => NULL,
-        'edit_id' => NULL,
-        'label' => NULL,
-        'attributes' => array(),
-      ),
+    'edit_wrap_field' => array(
+      'variables' => array('value' => NULL, 'edit_id' => NULL),
     ),
   );
 }
@@ -351,6 +199,271 @@ function edit_library() {
 }
 
 /**
+ * Implements hook_block_info().
+ */
+function edit_block_info() {
+  $blocks['edit'] = array(
+    'info' => t('Quick edit'),
+    'status' => TRUE,
+    'region' => 'sidebar_first',
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function edit_block_view($delta = '') {
+  if ($delta === 'edit') {
+    $block['subject'] = t('In-place edit operations');
+    $content = '';
+
+    $path = current_path();
+
+    // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
+    if (!path_is_admin($path)) {
+      $content = array(
+        'content' => array(
+          '#theme' => 'item_list',
+          '#items' => array(
+            l(t('View'), $path, array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
+            l(t('Quick edit'), $path, array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          ),
+        ),
+        '#attached' => array(
+          'library' => array(
+            array('edit', 'edit'),
+          ),
+        ),
+        '#post_render' => array(
+          'edit_editbar_post_render',
+        ),
+      );
+      // Include the attachments and settings for all available editors.
+      // @todo this is loading all defined editore, not just the used ones.
+      $content['#attached'] = array_merge_recursive($content['#attached'], edit_get_all_editor_attachments());
+    }
+    $block['content'] = $content;
+  }
+
+  return $block;
+}
+
+/**
+ * Post-render function to remove the editbar if nothing editable is present.
+ */
+function edit_editbar_post_render($html) {
+  return (!empty($GLOBALS['editbar']) && $GLOBALS['editbar'] !== TRUE) ? '' : $html;
+}
+
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function edit_preprocess_field(&$variables) {
+  $element = $variables['element'];
+
+  $entity_type = $element['#entity_type'];
+  $field_name = $element['#field_name'];
+  $language = $element['#language'];
+  $view_mode = $element['#view_mode'];
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
+
+  // Provide metadata through data- attributes.
+  $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
+}
+
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function edit_preprocess_page(&$variables) {
+  // If we don't have a node object to work with, return early to avoid
+  // processing.
+  if (empty($variables['node'])) {
+    return;
+  }
+
+  $node = $variables['node'];
+
+  // Ensure the user has access to update the node.
+  if (entity_access('update', 'node', $node)) {
+    // On full node pages the title of the node becomes the page title so we
+    // must handle it differently. In this case, we add a wrapper around the
+    // title with the required attributes to enable editability.
+    $node_type = node_type_get_type($node->type);
+
+    if ($node_type->has_title) {
+      // Make sure the editbar is created.
+      $GLOBALS['editbar'] = TRUE;
+      $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
+
+      $variables['title'] = edit_wrap_pseudofield(drupal_get_title(), "node/$node->nid/title/$language/full");
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function edit_preprocess_node(&$variables) {
+  $entity_type = $variables['elements']['#entity_type'];
+  $entity = $variables['elements']['#node'];
+  $view_mode = $variables['elements']['#view_mode'];
+
+  if (entity_access('update', $entity_type, $entity)) {
+    // Make sure the editbar is created.
+    $GLOBALS['editbar'] = TRUE;
+
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+    $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
+    $edit_id_suffix = "$language/$view_mode";
+
+    // Pseudo-field: title.
+    $node_type = node_type_get_type($bundle);
+    if ($node_type->has_title) {
+      $variables['title_attributes_array']['data-edit-id'] = "node/$id/title/$edit_id_suffix";
+      $variables['title'] = edit_wrap_pseudofield($entity->title, "node/$id/title/$edit_id_suffix");
+    }
+
+    // Pseudo-fields: author (name) and created date (authoring date).
+    if ($variables['display_submitted']) {
+      $variables['name'] = edit_wrap_pseudofield($variables['name'], "node/$id/author/$edit_id_suffix");
+      $variables['date'] = edit_wrap_pseudofield($variables['date'], "node/$id/created/$edit_id_suffix");
+      $variables['submitted'] = t('Submitted by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_panels_pane().
+ */
+function edit_preprocess_panels_pane(&$variables) {
+  // If we don't have a node object to work with, return early to avoid
+  // processing.
+  // Note: This convoluted check is required because the expression
+  // $variables['content']['#node'] is being interpreted as "the first character
+  // of the string in $variables['content']" in panes that contain 'content' as
+  // a string, rather than an array. Bleh.
+  if (!isset($variables['content']['#node']) || !is_object($variables['content']['#node'])) {
+    return;
+  }
+
+  $node = $variables['content']['#node'];
+  $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
+  $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
+  $edit_id_suffix = "$laguage/$view_mode";
+
+  // Ensure the user has access to update the node.
+  if (entity_access('update', 'node', $node)) {
+    // Make sure the editbar is created.
+    $GLOBALS['editbar'] = TRUE;
+
+    $node_type = node_type_get_type($node->type);
+    if ($node_type->has_title) {
+      //$variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$edit_id_suffix";
+
+      // Title needs some special handling only show things if title is not overriden
+      // and you don't have a link on the node title.
+      $configuration = $variables['pane']->configuration;
+      if (!$configuration['override_title']) {
+        $variables['title'] = edit_wrap_pseudofield($variables['title'], "node/$node->nid/title/$edit_id_suffix");
+      }
+    }
+  }
+}
+
+/**
+ * Discovers all available editors by invoking hook_edit_editor_info().
+ *
+ * @param bool $reset
+ *   Reset the editor info static cache.
+ *
+ * @return array
+ *   An associative array keyed on editor ID.
+ *
+ * @see Drupal 8's Edit's EditorManager
+ */
+function edit_editor_list($reset = FALSE) {
+  $editors = & drupal_static(__FUNCTION__);
+  if (!isset($editors) || $reset) {
+    $editors = module_invoke_all('edit_editor_info');
+    drupal_alter('edit_editor_info', $editors);
+  }
+
+  return $editors;
+}
+
+/**
+ * Implements hook_edit_editor_info().
+ *
+ * @see Drupal 8's Edit's FormEditor and DirectEditor.
+ */
+function edit_edit_editor_info() {
+  $editors = array();
+
+  $path = drupal_get_path('module', 'edit');
+
+  $editors['form'] = array(
+    'widget' => 'drupalFormWidget',
+    'file' => $path . '/includes/editor.form.inc',
+    'compatibility check callback' => '_edit_editor_form_is_compatible',
+    'metadata callback' => '_edit_editor_form_metadata',
+    'attachments callback' => '_edit_editor_form_attachments',
+  );
+  $editors['direct'] = array(
+    'widget' => 'drupalContentEditableWidget',
+    'file' => $path . '/includes/editor.direct.inc',
+    'compatibility check callback' => '_edit_editor_direct_is_compatible',
+    'metadata callback' => '_edit_editor_direct_metadata',
+    'attachments callback' => '_edit_editor_direct_attachments',
+  );
+
+  return $editors;
+}
+
+/**
+ * Returns all editor attachments, ready for use with #attached.
+ *
+ * @return array
+ *   The attachments.
+ *
+ * @see drupal_process_attached()
+ * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
+ */
+function edit_get_all_editor_attachments() {
+  $attachments = array();
+  $editors = edit_editor_list();
+  $settings = array();
+
+  // Editor plugins' attachments.
+  foreach ($editors as $editor_id => $editor) {
+    require_once($editor['file']);
+    $attachments[] = $editor['attachments callback']();
+  }
+
+  // JavaScript settings for Edit.
+  foreach ($editors as $editor_id => $editor) {
+    $settings[$editor_id] = array('widget' => $editor['widget']);
+  }
+
+  if (!empty($settings)) {
+    $attachments[] = array(
+      // This will be used in Create.js' propertyEditorWidgetsConfiguration.
+      'js' => array(
+        array(
+          'type' => 'setting',
+          'data' => array('edit' => array('editors' => $settings)),
+        )
+      ),
+    );
+  }
+
+  return drupal_array_merge_deep_array($attachments);
+}
+
+/**
  * Implements hook_module_implements_alter().
  *
  * Make sure our alter hook is run after jquery update (and after all the others
@@ -395,6 +508,7 @@ function edit_field_attach_view_alter(&$output, $context) {
   }
 
   // Special case for this special mode.
+  // @todo move that to filter_true_wysiwyg module?
   if ($context['display'] == 'edit-render-without-transformation-filters') {
     $children = element_children($output);
     $field = reset($children);
@@ -422,101 +536,6 @@ function edit_field_formatter_info_alter(&$info) {
 }
 
 /**
- * Implements hook_preprocess_panels_pane().
- */
-function edit_preprocess_panels_pane(&$variables) {
-  // If we don't have a node object to work with, return early to avoid
-  // processing.
-  // Note: This convoluted check is required because the expression
-  // $variables['content']['#node'] is being interpreted as "the first character
-  // of the string in $variables['content']" in panes that contain 'content' as
-  // a string, rather than an array. Bleh.
-  if (!isset($variables['content']['#node']) || !is_object($variables['content']['#node'])) {
-    return;
-  }
-
-  $node = $variables['content']['#node'];
-  $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
-  $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
-
-  // Ensure the user has access to update the node.
-  if (entity_access('update', 'node', $node)) {
-    // Make sure the editbar is created.
-    $GLOBALS['editbar'] = TRUE;
-
-    $node_type = node_type_get_type($node->type);
-    if ($node_type->has_title) {
-      $variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$language/$view_mode";
-
-      // Title needs some special handling only show things if title is not overriden
-      // and you don't have a link on the node title.
-      $configuration = $variables['pane']->configuration;
-      if (!$configuration['override_title']) {
-        $variables['title'] = edit_page_title_render($variables['title'], $node_type->title_label, $node->nid, $language, $view_mode);
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_preprocess_page().
- */
-function edit_preprocess_page(&$variables) {
-  // If we don't have a node object to work with, return early to avoid
-  // processing.
-  if (empty($variables['node'])) {
-    return;
-  }
-
-  $node = $variables['node'];
-
-  // Ensure the user has access to update the node.
-  if (entity_access('update', 'node', $node)) {
-    // On full node pages the title of the node becomes the page title so we
-    // must handle it differently. In this case, we add a wrapper around the
-    // title with the required attributes to enable editability.
-    $node_type = node_type_get_type($node->type);
-
-    if ($node_type->has_title) {
-      // Make sure the editbar is created.
-      $GLOBALS['editbar'] = TRUE;
-
-      $variables['title'] = edit_page_title_render(drupal_get_title(), $node_type->title_label, $node->nid);
-    }
-  }
-}
-
-/**
- * Implements hook_preprocess_node().
- */
-function edit_preprocess_node(&$variables) {
-  $entity_type = $variables['elements']['#entity_type'];
-  $entity = $variables['elements']['#node'];
-  $view_mode = $variables['elements']['#view_mode'];
-
-  if (entity_access('update', $entity_type, $entity)) {
-    // Make sure the editbar is created.
-    $GLOBALS['editbar'] = TRUE;
-
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-    $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
-    // Pseudo-field: title.
-    $node_type = node_type_get_type($bundle);
-    if ($node_type->has_title) {
-      $variables['title_attributes_array']['data-edit-id'] = "node/$id/title/$language/$view_mode";
-      $variables['title'] = edit_page_title_render($entity->title, $node_type->title_label, $id, $language, $view_mode);
-    }
-
-    // Pseudo-fields: author (name) and created date (authoring date).
-    if ($variables['display_submitted']) {
-      $variables['name'] = edit_node_wrap_name($variables['name'], $id, $language, $view_mode);
-      $variables['date'] = edit_node_wrap_date($variables['date'], $id, $language, $view_mode);
-      $variables['submitted'] = edit_node_render_submitted($variables['name'], $variables['date'], $language, $view_mode);
-    }
-  }
-}
-
-/**
  * Wraps the name pseudo-field attached to nodes.
  *
  * @param $name
@@ -527,75 +546,14 @@ function edit_preprocess_node(&$variables) {
  * @return
  *   The fully-themed HTML output for the wrapped "name" pseudo-field.
  */
-function edit_node_wrap_name($name, $node_id, $language, $view_mode) {
-  return theme('edit_spanned_field', array(
-    'value' => $name,
-    'edit_id' => "node/$node_id/author/$language/$view_mode",
-  ));
+function edit_wrap_pseudofield($value, $edit_id) {
+  return theme('edit_wrap_field', array('value' => $value, 'edit_id' => $edit_id));
 }
 
 /**
- * Wraps the "date" pseudo-field attached to nodes.
- *
- * @param $date
- *   The existing date value.
- * @param $node_id
- *   The node ID.
- *
- * @return
- *   The fully-themed HTML output for the wrapped "date" pseudo-field.
+ * Formats a field in a wrapper with the required metadata.
  */
-function edit_node_wrap_date($date, $node_id, $language, $view_mode) {
-  return theme('edit_spanned_field', array(
-    'value' => $date,
-    'edit_id' => "node/$node_id/created/$language/$view_mode",
-  ));
-}
-
-/**
- * Wraps the "title" pseudo-field for a page.
- *
- * @param $title
- *   The existing date value.
- * @param $label
- *   The Label name for the content type.
- * @param $node_id
- *   The node ID.
- *
- * @return
- *   The fully-themed HTML output for the wrapped "date" pseudo-field.
- */
-function edit_page_title_render($title, $label, $node_id, $language = LANGUAGE_NONE, $view_mode = 'full') {
-  return theme('edit_spanned_field', array(
-    'value' => $title,
-    'edit_id' => 'node/' . $node_id . '/title/' . $language . '/' . $view_mode,
-  ));
-}
-
-/**
- * Renders the author and created date pseudo-fields.
- */
-function edit_node_render_submitted($author, $created, $language, $view_mode) {
-  // @todo Consider using template_preprocess_node() or theme_preprocess_node()
-  // instead so this may be more easily overridden.
-  return t('Submitted by !username on !datetime', array(
-    '!username' => $author,
-    '!datetime' => $created
-  ));
-}
-
-/**
- * Implements hook_preprocess_field().
- */
-function edit_preprocess_field(&$variables) {
-  $element = $variables['element'];
-
-  $entity_type = $element['#entity_type'];
-  $field_name = $element['#field_name'];
-  $language = $element['#language'];
-  $view_mode = $element['#view_mode'];
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
-
-  // Provide metadata through data- attributes.
-  $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
+function theme_edit_wrap_field($variables) {
+  $variables['attributes']['data-edit-id'] = $variables['edit_id'];
+  return '<span' . drupal_attributes($variables['attributes']) . '><span class="field-item">' .  $variables['value'] . '</span></span>';
 }

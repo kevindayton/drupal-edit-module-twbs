@@ -54,7 +54,9 @@ function edit_metadata() {
 }
 
 function _edit_is_special_field($entity_type, $field_name) {
-  return ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
+  $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
+  // @todo add a drupal_alter of invoke_all maybe?
+  return $is_special;
 }
 
 /**
@@ -74,19 +76,20 @@ function _edit_is_special_field($entity_type, $field_name) {
  */
 function edit_metadata_generator($field) {
   list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode('/', $field);
+  $is_special_field = _edit_is_special_field($entity_type, $field_name);
 
   $entity = entity_load_single($entity_type, $entity_id);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   // Early-return if user does not have access.
   $entity_access = entity_access('update', $entity_type, $entity);
-  $field_access = (_edit_is_special_field($entity_type, $field_name)) ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
+  $field_access = $is_special_field ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
   if (!$entity_access || !$field_access) {
     return array('access' => FALSE);
   }
 
   // Early-return if no editor is available.
-  if (!_edit_is_special_field($entity_type, $field_name)) {
+  if (!$is_special_field) {
     $instance_info = field_info_instance($entity_type, $field_name, $bundle);
     $display = $instance_info['display']['default'];
     if (array_key_exists($view_mode, $instance_info['display'])) {
@@ -94,7 +97,7 @@ function edit_metadata_generator($field) {
     }
     $formatter_type = field_info_formatter_types($display['type']);
     $items = field_get_items($entity_type, $entity, $field_name, $language);
-    $editor_id = edit_select_editor($formatter_type, $instance_info, $items, $entity_type, $field_name);
+    $editor_id = edit_select_editor($formatter_type, $instance_info, $items, $entity_type, $field_name, $view_mode);
   }
   // Node title/author/date are not fields, so we have to hard code their editor
   // mapping instead of selecting the editor dynamically.
@@ -106,7 +109,7 @@ function edit_metadata_generator($field) {
   }
 
   // Gather metadata, allow the editor to add additional metadata of its own.
-  if (!_edit_is_special_field($entity_type, $field_name)) {
+  if (!$is_special_field) {
     $label = $instance_info['label'];
   }
   else {
@@ -126,7 +129,7 @@ function edit_metadata_generator($field) {
     'editor' => $editor_id,
     'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
   );
-  if (!_edit_is_special_field($entity_type, $field_name)) {
+  if (!$is_special_field) {
     $editors = edit_editor_list();
     $editor = $editors[$editor_id];
     require_once($editor['file']);
@@ -250,19 +253,15 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $is_special_field = _edit_is_special_field($entity_type, $field_name);
   $display = array();
 
   // This allows us to have limited support for non-field API fields. Currently,
   // we only have support for node:title, node:author and node:created.
   $subform_id = 'edit_field_edit_form';
-  $subforms = array(
-    'title' => 'editfape_field_edit_node_title_form',
-    'author' => 'editfape_field_edit_node_author_form',
-    'created' => 'editfape_field_edit_node_created_form',
-  );
-  if ($entity_type == 'node' && array_key_exists($field_name, $subforms)) {
+  if ($is_special_field) {
     $field_instance = TRUE;
-    $subform_id = $subforms[$field_name];
+    $subform_id = 'editfape_field_edit_node_' . $field_name . '_form';
     if (!node_access('update', $entity)) {
       return MENU_ACCESS_DENIED;
     }
@@ -301,25 +300,25 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     $entity = entity_load($entity_type, array($entity_id));
     $entity = reset($entity);
 
-    // Pseudo-field: title.
-    if ($entity_type == 'node' && $field_name == 'title') {
-      $node_type = node_type_get_type($entity->type);
+    if ($is_special_field) {
+      switch ($field_name) {
+        case 'title':
+          $value = $entity->title;
+          break;
+
+        case 'author':
+          $value = theme('username', array('account' => $entity));
+          break;
+
+        case 'created':
+          $value = format_date($entity->created);
+          break;
+      }
+      $data = edit_wrap_pseudofield($value, "node/$id/$field_name/$langcode/$view_mode");
+      // @todo will need special things for panel nodes most likely.
       $commands[] = array(
         'command' => 'editFieldFormSaved',
-        'data' => edit_page_title_render($entity->title, $node_type->title_label, $id, $langcode, $view_mode),
-      );
-    }
-    // Pseudo-fields: name and date.
-    elseif ($entity_type == 'node' && $field_name == 'author') {
-      $commands[] = array(
-        'command' => 'editFieldFormSaved',
-        'data' => edit_node_wrap_name(theme('username', array('account' => $entity)), $id, $langcode, $view_mode),
-      );
-    }
-    elseif ($entity_type == 'node' && $field_name == 'created') {
-      $commands[] = array(
-        'command' => 'editFieldFormSaved',
-        'data' => edit_node_wrap_date(format_date($entity->created), $id, $langcode, $view_mode),
+        'data' => $data,
       );
     }
     // All other fields.
@@ -417,7 +416,7 @@ function edit_field_form($form, &$form_state) {
 
   form_load_include($form_state, 'inc', 'edit', 'includes/fape');
 
-  if ($form_state['subform_id']) {
+  if ($form_state['subform_id'] && function_exists($form_state['subform_id'])) {
     $form_state['subform_id']($form, $form_state);
   }
 
@@ -446,10 +445,10 @@ function edit_field_form_simplify(&$form, &$form_state) {
       'author' => 'name',
       'created' => 'date',
     );
-    $widget_element =& $form[$field_mapping[$field_name]];
+    $widget_element = &$form[$field_mapping[$field_name]];
   }
   else {
-    $widget_element =& $form[$field_name][$langcode];
+    $widget_element = &$form[$field_name][$langcode];
   }
 
   // Hide the field label from displaying within the form, because JavaScript
