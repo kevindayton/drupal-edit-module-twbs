@@ -129,14 +129,15 @@ function edit_metadata_generator($field) {
     'editor' => $editor_id,
     'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
   );
+  // Add editor metadata if needed.
   if (!$is_special_field) {
-    $editors = edit_editor_list();
-    $editor = $editors[$editor_id];
-    require_once($editor['file']);
-    $get_metadata = $editor['metadata callback'];
-    $custom_metadata = $get_metadata($instance_info, $items);
-    if (count($custom_metadata)) {
-      $metadata['custom'] = $custom_metadata;
+    $editor = edit_editor_get($editor_id);
+    module_load_include('inc', $editor['module'], $editor['file']);
+    if (!empty($editor['metadata callback'])) {
+      $editor_metadata = $editor['metadata callback']($instance_info, $items);
+      if (!empty($editor_metadata)) {
+        $metadata['editor'] = $editor_metadata;
+      }
     }
   }
 
@@ -163,6 +164,9 @@ function edit_metadata_generator($field) {
  * @see Drupal 8's Edit's EditorSelector::getEditor()
  */
 function edit_select_editor(array $formatter_type, array $instance, array $items, $entity_type, $field_name, $view_mode) {
+  $alternatives = &drupal_static(__FUNCTION__, NULL);
+  $editors = edit_editor_list();
+
   // Node title/author/date are not fields, so we have to hard code their editor
   // mapping instead of selecting the editor dynamically.
   if (_edit_is_special_field($entity_type, $field_name)) {
@@ -170,12 +174,9 @@ function edit_select_editor(array $formatter_type, array $instance, array $items
     return $is_full_title ? 'direct' : 'form';
   }
 
-  static $alternatives;
-
   // Build a static cache of the editors that have registered themselves as
   // alternatives to a certain editor.
-  if (!isset($alternatives)) {
-    $editors = edit_editor_list();
+  if (!$alternatives) {
     foreach ($editors as $alternative_editor_id => $editor) {
       if (isset($editor['alternativeTo'])) {
         foreach ($editor['alternativeTo'] as $original_editor_id) {
@@ -205,13 +206,13 @@ function edit_select_editor(array $formatter_type, array $instance, array $items
   }
 
   // Make a choice.
-  $editors = edit_editor_list();
   foreach ($editor_choices as $editor_id) {
-    $editor = $editors[$editor_id];
-    require_once($editor['file']);
-    $is_compatible = $editor['compatibility check callback'];
-    if ($is_compatible($instance, $items)) {
-      return $editor_id;
+    $editor = edit_editor_get($editor_id);
+    module_load_include('inc', $editor['module'], $editor['file']);
+    if (!empty($editor['compatibility check callback'])) {
+      if ($editor['compatibility check callback']($instance, $items)) {
+        return $editor_id;
+      }
     }
   }
 

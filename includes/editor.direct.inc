@@ -16,9 +16,7 @@ function _edit_editor_direct_is_compatible(array $instance, array $items) {
   elseif (!empty($instance['settings']['text_processing'])) {
     return FALSE;
   }
-  else {
-    return TRUE;
-  }
+  return TRUE;
 }
 
 function _edit_editor_direct_metadata(array $instance, array $items) {

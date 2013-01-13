@@ -386,13 +386,18 @@ function edit_preprocess_panels_pane(&$variables) {
  * @see Drupal 8's Edit's EditorManager
  */
 function edit_editor_list($reset = FALSE) {
-  $editors = & drupal_static(__FUNCTION__);
-  if (!isset($editors) || $reset) {
+  $editors = &drupal_static(__FUNCTION__, NULL);
+  if (!$editors || $reset) {
     $editors = module_invoke_all('edit_editor_info');
     drupal_alter('edit_editor_info', $editors);
   }
 
   return $editors;
+}
+
+function edit_editor_get($editor) {
+  $list = edit_editor_list();
+  return !empty($list[$editor]) ? $list[$editor] : FALSE;
 }
 
 /**
@@ -403,21 +408,21 @@ function edit_editor_list($reset = FALSE) {
 function edit_edit_editor_info() {
   $editors = array();
 
-  $path = drupal_get_path('module', 'edit');
-
   $editors['form'] = array(
     'widget' => 'drupalFormWidget',
-    'file' => $path . '/includes/editor.form.inc',
     'compatibility check callback' => '_edit_editor_form_is_compatible',
     'metadata callback' => '_edit_editor_form_metadata',
     'attachments callback' => '_edit_editor_form_attachments',
+    'module' => 'edit',
+    'file' => 'includes/editor.form',
   );
   $editors['direct'] = array(
     'widget' => 'drupalContentEditableWidget',
-    'file' => $path . '/includes/editor.direct.inc',
     'compatibility check callback' => '_edit_editor_direct_is_compatible',
     'metadata callback' => '_edit_editor_direct_metadata',
     'attachments callback' => '_edit_editor_direct_attachments',
+    'module' => 'edit',
+    'file' => 'includes/editor.direct',
   );
 
   return $editors;
@@ -439,7 +444,7 @@ function edit_get_all_editor_attachments() {
 
   // Editor plugins' attachments.
   foreach ($editors as $editor_id => $editor) {
-    require_once($editor['file']);
+    module_load_include('inc', $editor['module'], $editor['file']);
     $attachments[] = $editor['attachments callback']();
   }
 
