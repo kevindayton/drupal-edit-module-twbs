@@ -147,6 +147,21 @@ function edit_library() {
     ),
   );
 
+  if (module_exists('ckeditor')) {
+    module_load_include('module', 'ckeditor');
+    $libraries['edit.editor.wysiwyg'] = array(
+      'title' => '"WYSIWG" Create.js PropertyEditor widget',
+      'version' => VERSION,
+      'js' => array(
+        $path . '/js/createjs/editingWidgets/drupalwysiwygwidget.js' => $options,
+        ckeditor_path('local', TRUE) . '/ckeditor.js' => $options,
+      ),
+      'dependencies' => array(
+        array('edit', 'edit'),
+      ),
+    );
+  }
+
   $libraries['create.editonly'] = array(
     'title' => 'CreateJS and deps',
     'website' => 'http://createjs.org',
@@ -413,16 +428,22 @@ function edit_edit_editor_info() {
     'compatibility check callback' => '_edit_editor_form_is_compatible',
     'metadata callback' => '_edit_editor_form_metadata',
     'attachments callback' => '_edit_editor_form_attachments',
-    'module' => 'edit',
-    'file' => 'includes/editor.form',
+    'file' => 'includes/editor.form.inc',
   );
   $editors['direct'] = array(
     'widget' => 'drupalContentEditableWidget',
     'compatibility check callback' => '_edit_editor_direct_is_compatible',
     'metadata callback' => '_edit_editor_direct_metadata',
     'attachments callback' => '_edit_editor_direct_attachments',
-    'module' => 'edit',
-    'file' => 'includes/editor.direct',
+    'file' => 'includes/editor.direct.inc',
+  );
+  $editors['wysiwyg'] = array(
+    'widget' => 'drupalWysiwygWidget',
+    'compatibility check callback' => '_edit_editor_wysiwyg_is_compatible',
+    'metadata callback' => '_edit_editor_wysiwyg_metadata',
+    'attachments callback' => '_edit_editor_wysiwyg_attachments',
+    'alternativeTo' => array('direct'),
+    'file' => 'includes/editor.wysiwyg.inc',
   );
 
   return $editors;
@@ -444,7 +465,10 @@ function edit_get_all_editor_attachments() {
 
   // Editor plugins' attachments.
   foreach ($editors as $editor_id => $editor) {
-    module_load_include('inc', $editor['module'], $editor['file']);
+    if ($editor['file']) {
+      $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
+      require_once $file_path . '/' . $editor['file'];
+    }
     $attachments[] = $editor['attachments callback']();
   }
 

@@ -132,11 +132,14 @@ function edit_metadata_generator($field) {
   // Add editor metadata if needed.
   if (!$is_special_field) {
     $editor = edit_editor_get($editor_id);
-    module_load_include('inc', $editor['module'], $editor['file']);
     if (!empty($editor['metadata callback'])) {
+      if ($editor['file']) {
+        $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
+        require_once $file_path . '/' . $editor['file'];
+      }
       $editor_metadata = $editor['metadata callback']($instance_info, $items);
       if (!empty($editor_metadata)) {
-        $metadata['editor'] = $editor_metadata;
+        $metadata['custom'] = $editor_metadata;
       }
     }
   }
@@ -191,7 +194,8 @@ function edit_select_editor(array $formatter_type, array $instance, array $items
   // 'direct' editor. If the formatter doesn't specify, fall back to the
   // 'form' editor, since that can work for any field. Formatter definitions
   // can use 'disabled' to explicitly opt out of in-place editing.
-  $editor_id = isset($formatter_type['edit']['editor']) ? $formatter_type['edit']['editor'] : 'form';
+  $formatter_settings = $formatter_type['settings'];
+  $editor_id = isset($formatter_settings['edit']['editor']) ? $formatter_settings['edit']['editor'] : 'form';
   if ($editor_id === 'disabled') {
     return;
   }
@@ -201,15 +205,18 @@ function edit_select_editor(array $formatter_type, array $instance, array $items
 
   // No early return, so create a list of all choices.
   $editor_choices = array($editor_id);
-  if (isset($this->alternatives[$editor_id])) {
+  if (isset($alternatives[$editor_id])) {
     $editor_choices = array_merge($editor_choices, $alternatives[$editor_id]);
   }
 
   // Make a choice.
   foreach ($editor_choices as $editor_id) {
     $editor = edit_editor_get($editor_id);
-    module_load_include('inc', $editor['module'], $editor['file']);
     if (!empty($editor['compatibility check callback'])) {
+      if ($editor['file']) {
+        $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
+        require_once $file_path . '/' . $editor['file'];
+      }
       if ($editor['compatibility check callback']($instance, $items)) {
         return $editor_id;
       }
