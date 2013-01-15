@@ -147,7 +147,7 @@ function edit_library() {
     ),
   );
 
-  if (in_array('ckeditor', module_list())) {
+  if (module_exists('ckeditor')) {
     module_load_include('module', 'ckeditor');
     $libraries['edit.editor.wysiwyg'] = array(
       'title' => '"WYSIWG" Create.js PropertyEditor widget',
@@ -437,7 +437,7 @@ function edit_edit_editor_info() {
     'attachments callback' => '_edit_editor_direct_attachments',
     'file' => 'includes/editor.direct.inc',
   );
-  if (in_array('ckeditor', module_list())) {
+  if (module_exists('ckeditor')) {
     $editors['wysiwyg'] = array(
       'widget' => 'drupalWysiwygWidget',
       'compatibility check callback' => '_edit_editor_wysiwyg_is_compatible',
