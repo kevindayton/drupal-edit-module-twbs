@@ -16,6 +16,7 @@
     },
 
     enable: function () {
+      var that = this;
       this.element.attr('contentEditable', 'true');
       var settings = {};
       var mainToolbarId = this.toolbarView.getMainWysiwygToolgroupId();
@@ -34,13 +35,15 @@
       this.editor = CKEDITOR.inline(this.element.get(0), settings);
       this.options.disabled = false;
 
-      var widget = this;
-      this.editor.on('focus blur', function () {
-        widget.options.activated();
-      });
-      this.editor.on('key paste afterCommandExec', function () {
-        widget.options.changed(widget.editor.getData());
-      });
+      function updateData () {
+        that.options.changed(that.editor.getData());
+      }
+
+      this.editor.on('focus', that.options.activated);
+      this.editor.on('blur', that.options.activated);
+      this.editor.on('key', updateData);
+      this.editor.on('paste', updateData);
+      this.editor.on('afterCommandExec', updateData);
     },
 
     disable: function () {
@@ -73,19 +76,6 @@
         event.stopPropagation();
         event.preventDefault();
         that.options.activated();
-      });
-
-      // Sets the state to 'changed' whenever the content has changed.
-      var before = jQuery.trim(this.element.text());
-      this.element.on('keyup paste', function (event) {
-        if (that.options.disabled) {
-          return;
-        }
-        var current = jQuery.trim(that.element.text());
-        if (before !== current) {
-          before = current;
-          that.options.changed(current);
-        }
       });
     },
 
