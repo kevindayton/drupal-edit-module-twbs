@@ -5,7 +5,7 @@
  * Callbacks for the "wysiwyg" Create.js PropertyEditor widget.
  */
 
-function _edit_editor_wysiwyg_is_compatible(array $instance, array $items) {
+function _edit_editor_ckeditor_is_compatible(array $instance, array $items) {
 
   module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
 
@@ -24,19 +24,24 @@ function _edit_editor_wysiwyg_is_compatible(array $instance, array $items) {
   return $wysiwyg_possible && $ckeditor_on;
 }
 
-function _edit_editor_wysiwyg_metadata(array $instance, array $items) {
+function _edit_editor_ckeditor_metadata(array $instance, array $items) {
   $field = field_info_field($instance['field_name']);
   $format = $items[0]['format'];
 
   module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
 
   if ($settings = ckeditor_profiles_compile($format)) {
+
+    // Clean up a few settings.
+    foreach (array('customConfig', 'show_toggle', 'ss', 'contentsCss', 'stylesCombo_stylesSet') as $config_item) {
+      unset($settings[$config_item]);
+    }
+
     $data = array(
-      'module_path' => ckeditor_module_path('relative'),
-      'editor_path' => ckeditor_path('relative') . '/',
-      'ajaxToken' => drupal_get_token('ckeditorAjaxCall'),
-      'xss_url' => url('ckeditor/xss'),
-      'theme' => $GLOBALS['theme'],
+      //'module_path' => ckeditor_module_path('relative'),
+      //'editor_path' => ckeditor_path('relative') . '/',
+      //'ajaxToken' => drupal_get_token('ckeditorAjaxCall'),
+      'config' => $settings,
     );
 
     //[#1473010]
@@ -49,7 +54,7 @@ function _edit_editor_wysiwyg_metadata(array $instance, array $items) {
 
     foreach(array('paging', 'linktocontent_node', 'linktocontent_menu', 'pagebreak') as $plugin) {
       if (module_exists($plugin)) {
-        $data[$plugin] = TRUE;
+        $data['config'][$plugin] = TRUE;
       }
     }
   }
@@ -60,18 +65,10 @@ function _edit_editor_wysiwyg_metadata(array $instance, array $items) {
   );
 }
 
-function _edit_editor_wysiwyg_attachments() {
-  module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
+function _edit_editor_ckeditor_attachments() {
   return array(
     'library' => array(
-      array('edit', 'edit.editor.wysiwyg'),
+      array('edit', 'edit.editor.ckeditor'),
     ),
-    'js' => array(
-      array(
-        'data' => 'window.CKEDITOR_BASEPATH = "' . ckeditor_path('relative') . '/"',
-        'type' => 'inline',
-        'weight' => -100,
-      )
-    )
   );
 }

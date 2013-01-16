@@ -149,11 +149,11 @@ function edit_library() {
 
   if (module_exists('ckeditor')) {
     module_load_include('module', 'ckeditor');
-    $libraries['edit.editor.wysiwyg'] = array(
-      'title' => '"WYSIWG" Create.js PropertyEditor widget',
+    $libraries['edit.editor.ckeditor'] = array(
+      'title' => '"CKEditor" Create.js PropertyEditor widget',
       'version' => VERSION,
       'js' => array(
-        $path . '/js/createjs/editingWidgets/drupalwysiwygwidget.js' => $options,
+        $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => $options,
         ckeditor_path('local', TRUE) . '/ckeditor.js' => $options,
       ),
       'dependencies' => array(
@@ -390,6 +390,25 @@ function edit_preprocess_panels_pane(&$variables) {
 }
 
 /**
+ * Implements hook_ckeditor_plugin().
+ *
+ * Adds the sharedspaces plugin.
+ */
+function edit_ckeditor_plugin() {
+  return array(
+    'sharedspace' => array(
+      // Name of the plugin used to write it.
+      'name' => 'sharedspace',
+      // Description of the plugin - it would be displayed in the plugins management section of profile settings.
+      'desc' => t('Shared space'),
+      // The full path to the CKEditor plugins directory, with the trailing slash.
+      'path' => drupal_get_path('module', 'edit') . '/vendor/ckeditor/plugins/sharedspace/',
+      'buttons' => FALSE,
+    ),
+  );
+}
+
+/**
  * Discovers all available editors by invoking hook_edit_editor_info().
  *
  * @param bool $reset
@@ -438,13 +457,13 @@ function edit_edit_editor_info() {
     'file' => 'includes/editor.direct.inc',
   );
   if (module_exists('ckeditor')) {
-    $editors['wysiwyg'] = array(
-      'widget' => 'drupalWysiwygWidget',
-      'compatibility check callback' => '_edit_editor_wysiwyg_is_compatible',
-      'metadata callback' => '_edit_editor_wysiwyg_metadata',
-      'attachments callback' => '_edit_editor_wysiwyg_attachments',
+    $editors['ckeditor'] = array(
+      'widget' => 'drupalCKEditorWidget',
+      'compatibility check callback' => '_edit_editor_ckeditor_is_compatible',
+      'metadata callback' => '_edit_editor_ckeditor_metadata',
+      'attachments callback' => '_edit_editor_ckeditor_attachments',
       'alternativeTo' => array('direct'),
-      'file' => 'includes/editor.wysiwyg.inc',
+      'file' => 'includes/editor.ckeditor.inc',
     );
   }
   return $editors;
