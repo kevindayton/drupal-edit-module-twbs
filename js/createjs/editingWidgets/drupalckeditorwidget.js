@@ -21,14 +21,12 @@
 
       var propertyID = Drupal.edit.util.calcPropertyID(this.options.entity, this.options.property);
       var metadata = Drupal.edit.metadataCache[propertyID].custom;
-      var settings = metadata.ckeditor.config;
-      var pluginPath;
+      var settings = metadata.ckeditor;
 
       if (settings.loadPlugins) {
         for (var pluginName in settings.loadPlugins) {
           if (settings.loadPlugins.hasOwnProperty(pluginName)) {
-            pluginPath = settings.loadPlugins[pluginName].path.substring(1);
-            CKEDITOR.plugins.addExternal(pluginName, Drupal.settings.basePath + pluginPath, settings.loadPlugins[pluginName].file);
+            CKEDITOR.plugins.addExternal(pluginName,  settings.loadPlugins[pluginName].path, settings.loadPlugins[pluginName].file);
           }
         }
       }

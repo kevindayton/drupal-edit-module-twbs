@@ -37,31 +37,30 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
       unset($settings[$config_item]);
     }
 
-    $data = array(
-      //'module_path' => ckeditor_module_path('relative'),
-      //'editor_path' => ckeditor_path('relative') . '/',
-      //'ajaxToken' => drupal_get_token('ckeditorAjaxCall'),
-      'config' => $settings,
-    );
+    // Add sharedspace plugin, required for toolbar to show up.
+    $plugins = edit_ckeditor_plugin();
+    $settings['loadPlugins']['sharedspace'] = $plugins['sharedspace'];
+    $settings['loadPlugins']['sharedspace']['path'] = $GLOBALS['base_path'] . $plugins['sharedspace']['path'];
 
     //[#1473010]
     if (isset($settings['scayt_sLang'])) {
-      $data['scayt_language'] = $settings['scayt_sLang'];
+      $settings['scayt_language'] = $settings['scayt_sLang'];
+      unset($settings['scayt_sLang']);
     }
     elseif (!empty($field["#language"]) && $field["#language"] != LANGUAGE_NONE) {
-      $data['scayt_language'] = ckeditor_scayt_langcode($field["#language"]);
+      $settings['scayt_language'] = ckeditor_scayt_langcode($field["#language"]);
     }
 
     foreach(array('paging', 'linktocontent_node', 'linktocontent_menu', 'pagebreak') as $plugin) {
       if (module_exists($plugin)) {
-        $data['config'][$plugin] = TRUE;
+        $settings['config'][$plugin] = TRUE;
       }
     }
   }
 
   return array(
     'format' => $format,
-    'ckeditor' => $data,
+    'ckeditor' => $settings,
   );
 }
 
