@@ -65,9 +65,14 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
 }
 
 function _edit_editor_ckeditor_attachments() {
+  module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
+
   return array(
     'library' => array(
       array('edit', 'edit.editor.ckeditor'),
     ),
+    'js' => array(
+      array('data' => array('ckeditor' => array('basePath' => ckeditor_path('relative') . '/')), 'type' => 'setting'),
+    )
   );
 }

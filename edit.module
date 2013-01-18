@@ -23,6 +23,8 @@ function edit_menu() {
     'access callback' => TRUE,
     'page callback' => 'edit_metadata',
     'file' => 'includes/pages.inc',
+    'delivery callback' => 'ajax_deliver',
+    'theme callback' => 'ajax_base_page_theme',
   );
   $items['edit/form/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
@@ -154,7 +156,7 @@ function edit_library() {
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => $options,
-        ckeditor_path('local', TRUE) . '/ckeditor.js' => $options,
+        ckeditor_path(TRUE) . '/ckeditor.js' => $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
@@ -240,24 +242,18 @@ function edit_block_view($delta = '') {
     if (!path_is_admin($path)) {
       $content = array(
         'content' => array(
-          '#theme' => 'item_list',
-          '#items' => array(
-            l(t('View'), $path, array('attributes' => array('class' => array('edit_view-edit-toggle', 'edit-view')))),
-            l(t('Quick edit'), $path, array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit')))),
+          '#type' => 'link',
+          '#title' => t('Quick edit'),
+          '#href' => $path,
+          '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
+          '#ajax' => array(
+            'path' => 'edit/metadata',
+            'event' => 'metadatafetch',
+            'progress' => array(),
           ),
         ),
-        '#attached' => array(
-          'library' => array(
-            array('edit', 'edit'),
-          ),
-        ),
-        '#post_render' => array(
-          'edit_editbar_post_render',
-        ),
+        '#pre_render' => array('edit_editbar_pre_render'),
       );
-      // Include the attachments and settings for all available editors.
-      // @todo this is loading all defined editore, not just the used ones.
-      $content['#attached'] = array_merge_recursive($content['#attached'], edit_get_all_editor_attachments());
     }
     $block['content'] = $content;
   }
@@ -268,8 +264,15 @@ function edit_block_view($delta = '') {
 /**
  * Post-render function to remove the editbar if nothing editable is present.
  */
-function edit_editbar_post_render($html) {
-  return (!empty($GLOBALS['editbar']) && $GLOBALS['editbar'] !== TRUE) ? '' : $html;
+function edit_editbar_pre_render($content) {
+  $editbar = !empty($GLOBALS['editbar']) ? $GLOBALS['editbar'] : FALSE;
+  $content['#attached'] = array(
+    'library' => array(array('edit', 'edit')),
+  );
+  if (!$editbar) {
+    $content['#printed'] = TRUE;
+  }
+  return $content;
 }
 
 

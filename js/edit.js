@@ -66,36 +66,30 @@ Drupal.behaviors.edit = {
     Drupal.edit.app.findEditableProperties($context);
 
     if (remainingFieldsToAnnotate.length) {
-      $(window).ready(function() {
-        $.ajax({
-          url: drupalSettings.edit.metadataURL,
-          type: 'POST',
-          data: { 'fields[]' : _.pluck(remainingFieldsToAnnotate, 'editID') },
-          dataType: 'json',
-          success: function(results) {
-            // Update the metadata cache.
-            _.each(results, function(metadata, editID) {
-              Drupal.edit.metadataCache[editID] = metadata;
-            });
 
-            // Annotate the remaining fields based on the updated access cache.
-            _.each(remainingFieldsToAnnotate, annotateField);
-
-            // As soon as there is at least one editable field, show the Edit
-            // tab in the toolbar.
-            if ($fields.filter('.edit-allowed').length) {
-              $('.toolbar .icon-edit.edit-nothing-editable-hidden')
-                .removeClass('edit-nothing-editable-hidden');
-            }
-
-            // Find editable fields, make them editable.
-            Drupal.edit.app.findEditableProperties($context);
-          }
-        });
+      var toolbarAjax = Drupal.ajax['toolbar-tab-edit'];
+      $.extend(toolbarAjax.options.data, {
+        fields: _.pluck(remainingFieldsToAnnotate, 'editID')
       });
+
+      toolbarAjax.commands.annotateFields = function (ajax, response, status) {
+        // Update the metadata cache.
+        _.each(response.results, function(metadata, editID) {
+          Drupal.edit.metadataCache[editID] = metadata;
+        });
+
+        // Annotate the remaining fields based on the updated access cache.
+        _.each(remainingFieldsToAnnotate, annotateField);
+
+        // Find editable fields, make them editable.
+        Drupal.edit.app.findEditableProperties($context);
+      };
+
+      $context.find('#toolbar-tab-edit').trigger('metadatafetch');
     }
   }
 };
+
 
 Drupal.edit.init = function() {
   // Append a messages element for appending interaction updates for screen

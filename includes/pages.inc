@@ -49,8 +49,18 @@ function edit_metadata() {
     $metadata[$field] = edit_metadata_generator($field);
   }
 
-  drupal_json_output($metadata);
-  drupal_exit();
+  $commands = array();
+  $commands[] = array(
+    'command' => 'annotateFields',
+    'results' => $metadata,
+  );
+
+  // Include the attachments and settings for all available editors.
+  // @todo this is loading all defined editore, not just the used ones.
+  $elements['#attached'] = edit_get_all_editor_attachments();
+  drupal_process_attached($elements);
+
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 function _edit_is_special_field($entity_type, $field_name) {
