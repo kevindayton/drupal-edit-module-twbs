@@ -70,7 +70,7 @@ function edit_library() {
   $path = drupal_get_path('module', 'edit');
   $options = array(
     'scope' => 'footer',
-    'attributes' => array('defer' => TRUE),
+    array('weight' => 1),
   );
   $libraries['edit'] = array(
     'title' => 'Edit: in-place editing',
@@ -79,7 +79,7 @@ function edit_library() {
     'js' => array(
       // Core.
       $path . '/js/app.js' => $options,
-      $path . '/js/edit.js' => $options,
+      $path . '/js/edit.js' => array('weight' => 2) + $options,
       // Routers.
       $path . '/js/routers/edit-router.js' => $options,
       // Models.
@@ -155,8 +155,8 @@ function edit_library() {
       'title' => '"CKEditor" Create.js PropertyEditor widget',
       'version' => VERSION,
       'js' => array(
-        $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => $options,
-        ckeditor_path(TRUE) . '/ckeditor.js' => $options,
+        $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
+        drupal_get_path('module', 'ckeditor') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
