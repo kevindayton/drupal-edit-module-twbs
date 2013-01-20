@@ -25,6 +25,7 @@ function edit_menu() {
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
     'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
   );
   $items['edit/form/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
@@ -36,6 +37,7 @@ function edit_menu() {
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
     'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
   );
   $items['edit/text/%/%/%/%/%'] = array(
     // Access is controlled after we have inspected the entity, which can't
@@ -47,6 +49,7 @@ function edit_menu() {
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
     'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
