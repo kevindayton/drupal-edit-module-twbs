@@ -229,6 +229,8 @@
   position: absolute;
   z-index: 300;
   box-shadow: 0 0 30px 4px #4f4f4f;
+}
+.edit-form-bound {
   max-width: 35em;
 }
 
