@@ -342,7 +342,7 @@ function edit_preprocess_node(&$variables) {
 
     // Pseudo-field: title.
     $node_type = node_type_get_type($bundle);
-    if ($node_type->has_title) {
+    if ($node_type->has_title && !empty($entity->title)) {
       $variables['title_attributes_array']['data-edit-id'] = "node/$id/title/$edit_id_suffix";
       $variables['title'] = edit_wrap_pseudofield($entity->title, "node/$id/title/$edit_id_suffix");
     }
