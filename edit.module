@@ -153,13 +153,12 @@ function edit_library() {
   );
 
   if (module_exists('ckeditor')) {
-    module_load_include('module', 'ckeditor');
     $libraries['edit.editor.ckeditor'] = array(
       'title' => '"CKEditor" Create.js PropertyEditor widget',
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
-        drupal_get_path('module', 'ckeditor') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
+        ckeditor_library_path('url') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
