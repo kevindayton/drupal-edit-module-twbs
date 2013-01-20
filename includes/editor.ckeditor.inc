@@ -65,7 +65,7 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
 }
 
 function _edit_editor_ckeditor_attachments() {
-  $ckeditor_path = ckeditor_library_path('url') . '/ckeditor';
+  $ckeditor_path = ckeditor_library_path('relative') . '/ckeditor';
   return array(
     'library' => array(
       array('edit', 'edit.editor.ckeditor'),

@@ -158,7 +158,7 @@ function edit_library() {
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
-        ckeditor_library_path('url') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
+        ckeditor_library_path('relative') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
