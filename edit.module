@@ -484,22 +484,18 @@ function edit_edit_editor_info() {
  * @see drupal_process_attached()
  * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
  */
-function edit_get_all_editor_attachments() {
+function edit_get_all_editor_attachments($editors = array()) {
   $attachments = array();
-  $editors = edit_editor_list();
   $settings = array();
 
   // Editor plugins' attachments.
-  foreach ($editors as $editor_id => $editor) {
+  foreach ($editors as $editor_id) {
+    $editor = edit_editor_get($editor_id);
     if ($editor['file']) {
       $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
       require_once $file_path . '/' . $editor['file'];
     }
     $attachments[] = $editor['attachments callback']();
-  }
-
-  // JavaScript settings for Edit.
-  foreach ($editors as $editor_id => $editor) {
     $settings[$editor_id] = array('widget' => $editor['widget']);
   }
 

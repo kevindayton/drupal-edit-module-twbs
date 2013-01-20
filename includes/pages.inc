@@ -19,6 +19,7 @@
 function edit_metadata() {
   $fields = $_POST['fields'];
   $metadata = array();
+  $editors = array();
   if (!isset($fields)) {
     return MENU_NOT_FOUND;
   }
@@ -47,6 +48,7 @@ function edit_metadata() {
     }
 
     $metadata[$field] = edit_metadata_generator($field);
+    $editors[] = $metadata[$field]['editor'];
   }
 
   $commands = array();
@@ -57,7 +59,7 @@ function edit_metadata() {
 
   // Include the attachments and settings for all available editors.
   // @todo this is loading all defined editore, not just the used ones.
-  $elements['#attached'] = edit_get_all_editor_attachments();
+  $elements['#attached'] = edit_get_all_editor_attachments($editors);
   drupal_process_attached($elements);
 
   return array('#type' => 'ajax', '#commands' => $commands);
