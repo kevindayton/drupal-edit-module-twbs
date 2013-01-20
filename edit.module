@@ -17,10 +17,7 @@
 function edit_menu() {
   $items = array();
   $items['edit/metadata'] = array(
-    // Access is controlled after we have inspected the entity, which can't
-    // easily happen until after the callback.
-    'access arguments' => array(TRUE),
-    'access callback' => TRUE,
+    'access arguments' => array('access inline edit'),
     'page callback' => 'edit_metadata',
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
@@ -28,10 +25,7 @@ function edit_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['edit/form/%/%/%/%/%'] = array(
-    // Access is controlled after we have inspected the entity, which can't
-    // easily happen until after the callback.
-    'access arguments' => array(TRUE),
-    'access callback' => TRUE,
+    'access arguments' => array('access inline edit'),
     'page callback' => 'edit_field_edit',
     'page arguments' => array(2, 3, 4, 5, 6),
     'file' => 'includes/pages.inc',
@@ -40,10 +34,7 @@ function edit_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['edit/text/%/%/%/%/%'] = array(
-    // Access is controlled after we have inspected the entity, which can't
-    // easily happen until after the callback.
-    'access arguments' => array(TRUE),
-    'access callback' => TRUE,
+    'access arguments' => array('access inline edit'),
     'page callback' => 'edit_text_field_render_without_transformation_filters',
     'page arguments' => array(2, 3, 4, 5, 6),
     'file' => 'includes/pages.inc',
@@ -53,6 +44,17 @@ function edit_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function edit_permission() {
+  return array(
+    'access edit' => array(
+      'title' => t('Access inline editing'),
+    ),
+  );
 }
 
 /**
@@ -235,7 +237,7 @@ function edit_block_info() {
  */
 function edit_block_view($delta = '') {
   $block = array();
-  if ($delta === 'edit') {
+  if ($delta === 'edit' && user_access('access inline edit')) {
     $block['subject'] = t('In-place edit operations');
     $content = '';
 
@@ -255,7 +257,7 @@ function edit_block_view($delta = '') {
             'progress' => array(),
           ),
         ),
-        '#pre_render' => array('edit_editbar_pre_render'),
+        '#attached' => array('library' => array(array('edit', 'edit'))),
       );
     }
     $block['content'] = $content;
@@ -263,21 +265,6 @@ function edit_block_view($delta = '') {
 
   return $block;
 }
-
-/**
- * Post-render function to remove the editbar if nothing editable is present.
- */
-function edit_editbar_pre_render($content) {
-  $editbar = !empty($GLOBALS['editbar']) ? $GLOBALS['editbar'] : FALSE;
-  $content['#attached'] = array(
-    'library' => array(array('edit', 'edit')),
-  );
-  if (!$editbar) {
-    $content['#printed'] = TRUE;
-  }
-  return $content;
-}
-
 
 /**
  * Implements hook_preprocess_field().
