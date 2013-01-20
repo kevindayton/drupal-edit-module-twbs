@@ -153,14 +153,12 @@ function edit_library() {
   );
 
   if (module_exists('ckeditor')) {
-    // @todo fix upstream
-    $ckeditor_path = module_exists('libraries') ? libraries_get_path('ckeditor') : ckeditor_library_path('url') . '/ckeditor';
     $libraries['edit.editor.ckeditor'] = array(
       'title' => '"CKEditor" Create.js PropertyEditor widget',
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
-        $ckeditor_path . '/ckeditor.js' => array('weight' => 4) +  $options,
+        ckeditor_library_path('url') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
@@ -236,6 +234,7 @@ function edit_block_info() {
  * Implements hook_block_view().
  */
 function edit_block_view($delta = '') {
+  $block = array();
   if ($delta === 'edit') {
     $block['subject'] = t('In-place edit operations');
     $content = '';

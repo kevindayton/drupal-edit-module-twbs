@@ -65,9 +65,7 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
 }
 
 function _edit_editor_ckeditor_attachments() {
-  module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
-  // @todo fix upstream
-  $ckeditor_path = module_exists('libraries') ? libraries_get_path('ckeditor') : ckeditor_library_path('url') . '/ckeditor';
+  $ckeditor_path = ckeditor_library_path('url') . '/ckeditor';
   return array(
     'library' => array(
       array('edit', 'edit.editor.ckeditor'),
