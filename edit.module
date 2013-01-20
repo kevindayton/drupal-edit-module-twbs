@@ -371,7 +371,7 @@ function edit_preprocess_panels_pane(&$variables) {
   $node = $variables['content']['#node'];
   $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
   $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
-  $edit_id_suffix = "$laguage/$view_mode";
+  $edit_id_suffix = "$language/$view_mode";
 
   // Ensure the user has access to update the node.
   if (entity_access('update', 'node', $node)) {
