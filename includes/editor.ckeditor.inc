@@ -37,6 +37,12 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
       unset($settings[$config_item]);
     }
 
+    // For some reasons when ckeditor is in profiles/libraries ckeditor module
+    // defaults to the kama skin that doesn't exists in ckeditor 4.0.
+    if ($settings['skin'] == 'kama') {
+      $settings['skin'] = 'moono';
+    }
+
     // Add sharedspace plugin, required for toolbar to show up.
     $plugins = edit_ckeditor_plugin();
     $settings['loadPlugins']['sharedspace'] = $plugins['sharedspace'];
