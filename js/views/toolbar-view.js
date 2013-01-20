@@ -364,11 +364,10 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       }));
 
     // Animate the toolgroups into visibility.
-    var that = this;
-    setTimeout(function () {
-      that.show('wysiwyg-floated');
-      that.show('wysiwyg-main');
-    }, 0);
+    setTimeout($.proxy(function () {
+      this.show('wysiwyg-floated');
+      this.show('wysiwyg-main');
+    }, this), 0);
   },
 
   /**
@@ -379,25 +378,19 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    */
   render: function () {
     // Render toolbar.
-    this.setElement($(Drupal.theme('editToolbarContainer', {
-      id: this.getId()
-    })));
+    this.setElement(Drupal.theme('editToolbarContainer', { id: this.getId() }));
 
     // Insert in DOM.
-    if (this.$el.css('display') === 'inline') {
+    if (this.editor.element.css('display') === 'inline') {
       this.$el.prependTo(this.editor.element.offsetParent());
-      var pos = this.editor.element.position();
-      this.$el.css('left', pos.left).css('top', pos.top);
+      this.$el.css(this.editor.element.position());
     }
     else {
       this.$el.insertBefore(this.editor.element);
     }
 
-    var that = this;
     // Animate the toolbar into visibility.
-    setTimeout(function () {
-      that.$el.removeClass('edit-animate-invisible');
-    }, 0);
+    setTimeout($.proxy(function () { this.$el.removeClass('edit-animate-invisible'); }, this), 0);
   },
 
   remove: function () {

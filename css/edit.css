@@ -258,10 +258,6 @@
 .edit-toolbar-container,
 .edit-form-container {
   position: relative;
-  padding: 0;
-  border: 0;
-  margin: 0;
-  vertical-align: baseline;
   z-index: 310;
 }
 .edit-toolbar-container {
