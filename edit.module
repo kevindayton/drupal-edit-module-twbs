@@ -241,29 +241,36 @@ function edit_block_view($delta = '') {
     $block['subject'] = t('In-place edit operations');
     $content = '';
 
-    $path = current_path();
-
-    // Don't provide a view/edit toggle on admin pages, node/add and node/%/edit pages.
-    if (!path_is_admin($path)) {
-      $content = array(
-        'content' => array(
-          '#type' => 'link',
-          '#title' => t('Quick edit'),
-          '#href' => $path,
-          '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
-          '#ajax' => array(
-            'path' => 'edit/metadata',
-            'event' => 'metadatafetch',
-            'progress' => array(),
-          ),
-        ),
-        '#attached' => array('library' => array(array('edit', 'edit'))),
-      );
+    // Don't provide a view/edit toggle on admin pages.
+    if (!path_is_admin(current_path())) {
+      $content = edit_trigger_link();
     }
     $block['content'] = $content;
   }
 
   return $block;
+}
+
+/**
+ * Provides a render array for the quick edit trigger link.
+ *
+ * If another modules wants to output this link in some other place.
+ */
+function edit_trigger_link() {
+  return array(
+    'edit_trigger_link' => array(
+      '#type' => 'link',
+      '#title' => t('Quick edit'),
+      '#href' => current_path(),
+      '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
+      '#ajax' => array(
+        'path' => 'edit/metadata',
+        'event' => 'metadatafetch',
+        'progress' => array(),
+      ),
+      '#attached' => array('library' => array(array('edit', 'edit'))),
+    ),
+  );
 }
 
 /**
