@@ -234,6 +234,10 @@
   max-width: 35em;
 }
 
+.edit-form div.messages {
+  margin: 0 0 8px 0;
+}
+
 .edit-form .placeholder {
   min-height: 22px;
 }
