@@ -86,11 +86,7 @@
       CKEDITOR.disableAutoInline = true;
 
       // Sets the state to 'activated' upon clicking the element.
-      this.element.on("click.edit", function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        that.options.activated();
-      });
+      this.element.on('click.edit', that.options.activated);
     },
 
     /**

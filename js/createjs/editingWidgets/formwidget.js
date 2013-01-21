@@ -32,11 +32,7 @@
     _initialize: function() {
       // Sets the state to 'activating' upon clicking the element.
       var that = this;
-      this.element.on("click.edit", function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-        that.options.activating();
-      });
+      this.element.on('click.edit', that.options.activating);
     },
 
     /**

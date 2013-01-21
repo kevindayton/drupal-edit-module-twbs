@@ -414,11 +414,12 @@
     _manageDocumentFocus: function () {
       var editablesSelector = '.edit-candidate.edit-editable';
       var inputsSelector = 'a:visible, button:visible, input:visible, textarea:visible, select:visible';
-      var $editables = $(editablesSelector)
+      this.$editables = $(editablesSelector)
         .attr({
           'tabindex': 0,
           'role': 'button'
-        });
+        })
+        .on('click.edit-app', function (e) { e.preventDefault(); });
       // Instantiate a variable to hold the editable element in the set.
       var $currentEditable;
       // We're using simple function scope to manage 'this' for the internal
@@ -525,7 +526,7 @@
      */
     _releaseDocumentFocusManagement: function () {
       $(document).off('keydown.edit');
-      //$('.edit-allowed.edit-field').removeAttr('tabindex role');
+      this.$editables.off('click.edit-app').removeAttr('tabindex').removeAttr('role');
     }
   });
 
