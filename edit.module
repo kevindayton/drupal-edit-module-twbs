@@ -395,6 +395,15 @@ function edit_ckeditor_plugin() {
       'path' => drupal_get_path('module', 'edit') . '/vendor/ckeditor/plugins/sharedspace/',
       'buttons' => FALSE,
     ),
+    'onchange' => array(
+      // Name of the plugin used to write it.
+      'name' => 'onchange',
+      // Description of the plugin - it would be displayed in the plugins management section of profile settings.
+      'desc' => t('onChange'),
+      // The full path to the CKEditor plugins directory, with the trailing slash.
+      'path' => drupal_get_path('module', 'edit') . '/vendor/ckeditor/plugins/onchange/',
+      'buttons' => FALSE,
+    ),
   );
 }
 

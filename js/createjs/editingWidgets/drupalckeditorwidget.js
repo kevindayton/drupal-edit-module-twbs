@@ -37,7 +37,7 @@
       var mainToolbarId = this.toolbarView.getMainWysiwygToolgroupId();
       if (mainToolbarId) {
         var settingsOverride = {
-          extraPlugins: 'sharedspace',
+          extraPlugins: 'sharedspace,onchange',
           removePlugins: 'floatingspace,elementspath',
           sharedSpaces: {
             top: mainToolbarId
@@ -57,9 +57,7 @@
 
       this.editor.on('focus', that.options.activated);
       this.editor.on('blur', that.options.activated);
-      this.editor.on('key', updateData);
-      this.editor.on('paste', updateData);
-      this.editor.on('afterCommandExec', updateData);
+      this.editor.on('change', updateData);
     },
 
     disable: function () {

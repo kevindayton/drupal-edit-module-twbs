@@ -43,10 +43,14 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
       $settings['skin'] = 'moono';
     }
 
-    // Add sharedspace plugin, required for toolbar to show up.
+    // Add plugins that are not yet in ckeditor core
     $plugins = edit_ckeditor_plugin();
+    // Adds sharedspace plugin, required for toolbar to show up.
     $settings['loadPlugins']['sharedspace'] = $plugins['sharedspace'];
     $settings['loadPlugins']['sharedspace']['path'] = $GLOBALS['base_path'] . $plugins['sharedspace']['path'];
+    // Adds onchange plugin to detect changes in editable.
+    $settings['loadPlugins']['onchange'] = $plugins['onchange'];
+    $settings['loadPlugins']['onchange']['path'] = $GLOBALS['base_path'] . $plugins['onchange']['path'];
 
     //[#1473010]
     if (isset($settings['scayt_sLang'])) {
