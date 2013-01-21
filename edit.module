@@ -243,7 +243,7 @@ function edit_block_view($delta = '') {
 
     // Don't provide a view/edit toggle on admin pages.
     if (!path_is_admin(current_path())) {
-      $content = edit_trigger_link();
+      $content['edit_trigger_link'] = edit_trigger_link();
     }
     $block['content'] = $content;
   }
@@ -258,18 +258,16 @@ function edit_block_view($delta = '') {
  */
 function edit_trigger_link() {
   return array(
-    'edit_trigger_link' => array(
-      '#type' => 'link',
-      '#title' => t('Quick edit'),
-      '#href' => current_path(),
-      '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
-      '#ajax' => array(
-        'path' => 'edit/metadata',
-        'event' => 'metadatafetch',
-        'progress' => array(),
-      ),
-      '#attached' => array('library' => array(array('edit', 'edit'))),
+    '#type' => 'link',
+    '#title' => t('Quick edit'),
+    '#href' => current_path(),
+    '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
+    '#ajax' => array(
+      'path' => 'edit/metadata',
+      'event' => 'metadatafetch',
+      'progress' => array(),
     ),
+    '#attached' => array('library' => array(array('edit', 'edit'))),
   );
 }
 
