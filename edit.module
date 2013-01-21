@@ -308,8 +308,6 @@ function edit_preprocess_page(&$variables) {
     $node_type = node_type_get_type($node->type);
 
     if ($node_type->has_title) {
-      // Make sure the editbar is created.
-      $GLOBALS['editbar'] = TRUE;
       $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
 
       $variables['title'] = edit_wrap_pseudofield(drupal_get_title(), "node/$node->nid/title/$language/full");
@@ -326,9 +324,6 @@ function edit_preprocess_node(&$variables) {
   $view_mode = $variables['elements']['#view_mode'];
 
   if (entity_access('update', $entity_type, $entity)) {
-    // Make sure the editbar is created.
-    $GLOBALS['editbar'] = TRUE;
-
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
     $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
     $edit_id_suffix = "$language/$view_mode";
@@ -370,9 +365,6 @@ function edit_preprocess_panels_pane(&$variables) {
 
   // Ensure the user has access to update the node.
   if (entity_access('update', 'node', $node)) {
-    // Make sure the editbar is created.
-    $GLOBALS['editbar'] = TRUE;
-
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
       //$variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$edit_id_suffix";
