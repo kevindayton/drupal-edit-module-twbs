@@ -195,7 +195,6 @@ Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
       // Pad the editable.
       self.$el
       .css({
-        'position': 'relative',
         'top':  posProp.top  - 5 + 'px',
         'left': posProp.left - 5 + 'px',
         'padding-top'   : posProp['padding-top']    + 5 + 'px',
@@ -227,7 +226,6 @@ Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
       // Unpad the editable.
       self.$el
       .css({
-        'position': 'relative',
         'top':  posProp.top  + 5 + 'px',
         'left': posProp.left + 5 + 'px',
         'padding-top'   : posProp['padding-top']    - 5 + 'px',

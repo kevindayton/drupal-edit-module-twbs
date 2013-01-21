@@ -66,7 +66,6 @@ Drupal.edit.views.OverlayView = Backbone.View.extend({
   render: function () {
     this.$el
       .show()
-      .css('top', $('#navbar').outerHeight())
       .removeClass('edit-animate-invisible');
   },
 
