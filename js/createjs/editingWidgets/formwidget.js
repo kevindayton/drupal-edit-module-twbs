@@ -160,6 +160,8 @@
       }
 
       Drupal.edit.util.form.unajaxifySaving(this.$formContainer.find('.edit-form-submit'));
+      // Allow form widgets to detach properly.
+      Drupal.detachBehaviors(this.$formContainer, null, 'unload');
       this.$formContainer
         .off('change.edit', ':input')
         .off('keypress.edit', 'input')
