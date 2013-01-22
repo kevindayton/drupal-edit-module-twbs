@@ -111,6 +111,12 @@
         // Add this new EditableEntity widget element to the list.
         that.$entityElements = that.$entityElements.add($element);
       });
+
+      // When opening the page in #edit mode _manageDocumentFocus is called
+      // with an empty set of this.$entityElements we need to bind them here.
+      if (newState === 'candidate' && this.$entityElements.length) {
+        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); });
+      }
     },
 
     /**
@@ -129,10 +135,12 @@
       });
       // Manage the page's tab indexes.
       if (newState === 'candidate') {
+        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); });
         this._manageDocumentFocus();
         Drupal.edit.setMessage(Drupal.t('In place edit mode is active'), Drupal.t('Page navigation is limited to editable items.'), Drupal.t('Press escape to exit'));
       }
       else if (newState === 'inactive') {
+        this.$entityElements.removeOnce('edit-app-click-prevent').off('click.edit-app');
         this._releaseDocumentFocusManagement();
         Drupal.edit.setMessage(Drupal.t('Edit mode is inactive.'), Drupal.t('Resume normal page navigation'));
       }
@@ -418,8 +426,7 @@
         .attr({
           'tabindex': 0,
           'role': 'button'
-        })
-        .on('click.edit-app', function (e) { e.preventDefault(); });
+        });
       // Instantiate a variable to hold the editable element in the set.
       var $currentEditable;
       // We're using simple function scope to manage 'this' for the internal
@@ -526,7 +533,7 @@
      */
     _releaseDocumentFocusManagement: function () {
       $(document).off('keydown.edit');
-      this.$editables.off('click.edit-app').removeAttr('tabindex').removeAttr('role');
+      this.$editables.removeAttr('tabindex').removeAttr('role');
     }
   });
 
