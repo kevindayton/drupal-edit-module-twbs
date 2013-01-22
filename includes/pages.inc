@@ -448,6 +448,10 @@ function edit_field_form($form, &$form_state) {
     '#attributes' => array('class' => array('edit-form-submit')),
   );
 
+  // Remove metatags form elements
+  // @see http://drupal.org/node/1895142
+  unset($form['#metatags']);
+
   // Simplify it for optimal in-place use.
   edit_field_form_simplify($form, $form_state);
   return $form;
