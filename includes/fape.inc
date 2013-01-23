@@ -56,8 +56,6 @@ function edit_field_edit_form_submit(&$form, &$form_state) {
   $form_state['entity'] = $entity;
 }
 
-
-
 /**
  * Subform to edit the entity 'author' field.
  *
@@ -65,6 +63,7 @@ function edit_field_edit_form_submit(&$form, &$form_state) {
  */
 function editfape_field_edit_node_author_form(&$form, &$form_state) {
   $node = $form_state['entity'];
+  node_object_prepare($node);
 
   $form['name'] = array(
     '#type' => 'textfield',
@@ -93,13 +92,14 @@ function editfape_field_edit_node_author_form_validate($form, &$form_state) {
 
 // Taken from node_submit().
 function editfape_field_edit_node_author_form_submit($form, &$form_state) {
+  $entity = editfape_build_entity($form_state, t('Author'));
   if ($account = user_load_by_name($form_state['values']['name'])) {
-    $form_state['entity']->uid = $account->uid;
+    $entity->uid = $account->uid;
   }
   else {
-    $form_state['entity']->uid = 0;
+    $entity->uid = 0;
   }
-  entity_save($form_state['entity_type'], $form_state['entity']);
+  entity_save($form_state['entity_type'], $entity);
 }
 
 /**
@@ -134,9 +134,10 @@ function editfape_field_edit_node_created_form_validate($form, &$form_state) {
 
 // Taken from node_submit().
 function editfape_field_edit_node_created_form_submit($form, &$form_state) {
+  $entity = editfape_build_entity($form_state, t('Date'));
   $date = $form_state['values']['date'];
-  $form_state['entity']->created = !empty($date) ? strtotime($date) : REQUEST_TIME;
-  entity_save($form_state['entity_type'], $form_state['entity']);
+  $entity->created = !empty($date) ? strtotime($date) : REQUEST_TIME;
+  entity_save($form_state['entity_type'], $entity);
 }
 
 
@@ -147,6 +148,7 @@ function editfape_field_edit_node_created_form_submit($form, &$form_state) {
  */
 function editfape_field_edit_node_title_form(&$form, &$form_state) {
   $node = $form_state['entity'];
+  node_object_prepare($node);
   $type = node_type_get_type($node);
 
   $form['title'] = array(
@@ -161,6 +163,23 @@ function editfape_field_edit_node_title_form(&$form, &$form_state) {
 }
 
 function editfape_field_edit_node_title_form_submit($form, &$form_state) {
-  $form_state['entity']->title = $form_state['values']['title'];
-  entity_save($form_state['entity_type'], $form_state['entity']);
+  $entity = editfape_build_entity($form_state, t('Title'));
+  $entity->title = $form_state['values']['title'];
+  entity_save($form_state['entity_type'], $entity);
+}
+
+/**
+ * Creates a new revision for entity requiring it.
+ *
+ * @param $form_state
+ * @param $field
+ *
+ * @return $entity
+ */
+function editfape_build_entity($form_state, $field) {
+  $entity = clone $form_state['entity'];
+  if ($form_state['entity_type'] == 'node' && $entity->revision && !isset($entity->log)) {
+    $entity->log = t('Updated the %field-name field through in-place editing.', array('%field-name' => $field));
+  }
+  return $entity;
 }
