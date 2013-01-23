@@ -336,8 +336,8 @@ function edit_preprocess_node(&$variables) {
 
     // Pseudo-fields: author (name) and created date (authoring date).
     if ($variables['display_submitted']) {
-      $variables['name'] = edit_wrap_pseudofield($variables['name'], "node/$id/author/$edit_id_suffix");
-      $variables['date'] = edit_wrap_pseudofield($variables['date'], "node/$id/created/$edit_id_suffix");
+      $variables['name'] = edit_wrap_pseudofield($variables['name'], "node/$id/author/$edit_id_suffix", TRUE);
+      $variables['date'] = edit_wrap_pseudofield($variables['date'], "node/$id/created/$edit_id_suffix", TRUE);
       $variables['submitted'] = t('Submitted by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
     }
   }
@@ -546,13 +546,20 @@ function edit_library_alter(&$libraries, $module) {
  * Implements hook_field_attach_view_alter().
  */
 function edit_field_attach_view_alter(&$output, $context) {
-  if (!module_exists('filter_true_wysiwyg')) {
-    return;
+
+  // Very basic views support.
+  if ($context['view_mode'] === '_custom' && !empty($context['display']['views_view'])) {
+    $fields = element_children($output);
+    $field = &$output[end($fields)];
+    list($id, $vid, $bundle) = entity_extract_ids($field['#entity_type'], $field['#object']);
+
+    $edit_id = $field['#entity_type'] . '/' . $id . '/' . $field['#field_name'] . '/' . $field['#language'] . '/' . $field['#view_mode'];
+    $field[0]['#markup'] = edit_wrap_pseudofield($field[0]['#markup'], $edit_id);
   }
 
   // Special case for this special mode.
   // @todo move that to filter_true_wysiwyg module?
-  if ($context['display'] == 'edit-render-without-transformation-filters') {
+  if ($context['display'] == 'edit-render-without-transformation-filters' && module_exists('filter_true_wysiwyg')) {
     $children = element_children($output);
     $field = reset($children);
     $langcode = $output[$field]['#language'];
@@ -589,8 +596,8 @@ function edit_field_formatter_info_alter(&$info) {
  * @return
  *   The fully-themed HTML output for the wrapped "name" pseudo-field.
  */
-function edit_wrap_pseudofield($value, $edit_id) {
-  return theme('edit_wrap_field', array('value' => $value, 'edit_id' => $edit_id));
+function edit_wrap_pseudofield($value, $edit_id, $inline = FALSE) {
+  return theme('edit_wrap_field', array('value' => $value, 'edit_id' => $edit_id, 'inline' => $inline));
 }
 
 /**
@@ -598,5 +605,8 @@ function edit_wrap_pseudofield($value, $edit_id) {
  */
 function theme_edit_wrap_field($variables) {
   $variables['attributes']['data-edit-id'] = $variables['edit_id'];
-  return '<span' . drupal_attributes($variables['attributes']) . '><span class="field-item">' .  $variables['value'] . '</span></span>';
+  if ($variables['inline']) {
+    $variables['attributes']['class'][] = 'edit-inline';
+  }
+  return '<div' . drupal_attributes($variables['attributes']) . '><div class="field-item">' .  $variables['value'] . '</div></div>';
 }

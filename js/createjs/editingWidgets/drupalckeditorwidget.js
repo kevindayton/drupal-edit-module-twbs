@@ -7,6 +7,11 @@
   "use strict";
 
   // This value needs to be set before ckeditor.js is loaded.
+  // Stupid drupal_add_js() merging behavior.
+  var ckeditorBasePath = Drupal.settings.ckeditor.basePath;
+  if (ckeditorBasePath.length) {
+    Drupal.settings.ckeditor.basePath = ckeditorBasePath[0];
+  }
   window.CKEDITOR_BASEPATH = Drupal.settings.ckeditor.basePath;
 
   jQuery.widget('Drupal.drupalCKEditorWidget', jQuery.Create.editWidget, {
