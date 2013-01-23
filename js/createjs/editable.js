@@ -2,11 +2,13 @@
  * @file
  * Determines which editor to use based on a class attribute.
  */
-(function (jQuery, Drupal, drupalSettings) {
+(function (jQuery, Drupal, _, drupalSettings) {
 
 "use strict";
 
-  jQuery.widget('Drupal.createEditable', jQuery.Midgard.midgardEditable, {
+  var midgardEditable = jQuery.Midgard.midgardEditable;
+
+  jQuery.widget('Drupal.createEditable', midgardEditable, {
     _create: function() {
       this.vie = this.options.vie;
 
@@ -15,7 +17,7 @@
 
       this.options.propertyEditorWidgetsConfiguration = drupalSettings.edit.editors;
 
-      jQuery.Midgard.midgardEditable.prototype._create.call(this);
+      midgardEditable.prototype._create.call(this);
     },
 
     _propertyEditorName: function(data) {
@@ -25,7 +27,40 @@
         return 'direct';
       }
       return Drupal.edit.metadataCache[propertyID].editor;
+    },
+
+    /**
+     * We allow people to toggle on and off, default function caused JS errors.
+     */
+    disable: function () {
+      _.each(this.options.propertyEditors, function (editable) {
+        this.disableEditor({
+          widget: this,
+          editable: editable,
+          entity: this.options.model,
+          element: jQuery(editable)
+        });
+      }, this);
+
+      // This is the only change removed from default function!
+      // this.options.propertyEditors = {};
+
+
+      _.each(this.options.collections, function (collectionWidget) {
+        var editableOptions = _.clone(this.options);
+        editableOptions.state = 'inactive';
+        this.disableCollection({
+          widget: this,
+          model: this.options.model,
+          element: collectionWidget,
+          vie: this.vie,
+          editableOptions: editableOptions
+        });
+      }, this);
+      this.options.collections = [];
+
+      this._trigger('disable', null, this._params());
     }
   });
 
-})(jQuery, Drupal, Drupal.settings);
+})(jQuery, Drupal, _, Drupal.settings);
