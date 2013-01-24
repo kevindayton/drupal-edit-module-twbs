@@ -65,12 +65,6 @@ function edit_metadata() {
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
-function _edit_is_special_field($entity_type, $field_name) {
-  $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
-  // @todo add a drupal_alter of invoke_all maybe?
-  return $is_special;
-}
-
 /**
  * Generates in-place editing metadata for an entity field.
  *

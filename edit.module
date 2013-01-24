@@ -271,6 +271,12 @@ function edit_trigger_link() {
   );
 }
 
+function _edit_is_special_field($entity_type, $field_name) {
+  $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
+  // @todo add a drupal_alter of invoke_all maybe?
+  return $is_special;
+}
+
 /**
  * Implements hook_preprocess_field().
  */
@@ -287,6 +293,23 @@ function edit_preprocess_field(&$variables) {
   $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
 }
 
+/**
+ * Implements hook_preprocess_views_view_fields().
+ */
+function edit_preprocess_views_view_field(&$variables) {
+  $views_field = $variables['field'];
+  $entity_info = end($variables['row']->_field_data);
+
+  $entity_type = $entity_info['entity_type'];
+  $entity = $entity_info['entity'];
+  $field_name = $views_field->field;
+  $language = $entity->language;
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
+
+  $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+}
 
 /**
  * Implements hook_preprocess_page().
@@ -546,17 +569,6 @@ function edit_library_alter(&$libraries, $module) {
  * Implements hook_field_attach_view_alter().
  */
 function edit_field_attach_view_alter(&$output, $context) {
-
-  // Very basic views support.
-  if ($context['view_mode'] === '_custom' && !empty($context['display']['views_view'])) {
-    $fields = element_children($output);
-    $field = &$output[end($fields)];
-    list($id, $vid, $bundle) = entity_extract_ids($field['#entity_type'], $field['#object']);
-
-    $edit_id = $field['#entity_type'] . '/' . $id . '/' . $field['#field_name'] . '/' . $field['#language'] . '/' . $field['#view_mode'];
-    $field[0]['#markup'] = edit_wrap_pseudofield($field[0]['#markup'], $edit_id);
-  }
-
   // Special case for this special mode.
   // @todo move that to filter_true_wysiwyg module?
   if ($context['display'] == 'edit-render-without-transformation-filters' && module_exists('filter_true_wysiwyg')) {
