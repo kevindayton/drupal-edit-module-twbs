@@ -38,7 +38,7 @@ Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
     this.editor = options.editor;
     this.toolbarId = options.toolbarId;
 
-    this.$el.css('background-color', this._getBgColor(this.$el));
+    //this.$el.css('background-color', this._getBgColor(this.$el));
   },
 
   /**
@@ -239,6 +239,8 @@ Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
 
   /**
    * Gets the background color of an element (or the inherited one).
+   *
+   * @todo remove or improve.
    *
    * @param $e
    *   A DOM element.

@@ -88,8 +88,7 @@
         .css('width', formWidth)
         .find('.edit-form')
         .addClass('edit-editable edit-highlighted edit-editing')
-        .attr('role', 'dialog')
-        .css('background-color', $editorElement.css('background-color'));
+        .attr('role', 'dialog');
 
       // Make the form take the same space as the element we're editing.
       var formWidth = $editorElement.width();

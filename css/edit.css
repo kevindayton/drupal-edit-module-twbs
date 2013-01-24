@@ -145,12 +145,12 @@
 
 
 /* Editing (focused) editable. */
-.edit-form.edit-editable.edit-editing,
-.edit-field .edit-editable.edit-editing {
+.edit-form.edit-editable.edit-editing {
   /* In the latest design, there's no special styling when editing as opposed to
    * just hovering.
    * This will be necessary again for http://drupal.org/node/1844220.
    */
+  background-color: white;
 }
 
 /**
