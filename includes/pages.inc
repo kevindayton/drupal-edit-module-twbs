@@ -315,20 +315,23 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     $entity = reset($entity);
 
     if ($is_special_field) {
+      $inline = FALSE;
       switch ($field_name) {
         case 'title':
           $value = $entity->title;
           break;
 
         case 'author':
+          $inline = TRUE;
           $value = theme('username', array('account' => $entity));
           break;
 
         case 'created':
+          $inline = TRUE;
           $value = format_date($entity->created);
           break;
       }
-      $data = edit_wrap_pseudofield($value, "node/$id/$field_name/$langcode/$view_mode");
+      $data = edit_wrap_pseudofield($value, "node/$id/$field_name/$langcode/$view_mode", $inline);
       // @todo will need special things for panel nodes most likely.
       $commands[] = array(
         'command' => 'editFieldFormSaved',
