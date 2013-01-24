@@ -283,6 +283,12 @@ function _edit_is_special_field($entity_type, $field_name) {
 function edit_preprocess_field(&$variables) {
   $element = $variables['element'];
 
+  // Some fields might be rendered through theme_field()
+  // but are not Field API fields, e.g. Display Suite fields.
+  if (!empty($element['#skip_edit'])) {
+    return;
+  }
+
   $entity_type = $element['#entity_type'];
   $field_name = $element['#field_name'];
   $language = $element['#language'];
