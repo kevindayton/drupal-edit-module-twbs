@@ -115,7 +115,9 @@
       // When opening the page in #edit mode _manageDocumentFocus is called
       // with an empty set of this.$entityElements we need to bind them here.
       if (newState === 'candidate' && this.$entityElements.length) {
-        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); });
+        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); })
+          // This is to prevent chrome from redirecting to the node #1898912
+          .closest('a').on('click.edit-app', false);
       }
     },
 
@@ -135,12 +137,14 @@
       });
       // Manage the page's tab indexes.
       if (newState === 'candidate') {
-        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); });
+        var $elements = this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); })
+          // This is to prevent chrome from redirecting to the node #1898912
+          .closest('a').on('click.edit-app', false);
         this._manageDocumentFocus();
         Drupal.edit.setMessage(Drupal.t('In place edit mode is active'), Drupal.t('Page navigation is limited to editable items.'), Drupal.t('Press escape to exit'));
       }
       else if (newState === 'inactive') {
-        this.$entityElements.removeOnce('edit-app-click-prevent').off('click.edit-app');
+        this.$entityElements.removeOnce('edit-app-click-prevent').off('.edit-app').closest('a').off('.edit-app');
         this._releaseDocumentFocusManagement();
         Drupal.edit.setMessage(Drupal.t('Edit mode is inactive.'), Drupal.t('Resume normal page navigation'));
       }
