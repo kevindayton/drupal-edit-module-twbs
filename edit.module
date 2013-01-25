@@ -505,7 +505,7 @@ function edit_edit_editor_info() {
  * @see drupal_process_attached()
  * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
  */
-function edit_get_all_editor_attachments($editors = array()) {
+function edit_get_all_editor_attachments($editors = array(), $metadata = array()) {
   $attachments = array();
   $settings = array();
 
@@ -518,7 +518,8 @@ function edit_get_all_editor_attachments($editors = array()) {
         require_once $file_path . '/' . $editor['file'];
       }
       if (function_exists($editor['attachments callback'])) {
-        $attachments[$editor_id] = $editor['attachments callback']();
+        $attachments[$editor_id] = $editor['attachments callback']($metadata);
+        drupal_alter('edit_editor_attachments', $attachments[$editor_id], $editor_id, $metadata);
       }
     }
     $settings[$editor_id] = array('widget' => $editor['widget']);
@@ -536,7 +537,6 @@ function edit_get_all_editor_attachments($editors = array()) {
     );
   }
 
-  drupal_alter('edit_editor_attachments', $attachments);
   return drupal_array_merge_deep_array($attachments);
 }
 

@@ -82,6 +82,6 @@ function _edit_editor_ckeditor_attachments() {
     ),
     'js' => array(
       array('data' => array('ckeditor' => array('basePath' =>  $ckeditor_path . '/')), 'type' => 'setting'),
-    )
+    ),
   );
 }

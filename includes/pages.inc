@@ -41,7 +41,7 @@ function edit_metadata() {
   );
 
   // Include the attachments and settings for editors that are used.
-  $elements['#attached'] = edit_get_all_editor_attachments($editors);
+  $elements['#attached'] = edit_get_all_editor_attachments($editors, $metadata);
   drupal_process_attached($elements);
 
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -164,10 +164,21 @@ function edit_metadata_generator($field) {
         require_once $file_path . '/' . $editor['file'];
       }
       if (function_exists($editor['metadata callback'])) {
-        $metadata['custom'] = $editor['metadata callback']($instance_info, $items);
+        $editor_metadata = $editor['metadata callback']($instance_info, $items);
+        if (!empty($editor_metadata)) {
+          $metadata['custom'] = $editor_metadata;
+        }
       }
     }
   }
+
+  $context = array(
+    'field' => $field,
+    'entity' => $entity,
+    'instance_info' => $instance_info,
+    'items' => $items,
+  );
+  drupal_alter('edit_editor_metadata', $metadata, $editor_id, $context);
 
   return $metadata;
 }
