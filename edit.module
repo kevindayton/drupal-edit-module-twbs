@@ -160,7 +160,7 @@ function edit_library() {
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
-        ckeditor_library_path('relative') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
+        ckeditor_library_path('url') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
@@ -510,7 +510,7 @@ function edit_get_all_editor_attachments($editors = array(), $metadata = array()
   $settings = array();
 
   // Editor plugins' attachments.
-  foreach ($editors as $editor_id) {
+  foreach (array_unique($editors) as $editor_id) {
     $editor = edit_editor_get($editor_id);
     if (!empty($editor['attachments callback'])) {
       if ($editor['file']) {
