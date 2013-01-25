@@ -85,7 +85,7 @@ Drupal.behaviors.edit = {
         Drupal.edit.app.findEditableProperties($context);
       };
 
-      $context.find('#toolbar-tab-edit').trigger('metadatafetch');
+      $('#toolbar-tab-edit').trigger('metadatafetch');
     }
   }
 };
