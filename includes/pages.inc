@@ -25,30 +25,13 @@ function edit_metadata() {
   }
 
   foreach ($fields as $field) {
-    list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode('/', $field);
-
-    // Load the entity.
-    if (!$entity_type || !entity_get_info($entity_type)) {
-      return MENU_NOT_FOUND;
+    if (_edit_validate_field($field)) {
+      $metadata[$field] = edit_metadata_generator($field);
+      $editors[] = $metadata[$field]['editor'];
     }
-    $entity = entity_load_single($entity_type, $entity_id);
-    if (!$entity) {
-      return MENU_NOT_FOUND;
+    else {
+      $metadata[$field] = array('access' => FALSE);
     }
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-    // Validate the field name and language.
-    if (!_edit_is_special_field($entity_type, $field_name)) {
-      if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
-        return MENU_NOT_FOUND;
-      }
-    }
-    if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
-      return MENU_NOT_FOUND;
-    }
-
-    $metadata[$field] = edit_metadata_generator($field);
-    $editors[] = $metadata[$field]['editor'];
   }
 
   $commands = array();
@@ -57,13 +40,46 @@ function edit_metadata() {
     'results' => $metadata,
   );
 
-  // Include the attachments and settings for all available editors.
-  // @todo this is loading all defined editore, not just the used ones.
+  // Include the attachments and settings for editors that are used.
   $elements['#attached'] = edit_get_all_editor_attachments($editors);
   drupal_process_attached($elements);
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
+
+/**
+ * Checks if a field is inline editable or not.
+ *
+ * @param $field
+ *
+ * @return bool
+ */
+function _edit_validate_field($field) {
+  list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode('/', $field);
+
+  // Load the entity.
+  if (!$entity_type || !entity_get_info($entity_type)) {
+    return FALSE;
+  }
+  $entity = entity_load_single($entity_type, $entity_id);
+  if (!$entity) {
+    return FALSE;
+  }
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Validate the field name and language.
+  if (!_edit_is_special_field($entity_type, $field_name)) {
+    if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
+      return FALSE;
+    }
+  }
+  if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 
 /**
  * Generates in-place editing metadata for an entity field.
@@ -103,6 +119,10 @@ function edit_metadata_generator($field) {
     }
     $formatter_type = field_info_formatter_types($display['type']);
     $items = field_get_items($entity_type, $entity, $field_name, $language);
+    // For fields who don't have values, end here.
+    if (!$items) {
+      return array('access' => FALSE);
+    }
     $editor_id = edit_select_editor($formatter_type, $instance_info, $items, $entity_type, $field_name, $view_mode);
   }
   // Node title/author/date are not fields, so we have to hard code their editor
@@ -143,9 +163,8 @@ function edit_metadata_generator($field) {
         $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
         require_once $file_path . '/' . $editor['file'];
       }
-      $editor_metadata = $editor['metadata callback']($instance_info, $items);
-      if (!empty($editor_metadata)) {
-        $metadata['custom'] = $editor_metadata;
+      if (function_exists($editor['metadata callback'])) {
+        $metadata['custom'] = $editor['metadata callback']($instance_info, $items);
       }
     }
   }
