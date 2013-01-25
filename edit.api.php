@@ -35,3 +35,12 @@ function hook_edit_editor_attachments_alter(&$attachments, $editor, $metadata) {
 
 }
 
+/**
+ * JS API
+ */
+
+/**
+ * $(document).on('quickedit', function (event, status) {});
+ *
+ * status is a bool true when overlay is displayed and quick-edit is ready.
+ */

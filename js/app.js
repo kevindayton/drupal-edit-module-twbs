@@ -115,9 +115,7 @@
       // When opening the page in #edit mode _manageDocumentFocus is called
       // with an empty set of this.$entityElements we need to bind them here.
       if (newState === 'candidate' && this.$entityElements.length) {
-        this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); })
-          // This is to prevent chrome from redirecting to the node #1898912
-          .closest('a').on('click.edit-app', false);
+        this._manageDocumentFocus();
       }
     },
 
@@ -137,14 +135,10 @@
       });
       // Manage the page's tab indexes.
       if (newState === 'candidate') {
-        var $elements = this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); })
-          // This is to prevent chrome from redirecting to the node #1898912
-          .closest('a').on('click.edit-app', false);
         this._manageDocumentFocus();
         Drupal.edit.setMessage(Drupal.t('In place edit mode is active'), Drupal.t('Page navigation is limited to editable items.'), Drupal.t('Press escape to exit'));
       }
       else if (newState === 'inactive') {
-        this.$entityElements.removeOnce('edit-app-click-prevent').off('.edit-app').closest('a').off('.edit-app');
         this._releaseDocumentFocusManagement();
         Drupal.edit.setMessage(Drupal.t('Edit mode is inactive.'), Drupal.t('Resume normal page navigation'));
       }
@@ -424,6 +418,9 @@
      * want this feedback sooner than we can have a refactored application.
      */
     _manageDocumentFocus: function () {
+      if (!this.$entityElements.length) {
+        return;
+      }
       var editablesSelector = '.edit-candidate.edit-editable';
       var inputsSelector = 'a:visible, button:visible, input:visible, textarea:visible, select:visible';
       this.$editables = $(editablesSelector)
@@ -431,6 +428,17 @@
           'tabindex': 0,
           'role': 'button'
         });
+
+      var $els = this.$entityElements.once('edit-app-click-prevent').on('click.edit-app', function (e) { e.preventDefault(); });
+        // This is to prevent chrome from redirecting to the node #1898912
+        $els.closest('a').on('click.edit-app', function (e) { e.preventDefault(); });
+      // Checks for elements to avoid early triggering.
+      // @todo is there a proper backbone way for this?
+      if (this.$entityElements.length) {
+        // Triggers an event to allow contrib to react to global state change.
+        $(document).trigger('quickedit', [true]);
+      }
+
       // Instantiate a variable to hold the editable element in the set.
       var $currentEditable;
       // We're using simple function scope to manage 'this' for the internal
@@ -530,12 +538,18 @@
         }
       });
       // Set focus on the edit button initially.
-      $('#toolbar-tab-edit').focus();
+      // This makes the page scoll too much.
+      // @todo clean up this mess.
+      //$('#toolbar-tab-edit').focus();
     },
     /**
      * Removes key management and edit accessibility features from the DOM.
      */
     _releaseDocumentFocusManagement: function () {
+      $(document).trigger('quickedit', [false]);
+
+      var $els = this.$entityElements.removeOnce('edit-app-click-prevent').off('.edit-app');
+        $els.closest('a').off('click.edit-app');
       $(document).off('keydown.edit');
       this.$editables.removeAttr('tabindex').removeAttr('role');
     }
