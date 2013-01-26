@@ -12,7 +12,7 @@
  */
 
 /**
- * Implements hook_menu()
+ * Implements hook_menu().
  */
 function edit_menu() {
   $items = array();
@@ -221,6 +221,11 @@ function edit_library() {
 
 /**
  * Implements hook_block_info().
+ *
+ * Declare a block to put the quickedit link inside. Block is automatically
+ * added to the 'sidebar_first' region.
+ *
+ * This is not the best way to handle it bu there isn't much choice on D7.
  */
 function edit_block_info() {
   $blocks['edit'] = array(
@@ -254,7 +259,7 @@ function edit_block_view($delta = '') {
 /**
  * Provides a render array for the quick edit trigger link.
  *
- * If another modules wants to output this link in some other place.
+ * If another modules wants to output this link in other places.
  */
 function edit_trigger_link() {
   return array(
@@ -271,6 +276,16 @@ function edit_trigger_link() {
   );
 }
 
+/**
+ * Decides if a field needs to be handled outside of Field API.
+ *
+ * @param $entity_type
+ *   Machine name of the entity.
+ * @param $field_name
+ *   Entity's field name that is being checked.
+ *
+ * @return bool
+ */
 function _edit_is_special_field($entity_type, $field_name) {
   $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
   // @todo add a drupal_alter of invoke_all maybe?
@@ -279,6 +294,8 @@ function _edit_is_special_field($entity_type, $field_name) {
 
 /**
  * Implements hook_preprocess_field().
+ *
+ * This is the main entry point for marking up a field as inline editable.
  */
 function edit_preprocess_field(&$variables) {
   $element = $variables['element'];
@@ -301,6 +318,8 @@ function edit_preprocess_field(&$variables) {
 
 /**
  * Implements hook_preprocess_views_view_fields().
+ *
+ * Still a lot of handwaving for marking up views fields as inline editable.
  */
 function edit_preprocess_views_view_field(&$variables) {
   $views_field = $variables['field'];
@@ -319,6 +338,8 @@ function edit_preprocess_views_view_field(&$variables) {
 
 /**
  * Implements hook_preprocess_page().
+ *
+ * Wraps title field when viewing a node page to make it inline editable.
  */
 function edit_preprocess_page(&$variables) {
   // If we don't have a node object to work with, return early to avoid
@@ -346,6 +367,8 @@ function edit_preprocess_page(&$variables) {
 
 /**
  * Implements hook_preprocess_node().
+ *
+ * Takes care of wrapping title, author, and created date for inline-editability.
  */
 function edit_preprocess_node(&$variables) {
   $entity_type = $variables['elements']['#entity_type'];
@@ -374,6 +397,9 @@ function edit_preprocess_node(&$variables) {
 
 /**
  * Implements hook_preprocess_panels_pane().
+ *
+ * When a node is added as a pane, get it's view mode to build data-edit-id
+ * properly.
  */
 function edit_preprocess_panels_pane(&$variables) {
   // If we don't have a node object to work with, return early to avoid
@@ -395,10 +421,9 @@ function edit_preprocess_panels_pane(&$variables) {
   if (entity_access('update', 'node', $node)) {
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
-      //$variables['title_attributes_array']['data-edit-id'] = "node/$node->nid/title/$edit_id_suffix";
-
-      // Title needs some special handling only show things if title is not overriden
-      // and you don't have a link on the node title.
+      // Title needs some special handling. Only wraps it when it hasn't been
+      // overriden. There is now way to update the panels configuration in edit
+      // module currently.
       $configuration = $variables['pane']->configuration;
       if (!$configuration['override_title']) {
         $variables['title'] = edit_wrap_pseudofield($variables['title'], "node/$node->nid/title/$edit_id_suffix");
@@ -410,7 +435,8 @@ function edit_preprocess_panels_pane(&$variables) {
 /**
  * Implements hook_ckeditor_plugin().
  *
- * Adds the sharedspaces plugin.
+ * Adds the required sharedspaces and onchange plugin.
+ * @todo get rid of it when both make it in ckeditor 4.1.
  */
 function edit_ckeditor_plugin() {
   return array(
@@ -456,6 +482,16 @@ function edit_editor_list($reset = FALSE) {
   return $editors;
 }
 
+/**
+ * Helper to get a single editor info array.
+ *
+ * @param $editor
+ *   Machine name of the editor we return the editor.
+ *
+ * @return mixed
+ *   False if the editor is not found.
+ *   Info array for the editor.
+ */
 function edit_editor_get($editor) {
   $list = edit_editor_list();
   return !empty($list[$editor]) ? $list[$editor] : FALSE;
@@ -499,11 +535,15 @@ function edit_edit_editor_info() {
 /**
  * Returns all editor attachments, ready for use with #attached.
  *
+ * @param $editors
+ *   List of editors we need the attachments for.
+ * @param $metadata
+ *   List of all fields and their configurations in use on the page.
+ *
  * @return array
  *   The attachments.
  *
  * @see drupal_process_attached()
- * @see Drupal 8's Edit's EditorSelector::getAllEditorAttachments()
  */
 function edit_get_all_editor_attachments($editors = array(), $metadata = array()) {
   $attachments = array();
@@ -519,6 +559,7 @@ function edit_get_all_editor_attachments($editors = array(), $metadata = array()
       }
       if (function_exists($editor['attachments callback'])) {
         $attachments[$editor_id] = $editor['attachments callback']($metadata);
+        // Allows contrib to declare additional dependencies for the editor.
         drupal_alter('edit_editor_attachments', $attachments[$editor_id], $editor_id, $metadata);
       }
     }
@@ -557,6 +598,8 @@ function edit_module_implements_alter(&$implementations, $hook) {
 
 /**
  * Implements hook_library_alter().
+ *
+ * Backport a couple of things from jQuery that are required by CreateJS/VIE.
  */
 function edit_library_alter(&$libraries, $module) {
   $jquery_version = &drupal_static(__FUNCTION__, NULL);
@@ -577,31 +620,13 @@ function edit_library_alter(&$libraries, $module) {
 }
 
 /**
- * Implements hook_field_attach_view_alter().
- */
-function edit_field_attach_view_alter(&$output, $context) {
-  // Special case for this special mode.
-  // @todo move that to filter_true_wysiwyg module?
-  if ($context['display'] == 'edit-render-without-transformation-filters' && module_exists('filter_true_wysiwyg')) {
-    $children = element_children($output);
-    $field = reset($children);
-    $langcode = $output[$field]['#language'];
-    foreach (array_keys($output[$field]['#items']) as $item) {
-      $text = $output[$field]['#items'][$item]['value'];
-      $format_id = $output[$field]['#items'][$item]['format'];
-      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_DOM, FILTER_TYPE_TRANSFORM_TEXT));
-      $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
-    }
-  }
-}
-
-/**
  * Implements hook_field_formatter_info_alter().
+ *
+ * Every field can use the 'form' editor, but non-rich text fields can use the
+ * 'direct' editor, so we enrich the field formatter info metadata to indicate
+ * this.
  */
 function edit_field_formatter_info_alter(&$info) {
-  // Every field can use the 'form' editor, but non-rich text fields can use the
-  // 'direct' editor, so we enrich the field formatter info metadata to indicate
-  // this.
   if (module_exists('text')) {
     $info['text_default']['settings']['edit']['editor'] = 'direct';
     $info['text_plain']['settings']['edit']['editor'] = 'direct';
@@ -625,11 +650,15 @@ function edit_wrap_pseudofield($value, $edit_id, $inline = FALSE) {
 
 /**
  * Formats a field in a wrapper with the required metadata.
+ *
+ * Default tag is div because inline CKEditor will refuse to work on a span that
+ * is made contenteditable.
  */
 function theme_edit_wrap_field($variables) {
   $variables['attributes']['data-edit-id'] = $variables['edit_id'];
+  $el = 'div';
   if ($variables['inline']) {
-    $variables['attributes']['class'][] = 'edit-inline';
+    $el = 'span';
   }
-  return '<div' . drupal_attributes($variables['attributes']) . '><div class="field-item">' .  $variables['value'] . '</div></div>';
+  return '<'. $el . drupal_attributes($variables['attributes']) . '><' . $el .' class="field-item">' .  $variables['value'] . '</' . $el . '></' . $el . '>';
 }

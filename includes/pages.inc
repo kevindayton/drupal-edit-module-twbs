@@ -51,6 +51,7 @@ function edit_metadata() {
  * Checks if a field is inline editable or not.
  *
  * @param $field
+ *   the data-edit-id value of this field.
  *
  * @return bool
  */
@@ -484,7 +485,12 @@ function edit_field_form($form, &$form_state) {
   return $form;
 }
 
-
+/**
+ * Removes unneeded elements from the field from.
+ *
+ * @param $form
+ * @param $form_state
+ */
 function edit_field_form_simplify(&$form, &$form_state) {
   $field_name = $form_state['field_name'];
   $langcode = $form_state['langcode'];
