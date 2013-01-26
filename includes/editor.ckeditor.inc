@@ -38,33 +38,29 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
     }
 
     // For some reasons when ckeditor is in profiles/libraries ckeditor module
-    // defaults to the kama skin that doesn't exists in ckeditor 4.0.
+    // defaults to the kama skin that doesn't exists in CKEditor 4 standard.
+    // @todo remove? might be too brutal.
     if ($settings['skin'] == 'kama') {
       $settings['skin'] = 'moono';
     }
 
-    // Add plugins that are not yet in ckeditor core
+    // Add plugins that are not yet in ckeditor core.
     $plugins = edit_ckeditor_plugin();
     // Adds sharedspace plugin, required for toolbar to show up.
     $settings['loadPlugins']['sharedspace'] = $plugins['sharedspace'];
     $settings['loadPlugins']['sharedspace']['path'] = $GLOBALS['base_path'] . $plugins['sharedspace']['path'];
-    // Adds onchange plugin to detect changes in editable.
+    // Adds onchange plugin to properly detect changes in editable.
     $settings['loadPlugins']['onchange'] = $plugins['onchange'];
     $settings['loadPlugins']['onchange']['path'] = $GLOBALS['base_path'] . $plugins['onchange']['path'];
 
     //[#1473010]
+    // @todo see if this is needed.
     if (isset($settings['scayt_sLang'])) {
       $settings['scayt_language'] = $settings['scayt_sLang'];
       unset($settings['scayt_sLang']);
     }
     elseif (!empty($field["#language"]) && $field["#language"] != LANGUAGE_NONE) {
       $settings['scayt_language'] = ckeditor_scayt_langcode($field["#language"]);
-    }
-
-    foreach(array('paging', 'linktocontent_node', 'linktocontent_menu', 'pagebreak') as $plugin) {
-      if (module_exists($plugin)) {
-        $settings['config'][$plugin] = TRUE;
-      }
     }
   }
 
