@@ -323,17 +323,19 @@ function edit_preprocess_field(&$variables) {
  */
 function edit_preprocess_views_view_field(&$variables) {
   $views_field = $variables['field'];
-  $entity_info = end($variables['row']->_field_data);
+  if (!empty($variables['row']) && !empty($variables['row']->_field_data)) {
+    $entity_info = end($variables['row']->_field_data);
 
-  $entity_type = $entity_info['entity_type'];
-  $entity = $entity_info['entity'];
-  $field_name = $views_field->field;
-  $language = $entity->language;
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+    $entity_type = $entity_info['entity_type'];
+    $entity = $entity_info['entity'];
+    $field_name = $views_field->field;
+    $language = $entity->language;
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
+    $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
 
-  $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+    $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+  }
 }
 
 /**
