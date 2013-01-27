@@ -298,22 +298,24 @@ function _edit_is_special_field($entity_type, $field_name) {
  * This is the main entry point for marking up a field as inline editable.
  */
 function edit_preprocess_field(&$variables) {
-  $element = $variables['element'];
+  if (user_access('access inline edit')) {
+    $element = $variables['element'];
 
-  // Some fields might be rendered through theme_field()
-  // but are not Field API fields, e.g. Display Suite fields.
-  if (!empty($element['#skip_edit'])) {
-    return;
+    // Some fields might be rendered through theme_field()
+    // but are not Field API fields, e.g. Display Suite fields.
+    if (!empty($element['#skip_edit'])) {
+      return;
+    }
+
+    $entity_type = $element['#entity_type'];
+    $field_name = $element['#field_name'];
+    $language = $element['#language'];
+    $view_mode = $element['#view_mode'];
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
+
+    // Provide metadata through data- attributes.
+    $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
   }
-
-  $entity_type = $element['#entity_type'];
-  $field_name = $element['#field_name'];
-  $language = $element['#language'];
-  $view_mode = $element['#view_mode'];
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
-
-  // Provide metadata through data- attributes.
-  $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
 }
 
 /**
@@ -322,19 +324,21 @@ function edit_preprocess_field(&$variables) {
  * Still a lot of handwaving for marking up views fields as inline editable.
  */
 function edit_preprocess_views_view_field(&$variables) {
-  $views_field = $variables['field'];
-  if (!empty($variables['row']) && !empty($variables['row']->_field_data)) {
-    $entity_info = end($variables['row']->_field_data);
+  if (user_access('access inline edit')) {
+    $views_field = $variables['field'];
+    if (!empty($variables['row']) && !empty($variables['row']->_field_data)) {
+      $entity_info = end($variables['row']->_field_data);
 
-    $entity_type = $entity_info['entity_type'];
-    $entity = $entity_info['entity'];
-    $field_name = $views_field->field;
-    $language = $entity->language;
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+      $entity_type = $entity_info['entity_type'];
+      $entity = $entity_info['entity'];
+      $field_name = $views_field->field;
+      $language = $entity->language;
+      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-    $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
+      $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
 
-    $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+      $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+    }
   }
 }
 
@@ -353,7 +357,7 @@ function edit_preprocess_page(&$variables) {
   $node = $variables['node'];
 
   // Ensure the user has access to update the node.
-  if (entity_access('update', 'node', $node)) {
+  if (user_access('edit inline edit') && entity_access('update', 'node', $node)) {
     // On full node pages the title of the node becomes the page title so we
     // must handle it differently. In this case, we add a wrapper around the
     // title with the required attributes to enable editability.
@@ -377,7 +381,7 @@ function edit_preprocess_node(&$variables) {
   $entity = $variables['elements']['#node'];
   $view_mode = $variables['elements']['#view_mode'];
 
-  if (entity_access('update', $entity_type, $entity)) {
+  if (user_access('access inline edit') && entity_access('update', $entity_type, $entity)) {
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
     $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
     $edit_id_suffix = "$language/$view_mode";
@@ -420,7 +424,7 @@ function edit_preprocess_panels_pane(&$variables) {
   $edit_id_suffix = "$language/$view_mode";
 
   // Ensure the user has access to update the node.
-  if (entity_access('update', 'node', $node)) {
+  if (user_access('access inline edit') && entity_access('update', 'node', $node)) {
     $node_type = node_type_get_type($node->type);
     if ($node_type->has_title) {
       // Title needs some special handling. Only wraps it when it hasn't been
