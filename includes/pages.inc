@@ -111,6 +111,8 @@ function edit_metadata_generator($field) {
     return array('access' => FALSE);
   }
 
+  $instance_info = $items = array();
+
   // Early-return if no editor is available.
   if (!$is_special_field) {
     $instance_info = field_info_instance($entity_type, $field_name, $bundle);
