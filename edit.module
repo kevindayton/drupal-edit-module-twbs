@@ -358,20 +358,14 @@ function edit_preprocess_page(&$variables) {
     return;
   }
 
+  // On full node pages the title of the node becomes the page title so we
+  // must handle it differently. In this case, we add a wrapper around the
+  // title with the required attributes to enable in-place editability.
   $node = $variables['node'];
-
-  // Ensure the user has access to update the node.
-  if (user_access('access in-place editing') && entity_access('update', 'node', $node)) {
-    // On full node pages the title of the node becomes the page title so we
-    // must handle it differently. In this case, we add a wrapper around the
-    // title with the required attributes to enable editability.
-    $node_type = node_type_get_type($node->type);
-
-    if ($node_type->has_title) {
-      $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
-
-      $variables['title'] = edit_wrap_pseudofield(drupal_get_title(), "node/$node->nid/title/$language/full");
-    }
+  $node_type = node_type_get_type($node->type);
+  if ($node_type->has_title) {
+    $language = !empty($node->language) ? $node->language : LANGUAGE_NONE;
+    $variables['title'] = edit_wrap_pseudofield(drupal_get_title(), "node/$node->nid/title/$language/full");
   }
 }
 
@@ -386,23 +380,21 @@ function edit_preprocess_node(&$variables) {
   $entity = $variables['elements']['#node'];
   $view_mode = $variables['elements']['#view_mode'];
 
-  if (entity_access('update', $entity_type, $entity)) {
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-    $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
-    $edit_id_suffix = "$language/$view_mode";
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
+  $edit_id_suffix = "$language/$view_mode";
 
-    // Pseudo-field: title.
-    $node_type = node_type_get_type($bundle);
-    if ($node_type->has_title && !empty($entity->title)) {
-      $variables['title'] = edit_wrap_pseudofield($entity->title, "node/$id/title/$edit_id_suffix");
-    }
+  // Pseudo-field: title.
+  $node_type = node_type_get_type($bundle);
+  if ($node_type->has_title && !empty($entity->title)) {
+    $variables['title'] = edit_wrap_pseudofield($entity->title, "node/$id/title/$edit_id_suffix");
+  }
 
-    // Pseudo-fields: author (name) and created date (authoring date).
-    if ($variables['display_submitted']) {
-      $variables['name'] = edit_wrap_pseudofield($variables['name'], "node/$id/author/$edit_id_suffix", TRUE);
-      $variables['date'] = edit_wrap_pseudofield($variables['date'], "node/$id/created/$edit_id_suffix", TRUE);
-      $variables['submitted'] = t('Submitted by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
-    }
+  // Pseudo-fields: author (name) and created date (authoring date).
+  if ($variables['display_submitted']) {
+    $variables['name'] = edit_wrap_pseudofield($variables['name'], "node/$id/author/$edit_id_suffix", TRUE);
+    $variables['date'] = edit_wrap_pseudofield($variables['date'], "node/$id/created/$edit_id_suffix", TRUE);
+    $variables['submitted'] = t('Submitted by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
   }
 }
 
@@ -428,17 +420,14 @@ function edit_preprocess_panels_pane(&$variables) {
   $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
   $edit_id_suffix = "$language/$view_mode";
 
-  // Ensure the user has access to update the node.
-  if (entity_access('update', 'node', $node)) {
-    $node_type = node_type_get_type($node->type);
-    if ($node_type->has_title) {
-      // Title needs some special handling. Only wraps it when it hasn't been
-      // overriden. There is now way to update the panels configuration in edit
-      // module currently.
-      $configuration = $variables['pane']->configuration;
-      if (!$configuration['override_title']) {
-        $variables['title'] = edit_wrap_pseudofield($variables['title'], "node/$node->nid/title/$edit_id_suffix");
-      }
+  $node_type = node_type_get_type($node->type);
+  if ($node_type->has_title) {
+    // Title needs some special handling. Only wraps it when it hasn't been
+    // overridden. There is now way to update the panels configuration in edit
+    // module currently.
+    $configuration = $variables['pane']->configuration;
+    if (!$configuration['override_title']) {
+      $variables['title'] = edit_wrap_pseudofield($variables['title'], "node/$node->nid/title/$edit_id_suffix");
     }
   }
 }
