@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Provides inline content editing functionality for fields and entities.
+ * Provides in-place content editing functionality for fields.
  *
- * The Edit module makes content editable inline. Rather than having to visit a
- * separate page to edit content, it may be edited in-place.
+ * The Edit module makes content editable in-place. Rather than having to visit
+ * a separate page to edit content, it may be edited in-place.
  *
  * Technically, this module adds classes and data- attributes to fields and
  * entities, enabling them for in-place editing.
@@ -295,7 +295,7 @@ function _edit_is_special_field($entity_type, $field_name) {
 /**
  * Implements hook_preprocess_field().
  *
- * This is the main entry point for marking up a field as inline editable.
+ * This is the main entry point for marking up a field as in-place editable.
  */
 function edit_preprocess_field(&$variables) {
   $element = $variables['element'];
@@ -319,7 +319,7 @@ function edit_preprocess_field(&$variables) {
 /**
  * Implements hook_preprocess_views_view_fields().
  *
- * Still a lot of handwaving for marking up views fields as inline editable.
+ * Still a lot of handwaving for marking up views fields as in-place editable.
  */
 function edit_preprocess_views_view_field(&$variables) {
   if (user_access('access in-place editing')) {
@@ -343,7 +343,7 @@ function edit_preprocess_views_view_field(&$variables) {
 /**
  * Implements hook_preprocess_page().
  *
- * Wraps title field when viewing a node page to make it inline editable.
+ * Wraps title field when viewing a node page to make it in-place editable.
  */
 function edit_preprocess_page(&$variables) {
   // If we don't have a node object to work with, return early to avoid
@@ -355,7 +355,7 @@ function edit_preprocess_page(&$variables) {
   $node = $variables['node'];
 
   // Ensure the user has access to update the node.
-  if (user_access('edit inline edit') && entity_access('update', 'node', $node)) {
+  if (user_access('access in-place editing') && entity_access('update', 'node', $node)) {
     // On full node pages the title of the node becomes the page title so we
     // must handle it differently. In this case, we add a wrapper around the
     // title with the required attributes to enable editability.
@@ -372,7 +372,8 @@ function edit_preprocess_page(&$variables) {
 /**
  * Implements hook_preprocess_node().
  *
- * Takes care of wrapping title, author, and created date for inline-editability.
+ * Takes care of wrapping title, author, and created date for in-place
+ * editability.
  */
 function edit_preprocess_node(&$variables) {
   $entity_type = $variables['elements']['#entity_type'];

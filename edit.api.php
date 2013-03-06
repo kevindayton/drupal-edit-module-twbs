@@ -39,7 +39,7 @@ function hook_edit_editor_info_alter(&$editors) {
  * Alter a field metadata that is used by the front-end.
  *
  * @param $metadata
- *   Informations used by the front-end to make the field inline-editable.
+ *   Informations used by the front-end to make the field in-place editable.
  * @param $editor
  *   id of the editor used for the current field.
  * @param $context
