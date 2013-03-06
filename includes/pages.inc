@@ -36,7 +36,7 @@ function edit_metadata() {
 
   $commands = array();
   $commands[] = array(
-    'command' => 'annotateFields',
+    'command' => 'editMetadata',
     'results' => $metadata,
   );
 

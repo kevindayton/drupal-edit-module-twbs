@@ -477,7 +477,7 @@
         if (event.keyCode === 9) {
           var context = '';
           // Include the view mode toggle with the editables selector.
-          var selector = editablesSelector + ', #toolbar-tab-edit';
+          var selector = editablesSelector + ', #edit-trigger-link';
           activeEditor = that.model.get('activeEditor');
           var $confirmDialog = $('#edit_modal');
           // If the edit modal is active, that is the tabbing context.
@@ -540,7 +540,7 @@
       // Set focus on the edit button initially.
       // This makes the page scoll too much.
       // @todo clean up this mess.
-      //$('#toolbar-tab-edit').focus();
+      //$('#edit-trigger-link').focus();
     },
     /**
      * Removes key management and edit accessibility features from the DOM.

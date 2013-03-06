@@ -11,7 +11,7 @@ Drupal.edit.views = Drupal.edit.views || {};
 Drupal.edit.views.MenuView = Backbone.View.extend({
 
   events: {
-    'click #toolbar-tab-edit': 'editClickHandler'
+    'click #edit-trigger-link': 'editClickHandler'
   },
 
   /**
@@ -31,7 +31,7 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
   stateChange: function() {
     var isViewing = this.model.get('isViewing');
     // Toggle the state of the Toolbar Edit tab based on the isViewing state.
-    this.$el.find('#toolbar-tab-edit')
+    this.$el.find('#edit-trigger-link')
       .toggleClass('active', !isViewing)
       .attr('aria-pressed', !isViewing);
   },
@@ -44,7 +44,7 @@ Drupal.edit.views.MenuView = Backbone.View.extend({
     var isViewing = this.model.get('isViewing');
     // Toggle the href of the Toolbar Edit tab based on the isViewing state. The
     // href value should represent to state to be entered.
-    this.$el.find('#toolbar-tab-edit').attr('href', (isViewing) ? '#edit' : '#view');
+    this.$el.find('#edit-trigger-link').attr('href', (isViewing) ? '#edit' : '#view');
     this.model.set('isViewing', !isViewing);
   }
 });

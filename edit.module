@@ -232,6 +232,9 @@ function edit_block_info() {
     'info' => t('Quick edit'),
     'status' => TRUE,
     'region' => 'sidebar_first',
+    // Per-role caching makes sense for Edit's block, because permissions are
+    // also defined on a per-role level.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
   );
 
   return $blocks;
@@ -244,7 +247,7 @@ function edit_block_view($delta = '') {
   $block = array();
   if ($delta === 'edit' && user_access('access in-place editing')) {
     $block['subject'] = t('In-place edit operations');
-    $content = '';
+    $content = array();
 
     // Don't provide a view/edit toggle on admin pages.
     if (!path_is_admin(current_path())) {
@@ -259,17 +262,20 @@ function edit_block_view($delta = '') {
 /**
  * Provides a render array for the quick edit trigger link.
  *
- * If another modules wants to output this link in other places.
+ * Use this method to render Edit's trigger link somewhere else than in Edit's
+ * default block.
+ *
+ * @see Drupal.behaviors.edit.attach()
  */
 function edit_trigger_link() {
   return array(
     '#type' => 'link',
     '#title' => t('Quick edit'),
     '#href' => current_path(),
-    '#options' => array('attributes' => array('id' => 'toolbar-tab-edit', 'class' => array('edit_view-edit-toggle', 'edit-edit'))),
+    '#options' => array('attributes' => array('id' => 'edit-trigger-link')),
     '#ajax' => array(
       'path' => 'edit/metadata',
-      'event' => 'metadatafetch',
+      'event' => 'metadatafetch.edit',
       'progress' => array(),
     ),
     '#attached' => array('library' => array(array('edit', 'edit'))),

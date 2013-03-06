@@ -28,7 +28,7 @@ Drupal.behaviors.edit = {
     var $fields = $context.find('[data-edit-id]');
 
     // Initialize the Edit app.
-    $context.find('#toolbar-tab-edit').once('edit-init', Drupal.edit.init);
+    $context.find('#edit-trigger-link').once('edit-init', Drupal.edit.init);
 
     var annotateField = function(field) {
       if (_.has(Drupal.edit.metadataCache, field.editID)) {
@@ -66,13 +66,19 @@ Drupal.behaviors.edit = {
     Drupal.edit.app.findEditableProperties($context);
 
     if (remainingFieldsToAnnotate.length) {
-
-      var toolbarAjax = Drupal.ajax['toolbar-tab-edit'];
+      // Create a Drupal.ajax instance to load the metadata. We use Drupal.ajax
+      // plus AJAX commands because then the server side can load Create.js
+      // PropertyEditor widgets (plus dependencies) when they are really needed,
+      // instead of loading them on the initial page load.
+      var toolbarAjax = Drupal.ajax['edit-trigger-link'];
       $.extend(toolbarAjax.options.data, {
         fields: _.pluck(remainingFieldsToAnnotate, 'editID')
       });
 
-      toolbarAjax.commands.annotateFields = function (ajax, response, status) {
+      // If necessary, the server side will generate AJAX commands to load the
+      // Create.js PropertyEditor widgets, we don't need to handle that. We only
+      // need to handle the editMetadata command, which is guaranteed to occur.
+      toolbarAjax.commands.editMetadata = function (ajax, response, status) {
         // Update the metadata cache.
         _.each(response.results, function(metadata, editID) {
           Drupal.edit.metadataCache[editID] = metadata;
@@ -85,7 +91,9 @@ Drupal.behaviors.edit = {
         Drupal.edit.app.findEditableProperties($context);
       };
 
-      $('#toolbar-tab-edit').trigger('metadatafetch');
+      // Trigger event, which will trigger the AJAX request.
+      // @see edit_trigger_link()
+      $('#edit-trigger-link').trigger('metadatafetch');
     }
   }
 };
