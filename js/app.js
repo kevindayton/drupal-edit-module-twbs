@@ -369,8 +369,8 @@
       // @todo: BLOCKED_ON(Create.js, https://github.com/bergie/create/issues/133)
       // Get rid of this once that issue is solved.
       editor.options.widget.element.on('createeditablestatechange', function(event, data) {
-        editor.decorationView && editor.decorationView.stateChange(data.previous, data.current);
-        editor.toolbarView && editor.toolbarView.stateChange(data.previous, data.current);
+        editor.decorationView.stateChange(data.previous, data.current);
+        editor.toolbarView.stateChange(data.previous, data.current);
       });
     },
 
@@ -386,17 +386,13 @@
      *   The PropertyEditor widget object.
      */
     undecorateEditor: function(editor) {
-      if (editor.toolbarView) {
-        editor.toolbarView.undelegateEvents();
-        editor.toolbarView.remove();
-        delete editor.toolbarView;
-      }
-      if (editor.decorationView) {
-        editor.decorationView.undelegateEvents();
-        // Don't call .remove() on the decoration view, because that would remove
-        // a potentially rerendered field.
-        delete editor.decorationView;
-      }
+      editor.toolbarView.undelegateEvents();
+      editor.toolbarView.remove();
+      delete editor.toolbarView;
+      editor.decorationView.undelegateEvents();
+      // Don't call .remove() on the decoration view, because that would remove
+      // a potentially rerendered field.
+      delete editor.decorationView;
     },
 
     /**

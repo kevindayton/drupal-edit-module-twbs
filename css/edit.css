@@ -71,28 +71,6 @@
 
 
 
-/**
- * Toolbar.
- */
-.icon-edit:before {
-  background-image: url("../images/icon-edit.png");
-}
-.icon-edit:active:before,
-.active .icon-edit:before {
-  background-image: url("../images/icon-edit-active.png");
-}
-.toolbar .tray.edit.active {
-  z-index: 340;
-}
-.toolbar .icon-edit.edit-nothing-editable-hidden {
-  display: none;
-}
-/* In-place editing doesn't work in the overlay, so always hide the tab. */
-.overlay-open .toolbar .icon-edit {
-  display: none;
-}
-
-
 
 /**
  * Edit mode: overlay + candidate editables + editables being edited.
@@ -127,6 +105,7 @@
 
 /* Highlighted (hovered) editable. */
 .edit-editable.edit-highlighted {
+  z-index: 305;
   min-width: 200px;
 }
 .edit-field.edit-editable.edit-highlighted,
@@ -233,10 +212,6 @@
   background-color: white;
 }
 
-.edit-form div.messages {
-  margin: 0 0 8px 0;
-}
-
 .edit-form .placeholder {
   min-height: 22px;
 }
@@ -263,6 +238,10 @@
 .edit-toolbar-container,
 .edit-form-container {
   position: relative;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  vertical-align: baseline;
   z-index: 310;
 }
 .edit-toolbar-container {
@@ -280,6 +259,10 @@
   bottom: 1px;
   box-shadow: 0 0 1px 1px #0199ff, 0 0 3px 3px rgba(153, 153, 153, .5);
   background: #fff;
+  display: none;
+}
+.edit-highlighted .edit-toolbar-heightfaker {
+  display: block;
 }
 
 /* The toolbar; these are not necessarily visible. */

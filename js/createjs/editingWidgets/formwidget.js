@@ -29,11 +29,7 @@
     /**
      * Implements Create's _initialize() method.
      */
-    _initialize: function() {
-      // Sets the state to 'activating' upon clicking the element.
-      var that = this;
-      this.element.on('click.edit', that.options.activating);
-    },
+    _initialize: function() {},
 
     /**
      * Makes this PropertyEditor widget react to state changes.

@@ -214,7 +214,6 @@
       if (type.attributes.get(predicate)) {
         return type;
       }
-
       var range = predicate.split('/')[0];
       type.attributes.add(predicate, [range], 0, 1, {
         label: element.data('edit-field-label')

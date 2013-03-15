@@ -40,6 +40,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *   - editor: the editor object with an 'options' object that has these keys:
    *      * entity: the VIE entity for the property.
    *      * property: the predicate of the property.
+   *      * editorName: the editor name.
    *      * element: the jQuery-wrapped editor DOM element
    *   - $storageWidgetEl: the DOM element on which the Create Storage widget is
    *     initialized.
@@ -65,19 +66,26 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
   stateChange: function(from, to) {
     switch (to) {
       case 'inactive':
-        // Nothing happens in this stage.
+        if (from) {
+          this.remove();
+        }
         break;
       case 'candidate':
-        if (from !== 'inactive') {
+        if (from === 'inactive') {
+          this.render();
+        }
+        else {
+          // Remove all toolgroups; they're no longer necessary.
+          this.$el
+            .removeClass('edit-highlighted edit-editing')
+            .find('.edit-toolbar .edit-toolgroup').remove();
           if (from !== 'highlighted' && this.getEditUISetting('padding')) {
             this._unpad();
           }
-          this.remove();
         }
         break;
       case 'highlighted':
         // As soon as we highlight, make sure we have a toolbar in the DOM (with at least a title).
-        this.render();
         this.startHighlight();
         break;
       case 'activating':
@@ -89,6 +97,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
         if (this.getEditUISetting('fullWidthToolbar')) {
           this.$el.addClass('edit-toolbar-fullwidth');
         }
+
         if (this.getEditUISetting('padding')) {
           this._pad();
         }
@@ -273,6 +282,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     }
 
     this.$el
+      .addClass('edit-highlighted')
       .find('.edit-toolbar')
       // Append the "info" toolgroup into the toolbar.
       .append(Drupal.theme('editToolgroup', {
@@ -339,7 +349,7 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    *
    * @see PropertyEditorDecorationView._unpad().
    */
-  _unpad: function(editorName) {
+  _unpad: function() {
     // Move the toolbar back to its original position.
     var $hf = this.$el.find('.edit-toolbar-heightfaker');
     $hf.css({ bottom: '1px', left: '' });
@@ -364,10 +374,11 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
       }));
 
     // Animate the toolgroups into visibility.
-    setTimeout($.proxy(function () {
-      this.show('wysiwyg-floated');
-      this.show('wysiwyg-main');
-    }, this), 0);
+    var that = this;
+    setTimeout(function () {
+      that.show('wysiwyg-floated');
+      that.show('wysiwyg-main');
+    }, 0);
   },
 
   /**
@@ -378,19 +389,25 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
    */
   render: function () {
     // Render toolbar.
-    this.setElement(Drupal.theme('editToolbarContainer', { id: this.getId() }));
+    this.setElement($(Drupal.theme('editToolbarContainer', {
+      id: this.getId()
+    })));
 
     // Insert in DOM.
     if (this.editor.element.css('display') === 'inline') {
       this.$el.prependTo(this.editor.element.offsetParent());
-      this.$el.css(this.editor.element.position());
+      var pos = this.editor.element.position();
+      this.$el.css('left', pos.left).css('top', pos.top);
     }
     else {
       this.$el.insertBefore(this.editor.element);
     }
 
+    var that = this;
     // Animate the toolbar into visibility.
-    setTimeout($.proxy(function () { this.$el.removeClass('edit-animate-invisible'); }, this), 0);
+    setTimeout(function () {
+      that.$el.removeClass('edit-animate-invisible');
+    }, 0);
   },
 
   remove: function () {
@@ -399,7 +416,17 @@ Drupal.edit.views.ToolbarView = Backbone.View.extend({
     }
 
     // Remove after animation.
-    this.$el.remove();
+    var that = this;
+    var $el = this.$el;
+    this.$el
+      .addClass('edit-animate-invisible')
+      // Prevent this toolbar from being detected *while* it is being removed.
+      .removeAttr('id')
+      .find('.edit-toolbar .edit-toolgroup')
+      .addClass('edit-animate-invisible')
+      .on(Drupal.edit.util.constants.transitionEnd, function (e) {
+        $el.remove();
+      });
   },
 
   /**

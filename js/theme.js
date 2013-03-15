@@ -74,7 +74,6 @@ Drupal.theme.prototype.editToolbarContainer = function(settings) {
   return html;
 };
 
-
 /**
  * Theme function for a toolbar toolgroup of the Edit module.
  *
