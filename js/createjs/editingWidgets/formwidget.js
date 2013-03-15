@@ -84,20 +84,10 @@
         id: this.id,
         loadingMsg: Drupal.t('Loading…')}
       ));
-      var $editForm = this.$formContainer
-        .css('width', formWidth)
+      this.$formContainer
         .find('.edit-form')
         .addClass('edit-editable edit-highlighted edit-editing')
         .attr('role', 'dialog');
-
-      // Make the form take the same space as the element we're editing.
-      var formWidth = $editorElement.width();
-      if (formWidth > 400) {
-        $editForm.width(formWidth);
-      }
-      else {
-        this.$formContainer.addClass('edit-form-bound');
-      }
 
       // Insert form container in DOM.
       if ($editorElement.css('display') === 'inline') {

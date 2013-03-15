@@ -238,30 +238,6 @@ Drupal.edit.views.PropertyEditorDecorationView = Backbone.View.extend({
   },
 
   /**
-   * Gets the background color of an element (or the inherited one).
-   *
-   * @todo remove or improve.
-   *
-   * @param $e
-   *   A DOM element.
-   */
-  _getBgColor: function($e) {
-    var c;
-
-    if ($e === null || $e[0].nodeName === 'HTML') {
-      // Fallback to white.
-      return 'rgb(255, 255, 255)';
-    }
-    c = $e.css('background-color');
-    // TRICKY: edge case for Firefox' "transparent" here; this is a
-    // browser bug: https://bugzilla.mozilla.org/show_bug.cgi?id=635724
-    if (c === 'rgba(0, 0, 0, 0)' || c === 'transparent') {
-      return this._getBgColor($e.parent());
-    }
-    return c;
-  },
-
-  /**
    * Gets the top and left properties of an element and convert extraneous
    * values and information into numbers ready for subtraction.
    *
