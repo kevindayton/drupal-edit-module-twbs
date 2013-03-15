@@ -47,15 +47,6 @@
     },
 
     /**
-     * Need to do this for the cursor to show up properly on FF.
-     */
-    enable: function () {
-      this.element.attr('contenteditable', 'true');
-      this.element.attr('contenteditable', 'false');
-      setTimeout(jQuery.proxy(function () { this.element.attr('contenteditable', 'true'); }, this), 5)
-    },
-
-    /**
      * Makes this PropertyEditor widget react to state changes.
      */
     stateChange: function(from, to) {
