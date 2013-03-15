@@ -153,12 +153,7 @@
    */
 }
 
-/**
- * Make the wrapping divs display inline for author, date fields and so on.
- */
-.edit-inline, .edit-inline > .field-item {
-  display: inline;
-}
+
 
 
 /**

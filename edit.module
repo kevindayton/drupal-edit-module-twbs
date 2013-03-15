@@ -640,12 +640,14 @@ function edit_field_formatter_info_alter(&$info) {
  *   The existing name value.
  * @param $node_id
  *   The node ID.
+ * @param $is_inline
+ *   Whether this pseudofield should be rendered as display:inline or not.
  *
  * @return
  *   The fully-themed HTML output for the wrapped "name" pseudo-field.
  */
-function edit_wrap_pseudofield($value, $edit_id, $inline = FALSE) {
-  return theme('edit_wrap_field', array('value' => $value, 'edit_id' => $edit_id, 'inline' => $inline));
+function edit_wrap_pseudofield($value, $edit_id, $is_inline = FALSE) {
+  return theme('edit_wrap_field', array('value' => $value, 'edit_id' => $edit_id, 'inline' => $is_inline));
 }
 
 /**
