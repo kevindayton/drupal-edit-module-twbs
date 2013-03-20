@@ -23,7 +23,7 @@ function _edit_editor_direct_metadata(array $instance, array $items) {
 function _edit_editor_direct_attachments() {
   return array(
     'library' => array(
-      array('edit', 'edit.editor.direct'),
+      array('edit', 'edit.editorWidget.direct'),
     ),
   );
 }

@@ -405,9 +405,9 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 }
 
 /**
- * Page callback: render a processed text field without transformation filters.
+ * Page callback: renders a text field without transformation filters.
  */
-function edit_text_field_render_without_transformation_filters($entity_type, $entity_id, $field_name, $langcode = NULL, $view_mode = NULL) {
+function edit_ckeditor_get_untransformed_text($entity_type, $entity_id, $field_name, $langcode = NULL, $view_mode = NULL) {
   // Ensure the entity type is valid.
   if (empty($entity_type)) {
     return MENU_NOT_FOUND;
@@ -449,11 +449,10 @@ function edit_text_field_render_without_transformation_filters($entity_type, $en
   // Render the field in our custom display mode; retrieve the re-rendered
   // markup, this is what we're after.
   $field_output = field_view_field($entity_type, $entity, $field_name, 'edit-render-without-transformation-filters', $langcode);
-  // TODO: support multiple value text fields. Change the code below and the JS.
   $output = $field_output[0]['#markup'];
 
   $commands[] = array(
-    'command' => 'editFieldRenderedWithoutTransformationFilters',
+    'command' => 'editCKEditorGetUntransformedText',
     'id' => "$entity_type/$id/$field_name/$langcode/$view_mode",
     'data' => $output,
   );

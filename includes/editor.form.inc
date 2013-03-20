@@ -16,7 +16,7 @@ function _edit_editor_form_metadata(array $instance, array $items) {
 function _edit_editor_form_attachments() {
   return array(
     'library' => array(
-      array('edit', 'edit.editor.form'),
+      array('edit', 'edit.editorWidget.form'),
     ),
   );
 }

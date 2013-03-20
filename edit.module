@@ -11,6 +11,9 @@
  * entities, enabling them for in-place editing.
  */
 
+// Load filter system metadata additions.
+module_load_include('inc', 'edit', 'includes/filter');
+
 /**
  * Implements hook_menu().
  */
@@ -33,9 +36,9 @@ function edit_menu() {
     'theme callback' => 'ajax_base_page_theme',
     'type' => MENU_CALLBACK,
   );
-  $items['edit/text/%/%/%/%/%'] = array(
+  $items['edit/ckeditor/%/%/%/%/%'] = array(
     'access arguments' => array('access in-place editing'),
-    'page callback' => 'edit_text_field_render_without_transformation_filters',
+    'page callback' => 'edit_ckeditor_get_untransformed_text',
     'page arguments' => array(2, 3, 4, 5, 6),
     'file' => 'includes/pages.inc',
     'delivery callback' => 'ajax_deliver',
@@ -133,7 +136,7 @@ function edit_library() {
     ),
   );
 
-  $libraries['edit.editor.form'] = array(
+  $libraries['edit.editorWidget.form'] = array(
     'title' => '"Form" Create.js PropertyEditor widget',
     'version' => VERSION,
     'js' => array(
@@ -143,7 +146,7 @@ function edit_library() {
       array('edit', 'edit'),
     ),
   );
-  $libraries['edit.editor.direct'] = array(
+  $libraries['edit.editorWidget.direct'] = array(
     'title' => '"Direct" Create.js PropertyEditor widget',
     'version' => VERSION,
     'js' => array(
@@ -155,15 +158,28 @@ function edit_library() {
   );
 
   if (module_exists('ckeditor')) {
-    $libraries['edit.editor.ckeditor'] = array(
+    $libraries['edit.editorWidget.ckeditor'] = array(
       'title' => '"CKEditor" Create.js PropertyEditor widget',
       'version' => VERSION,
       'js' => array(
         $path . '/js/createjs/editingWidgets/drupalckeditorwidget.js' => array('weight' => 3) + $options,
+        array(
+          'type' => 'setting',
+          'data' => array(
+            'edit' => array(
+              'ckeditor' => array(
+                'getUntransformedTextURL' => url('edit/ckeditor/!entity_type/!id/!field_name/!langcode/!view_mode'),
+              ),
+            )
+          )
+        ),
+        // CKEditor.module sadly does not implement hook_library(), so we must
+        // indicate here that we want it to be loaded.
         ckeditor_library_path('url') . '/ckeditor/ckeditor.js' => array('weight' => 4) +  $options,
       ),
       'dependencies' => array(
         array('edit', 'edit'),
+        array('system', 'drupal.ajax'),
       ),
     );
   }
@@ -238,6 +254,24 @@ function edit_block_info() {
   );
 
   return $blocks;
+}
+
+/**
+ * Implements hook_field_attach_view_alter().
+ */
+function edit_field_attach_view_alter(&$output, $context) {
+  // Special case for this special mode.
+  if ($context['display'] == 'edit-render-without-transformation-filters') {
+    $children = element_children($output);
+    $field = reset($children);
+    $langcode = $output[$field]['#language'];
+    foreach (array_keys($output[$field]['#items']) as $item) {
+      $text      = $output[$field]['#items'][$item]['value'];
+      $format_id = $output[$field]['#items'][$item]['format'];
+      $wrapped_and_untransformed = check_markup2($text, $format_id, $langcode, FALSE, array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE));
+      $output[$field][$item]['#markup'] = $wrapped_and_untransformed;
+    }
+  }
 }
 
 /**
@@ -504,16 +538,15 @@ function edit_editor_get($editor) {
  */
 function edit_edit_editor_info() {
   $editors = array();
-
   $editors['form'] = array(
-    'widget' => 'drupalFormWidget',
+    'widget' => 'formEditEditor',
     'compatibility check callback' => '_edit_editor_form_is_compatible',
     'metadata callback' => '_edit_editor_form_metadata',
     'attachments callback' => '_edit_editor_form_attachments',
     'file' => 'includes/editor.form.inc',
   );
   $editors['direct'] = array(
-    'widget' => 'drupalContentEditableWidget',
+    'widget' => 'direct',
     'compatibility check callback' => '_edit_editor_direct_is_compatible',
     'metadata callback' => '_edit_editor_direct_metadata',
     'attachments callback' => '_edit_editor_direct_attachments',
@@ -521,7 +554,7 @@ function edit_edit_editor_info() {
   );
   if (module_exists('ckeditor')) {
     $editors['ckeditor'] = array(
-      'widget' => 'drupalCKEditorWidget',
+      'widget' => 'ckeditor',
       'compatibility check callback' => '_edit_editor_ckeditor_is_compatible',
       'metadata callback' => '_edit_editor_ckeditor_metadata',
       'attachments callback' => '_edit_editor_ckeditor_attachments',

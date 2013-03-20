@@ -5,33 +5,44 @@
  * Callbacks for the "wysiwyg" Create.js PropertyEditor widget.
  */
 
+// @see Drupal\editor\Plugin\edit\editor\Editor::isCompatible() in Drupal 8.
 function _edit_editor_ckeditor_is_compatible(array $instance, array $items) {
-
-  module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
-
   $field = field_info_field($instance['field_name']);
-  $format = $items[0]['format'];
 
-  $wysiwyg_possible = $field['cardinality'] == 1 && !empty($instance['settings']['text_processing']);
-  $ckeditor_on = FALSE;
-
-  if ($profile = ckeditor_get_profile($format)) {
-    if ($settings = ckeditor_profiles_compile($format)) {
-      $ckeditor_on = ($profile->settings['default'] == 't') ? TRUE : FALSE;
-    }
+  // This editor is incompatible with multivalued fields.
+  if ($field['cardinality'] != 1) {
+    return FALSE;
   }
+  // This editor is compatible with processed ("rich") text fields; but only
+  // if there is a currently active text format, and that text format has an
+  // associated CKEditor profile.
+  elseif (!empty($instance['settings']['text_processing'])) {
+    $format_id = $items[0]['format'];
+    module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
+    if ($ckeditor_profile = ckeditor_get_profile($format_id)) {
+      if ($settings = ckeditor_profiles_compile($format_id)) {
+        return ($ckeditor_profile->settings['default'] === 't');
+      }
+    }
 
-  return $wysiwyg_possible && $ckeditor_on;
+    return FALSE;
+  }
 }
 
+// @see Drupal\editor\Plugin\edit\editor\Editor::getMetadata() in Drupal 8.
 function _edit_editor_ckeditor_metadata(array $instance, array $items) {
-  $field = field_info_field($instance['field_name']);
-  $format = $items[0]['format'];
+  $format_id = $items[0]['format'];
+  $metadata['format'] = $format_id;
+  $metadata['formatHasTransformations'] = (bool) count(array_intersect(array(FILTER_TYPE_TRANSFORM_REVERSIBLE, FILTER_TYPE_TRANSFORM_IRREVERSIBLE), filter_get_filter_types_by_format($format_id)));
 
+  // This part does not exist in the equivalent Drupal 8 code, because in Drupal
+  // 8 we leverage the new Text Editor module, which takes care of all of this
+  // for us. We could send this information in the attachments callback (like in
+  // Drupal 8), but this makes the metadata for each field nicely contained,
+  // which is simpler.
+  // @todo Consider moving this to the attachments callback.
   module_load_include('inc', 'ckeditor', 'includes/ckeditor.lib');
-
-  if ($settings = ckeditor_profiles_compile($format)) {
-
+  if ($settings = ckeditor_profiles_compile($format_id)) {
     // Clean up a few settings.
     foreach (array('customConfig', 'show_toggle', 'ss', 'contentsCss', 'stylesCombo_stylesSet') as $config_item) {
       unset($settings[$config_item]);
@@ -67,6 +78,7 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
 
     //[#1473010]
     // @todo see if this is needed.
+    $field = field_info_field($instance['field_name']);
     if (isset($settings['scayt_sLang'])) {
       $settings['scayt_language'] = $settings['scayt_sLang'];
       unset($settings['scayt_sLang']);
@@ -74,22 +86,30 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
     elseif (!empty($field["#language"]) && $field["#language"] != LANGUAGE_NONE) {
       $settings['scayt_language'] = ckeditor_scayt_langcode($field["#language"]);
     }
+
+    // Set the collected metadata.
+    $metadata['ckeditorSettings'] = $settings;
   }
 
-  return array(
-    'format' => $format,
-    'ckeditor' => $settings,
-  );
+  return $metadata;
 }
 
 function _edit_editor_ckeditor_attachments() {
-  $ckeditor_path = ckeditor_library_path('relative') . '/ckeditor';
   return array(
     'library' => array(
-      array('edit', 'edit.editor.ckeditor'),
+      array('edit', 'edit.editorWidget.ckeditor'),
     ),
     'js' => array(
-      array('data' => array('ckeditor' => array('basePath' =>  $ckeditor_path . '/')), 'type' => 'setting'),
+      array(
+        'type' => 'setting',
+        'data' => array(
+          'edit' => array(
+            'ckeditor' => array(
+              'basePath' =>  ckeditor_library_path('relative') . '/ckeditor/',
+            ),
+          ),
+        ),
+      ),
     ),
   );
 }
