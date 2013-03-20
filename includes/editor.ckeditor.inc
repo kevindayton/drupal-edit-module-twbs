@@ -37,6 +37,18 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
       unset($settings[$config_item]);
     }
 
+    // CKEditor.module stores the toolbar configuration as a non-standard JSON
+    // serialization. In case they one day fix that, we check if it is indeed
+    // still serialized.
+    // See http://drupal.org/node/1906490.
+    if (is_string($settings['toolbar'])) {
+      // This bizarre code comes from ckeditor_admin_profile_form_validate().
+      $toolbar = $settings['toolbar'];
+      $toolbar = str_replace("'", '"', $toolbar);
+      $toolbar = preg_replace('/(\w*)\s*\:/', '"${1}":', $toolbar);
+      $settings['toolbar'] = json_decode($toolbar);
+    }
+
     // For some reasons when ckeditor is in profiles/libraries ckeditor module
     // defaults to the kama skin that doesn't exists in CKEditor 4 standard.
     // @todo remove? might be too brutal.
