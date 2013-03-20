@@ -13,6 +13,25 @@ Installation
    now available and placed in the first sidebar by default.
 
 
+In-place WYSIWYG editing using CKEditor
+---------------------------------------
+1. Download and install the latest stable release of the CKEditor module from
+   http://drupal.org/project/ckeditor.
+   Note that *only* the CKEditor module is supported, not any other module, like
+   the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
+2. Go to http://ckeditor.com/download and download the Standard or Full package.
+3. Extract the dowwnloaded package to sites/all/libraries/ckeditor. For maximum
+   security, it is recommended to delete the included "samples" directory at
+   sites/all/libraries/ckeditor/samples.
+4. Go to admin/config/content/ckeditor/, enable one of the CKEditor profiles for
+   each text format where you want to use CKEditor. Or create a new CKEditor
+   profile.
+   e.g. Enable the default "Advanced" profile for Drupal's "Filtered HTML" text
+   format.
+5. Find a node that uses e.g. the "Filtered HTML" text format for its body,
+   click the "Quick edit" link, then click the node's body, and you should see
+   CKEditor's in-place editing!
+
 FAQ
 ---
 Q: I want to make the "Quick edit" link look different.
