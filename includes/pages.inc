@@ -477,9 +477,13 @@ function edit_field_form($form, &$form_state) {
     '#attributes' => array('class' => array('edit-form-submit')),
   );
 
-  // Remove metatags form elements
+  // Remove http://drupal.org/project/metatag form elements.
   // @see http://drupal.org/node/1895142
   unset($form['#metatags']);
+
+  // Tell http://drupal.org/project/redirect to not add form elements.
+  // @see http://drupal.org/node/1935676
+  $form['redirect'] = array();
 
   // Simplify it for optimal in-place use.
   edit_field_form_simplify($form, $form_state);
