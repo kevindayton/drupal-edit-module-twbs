@@ -37,3 +37,13 @@ FAQ
 Q: I want to make the "Quick edit" link look different.
 A: No problem! Disable the block, and output edit_trigger_link()'s render array
    somewhere else on the page.
+Q: Edit breaks my node titles!
+A: This probably means you're using a theme that inappropriately uses the node
+   title as a "title" attribute as well, without stripping any HTML used in the
+   title. Within an attribute, HTML is pointless and potentially harmful.
+   So if your theme's node.tpl.php does something like this:
+     title="<?php print $title ?>"
+   then please replace it with this:
+     title="<?php print filter_xss($title, array()) ?>"
+   This ensures that any HTML tags are stripped from the title.
+   See http://drupal.org/node/1913964#comment-7231462 for details.
