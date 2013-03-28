@@ -9,22 +9,22 @@
 /**
  * Non-HTML markup language filters that generate HTML.
  */
-const FILTER_TYPE_MARKUP_LANGUAGE = 0;
+define('FILTER_TYPE_MARKUP_LANGUAGE', 0);
 
 /**
  * HTML tag and attribute restricting filters.
  */
-const FILTER_TYPE_HTML_RESTRICTOR = 1;
+define('FILTER_TYPE_HTML_RESTRICTOR', 1);
 
 /**
  * Reversible transformation filters.
  */
-const FILTER_TYPE_TRANSFORM_REVERSIBLE = 2;
+define('FILTER_TYPE_TRANSFORM_REVERSIBLE', 2);
 
 /**
  * Irreversible transformation filters.
  */
-const FILTER_TYPE_TRANSFORM_IRREVERSIBLE = 3;
+define('FILTER_TYPE_TRANSFORM_IRREVERSIBLE', 3);
 
 
 /**
@@ -165,14 +165,13 @@ function filter_get_filter_types_by_format($format_id) {
   $filter_types = array();
 
   $filters = filter_list_format($format_id);
-
-  // Ignore filters that are disabled.
-  $filters = array_filter($filters, function($filter) {
-    return $filter->status;
-  });
-
   $filters_info = filter_get_filters();
   foreach ($filters as $filter) {
+    // Ignore filters that are disabled.
+    if (empty($filter->status)) {
+      continue;
+    }
+
     if (!isset($filters_info[$filter->name]['type'])) {
       drupal_set_message(t('Filter !filter has no type specified!', array('!filter' => $filter->name)), 'error');
       continue;
