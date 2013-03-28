@@ -48,6 +48,8 @@ function edit_filter_info_alter(&$info) {
 
   /* CONTRIB */
   $contrib_filter_type = array(
+    // http://drupal.org/project/caption_filter
+    'caption_filter' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/filter_html_image_secure
     'filter_html_image_secure' => FILTER_TYPE_HTML_RESTRICTOR,
     // http://drupal.org/project/image_resize_filter
@@ -55,8 +57,12 @@ function edit_filter_info_alter(&$info) {
     // http://drupal.org/project/markdown
     'filter_markdown' => FILTER_TYPE_MARKUP_LANGUAGE,
     // http://drupal.org/project/mathjax: see http://drupal.org/node/1900436#comment-7198530
+    // http://drupal.org/project/media
+    'media_filter' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/typogrify
     'typogrify' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
+    // http://drupal.org/project/wysiwyg_filter
+    'wysiwyg' => FILTER_TYPE_HTML_RESTRICTOR,
   );
 
   foreach ($contrib_filter_type as $filter => $type) {
@@ -173,7 +179,7 @@ function filter_get_filter_types_by_format($format_id) {
     }
 
     if (!isset($filters_info[$filter->name]['type'])) {
-      drupal_set_message(t('Filter !filter has no type specified!', array('!filter' => $filter->name)), 'error');
+      drupal_set_message(t('Filter !filter has no type specified! This is required for the Edit module.', array('!filter' => $filter->name)), 'error');
       continue;
     }
 
