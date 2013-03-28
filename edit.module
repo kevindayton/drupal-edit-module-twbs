@@ -364,6 +364,12 @@ function edit_preprocess_field(&$variables) {
 function edit_preprocess_views_view_field(&$variables) {
   if (user_access('access in-place editing')) {
     $views_field = $variables['field'];
+
+    // If this Views Field is hidden from display, then don't alter its output.
+    if ($views_field->options['exclude']) {
+      return;
+    }
+
     if (!empty($variables['row']) && !empty($variables['row']->_field_data)) {
       $entity_info = end($variables['row']->_field_data);
 
