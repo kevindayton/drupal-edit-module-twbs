@@ -4,4 +4,4 @@ package = Spark
 core = 7.x
 
 dependencies[] = entity
-dependencies[] = field
+dependencies[] = field (>=7.22)
