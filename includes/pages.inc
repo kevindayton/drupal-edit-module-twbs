@@ -308,7 +308,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $subform_id = 'edit_field_edit_form';
   if ($is_special_field) {
     $field_instance = TRUE;
-    $subform_id = 'editfape_field_edit_node_' . $field_name . '_form';
+    $subform_id = 'edit_field_node_' . $field_name . '_edit_form';
     if (!node_access('update', $entity)) {
       return MENU_ACCESS_DENIED;
     }
@@ -342,10 +342,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $commands = array();
 
   if (!empty($form_state['executed'])) {
-    // Reload the entity. This is necessary for some fields; otherwise we'd
-    // render the field without the updated values.
-    $entity = entity_load($entity_type, array($entity_id));
-    $entity = reset($entity);
+    $entity = $form_state['entity'];
 
     if ($is_special_field) {
       $inline = FALSE;
@@ -356,7 +353,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 
         case 'author':
           $inline = TRUE;
-          $value = theme('username', array('account' => $entity));
+          $value = theme('username', array('account' => $entity, 'name' => $entity->name));
           break;
 
         case 'created':
