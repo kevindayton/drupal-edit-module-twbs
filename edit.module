@@ -350,7 +350,20 @@ function edit_preprocess_field(&$variables) {
   $field_name = $element['#field_name'];
   $language = $element['#language'];
   $view_mode = $element['#view_mode'];
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $element['#object']);
+  $entity = $element['#object'];
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Support for field-collection fields.
+  if ($entity_type === 'field_collection_item') {
+    $host_entity = field_collection_item_get_host_entity($element['#object']);
+    // Only when this field_collection_item field is rendered inside its host
+    // entity, we must inherit the host entity details.
+    if ($host_entity->value()->entity_view_prepared) {
+      $entity_type = $entity->hostEntityType();
+      $field_name = $entity->field_name;
+      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $host_entity);
+    }
+  }
 
   // Provide metadata through data- attributes.
   $variables['attributes_array']['data-edit-id'] = "$entity_type/$id/$field_name/$language/$view_mode";
