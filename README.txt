@@ -45,3 +45,9 @@ A: This probably means you're using a theme that inappropriately uses the node
      title="<?php print filter_xss($title, array()) ?>"
    This ensures that any HTML tags are stripped from the title.
    See http://drupal.org/node/1913964#comment-7231462 for details.
+Q: Why does Edit add attributes to my HTML even for users that don't have the
+   permission to use in-place editing?
+A: First: precisely because these are just small bits of metadata, there is no
+   harm; there is no security risk involved.
+   Second: it is by design, this metadata is always added, to not break Drupal's
+   render cache.
