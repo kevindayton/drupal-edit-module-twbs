@@ -116,10 +116,7 @@ function edit_metadata_generator($field) {
   // Early-return if no editor is available.
   if (!$is_special_field) {
     $instance_info = field_info_instance($entity_type, $field_name, $bundle);
-    $display = $instance_info['display']['default'];
-    if (array_key_exists($view_mode, $instance_info['display'])) {
-      $display = $instance_info['display'][$view_mode];
-    }
+    $display = field_get_display($instance_info, $view_mode, $entity);
     $formatter_type = field_info_formatter_types($display['type']);
     $items = field_get_items($entity_type, $entity, $field_name, $language);
     // For fields who don't have values, end here.
@@ -315,10 +312,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
   else {
     $field_instance = field_info_instance($entity_type, $field_name, $bundle);
-    $display = $field_instance['display']['default'];
-    if (array_key_exists($view_mode, $field_instance['display'])) {
-      $display = $field_instance['display'][$view_mode];
-    }
+    $display = field_get_display($field_instance, $view_mode, $entity);
   }
 
   if (empty($field_instance)) {
