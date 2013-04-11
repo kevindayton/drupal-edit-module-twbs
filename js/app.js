@@ -414,6 +414,7 @@
      * want this feedback sooner than we can have a refactored application.
      */
     _manageDocumentFocus: function () {
+      this.$editables = $([]);
       if (!this.$entityElements.length) {
         return;
       }
