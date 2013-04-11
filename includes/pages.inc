@@ -27,7 +27,9 @@ function edit_metadata() {
   foreach ($fields as $field) {
     if (_edit_validate_field($field)) {
       $metadata[$field] = edit_metadata_generator($field);
-      $editors[] = $metadata[$field]['editor'];
+      if ($metadata[$field]['access'] !== FALSE) {
+        $editors[] = $metadata[$field]['editor'];
+      }
     }
     else {
       $metadata[$field] = array('access' => FALSE);
