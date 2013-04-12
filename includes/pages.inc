@@ -135,6 +135,10 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     $entity = $form_state['entity'];
 
     if (!_edit_is_extra_field($entity_type, $field_name)) {
+      // The form submission took care of saving the updated entity. Return the
+      // updated view of the field.
+      $entities = entity_load($entity_type, array($id), TRUE);
+      $entity = reset($entities);
       $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
       $rerendered_field = drupal_render($field);
     }
