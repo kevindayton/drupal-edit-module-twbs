@@ -5,7 +5,7 @@
  */
 
 /**
- * Returns the metadata for a set of fields.
+ * Page callback: Returns the metadata for a set of fields.
  *
  * Given a list of field edit IDs as POST parameters, run access checks on the
  * entity and field level to determine whether the current user may edit them.
@@ -15,322 +15,109 @@
  *   The JSON response.
  *
  * @see Drupal 8's EditController::metadata()
+ * @see EditMetadataGenerator
+ * @see EditEntityFieldAccessCheck
+ * @see EditEditorSelector
  */
 function edit_metadata() {
-  // module_load_include('inc', 'edit', 'includes/metadata_generator');
-
   $fields = $_POST['fields'];
-  $metadata = array();
-  $editors = array();
   if (!isset($fields)) {
     return MENU_NOT_FOUND;
   }
+  module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
+  module_load_include('php', 'edit', 'includes/EditEditorSelector');
+  module_load_include('php', 'edit', 'includes/EditMetadataGenerator');
+  $accessChecker = new EditEntityFieldAccessCheck();
+  $editorSelector = new EditEditorSelector();
+  $metadataGenerator = new EditMetadataGenerator($accessChecker, $editorSelector);
 
+  // Build metadata for each field, track all in-place editors.
+  $metadata = array();
+  $editors = array();
   foreach ($fields as $field) {
-    if (_edit_validate_field($field)) {
-      $metadata[$field] = edit_metadata_generator($field);
-      if ($metadata[$field]['access'] !== FALSE) {
-        $editors[] = $metadata[$field]['editor'];
+    list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode('/', $field);
+
+    // Load the entity.
+    if (!$entity_type || !entity_get_info($entity_type)) {
+      return MENU_NOT_FOUND;
+    }
+    $entity = entity_load_single($entity_type, $entity_id);
+    if (!$entity) {
+      return MENU_NOT_FOUND;
+    }
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+    // Validate the field name and language.
+    if (!_edit_is_extra_field($entity_type, $field_name)) {
+      if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
+        return MENU_NOT_FOUND;
       }
     }
     else {
-      $metadata[$field] = array('access' => FALSE);
+      $instance = array('field_name' => $field_name);
+    }
+    if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
+      return MENU_NOT_FOUND;
+    }
+
+    // Generate metadata for the current field.
+    $metadata[$field] = $metadataGenerator->generate($entity_type, $entity, $instance, $langcode, $view_mode);
+
+    // Track all editors.
+    if ($metadata[$field]['access'] !== FALSE) {
+      $editors[] = $metadata[$field]['editor'];
     }
   }
 
+  // Build response.
   $commands = array();
   $commands[] = array(
     'command' => 'editMetadata',
     'results' => $metadata,
   );
 
-  // Include the attachments and settings for editors that are used.
-  $elements['#attached'] = edit_get_all_editor_attachments($editors, $metadata);
+  // Ensure an AJAX command is generated to load in-place editor attachments.
+  $elements['#attached'] = $editorSelector->getEditorAttachments($editors, $metadata);
   drupal_process_attached($elements);
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
- * Checks if a field is inline editable or not.
+ * Page callback: Returns a single field edit form as an Ajax response.
  *
- * @param $field
- *   the data-edit-id value of this field.
- *
- * @return bool
- */
-function _edit_validate_field($field) {
-  list($entity_type, $entity_id, $field_name, $langcode, $view_mode) = explode('/', $field);
-
-  // Load the entity.
-  if (!$entity_type || !entity_get_info($entity_type)) {
-    return FALSE;
-  }
-  $entity = entity_load_single($entity_type, $entity_id);
-  if (!$entity) {
-    return FALSE;
-  }
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-  // Validate the field name and language.
-  if (!_edit_is_extra_field($entity_type, $field_name)) {
-    if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
-      return FALSE;
-    }
-  }
-  if (!$langcode || (field_valid_language($langcode) !== $langcode)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-
-/**
- * Generates in-place editing metadata for an entity field.
- *
- * @param $field
- *   The edit ID of the field being edited.
- * @return array
- *   An array containing metadata with the following keys:
- *   - label: the user-visible label for the field.
- *   - access: whether the current user may edit the field or not.
- *   - editor: which editor should be used for the field.
- *   - aria: the ARIA label.
- *   - custom: (optional) any additional metadata that the editor provides.
- *
- * @see Drupal 8's Edit's MetadataGenerator::generate()
- */
-function edit_metadata_generator($field) {
-  list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode('/', $field);
-  $is_extra_field = _edit_is_extra_field($entity_type, $field_name);
-
-  $entity = entity_load_single($entity_type, $entity_id);
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-
-  module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
-  $x = new EditEntityFieldAccessCheck();
-  module_load_include('php', 'edit', 'includes/EditMetadataGenerator');
-
-  var_dump($x->accessEditEntityField($entity_type, $entity, $field_name));
-  exit;
-
-  // Early-return if user does not have access.
-  $entity_access = entity_access('update', $entity_type, $entity);
-  $field_access = $is_extra_field ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
-  if (!$entity_access || !$field_access) {
-    return array('access' => FALSE);
-  }
-
-  $instance_info = $items = array();
-
-  // Early-return if no editor is available.
-  if (!$is_extra_field) {
-    $instance_info = field_info_instance($entity_type, $field_name, $bundle);
-    $display = field_get_display($instance_info, $view_mode, $entity);
-    $formatter_type = field_info_formatter_types($display['type']);
-    $items = field_get_items($entity_type, $entity, $field_name, $language);
-    // For fields who don't have values, end here.
-    if (!$items) {
-      return array('access' => FALSE);
-    }
-    $editor_id = edit_select_editor($formatter_type, $instance_info, $items, $entity_type, $field_name, $view_mode);
-  }
-  // Node title/author/date are not fields, so we have to hard code their editor
-  // mapping instead of selecting the editor dynamically.
-  else {
-    $editor_id = edit_select_editor(array(), array(), array(), $entity_type, $field_name, $view_mode);
-  }
-  if (!isset($editor_id)) {
-    return array('access' => FALSE);
-  }
-
-  // Gather metadata, allow the editor to add additional metadata of its own.
-  if (!$is_extra_field) {
-    $label = $instance_info['label'];
-  }
-  else {
-    if ($field_name === 'title') {
-      $label = t('Title');
-    }
-    else if ($field_name === 'author') {
-      $label = t('Author');
-    }
-    else if ($field_name === 'created') {
-      $label = t('Date');
-    }
-  }
-  $metadata = array(
-    'label' => check_plain($label),
-    'access' => TRUE,
-    'editor' => $editor_id,
-    'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
-  );
-  // Add editor metadata if needed.
-  if (!$is_extra_field) {
-    $editor = edit_editor_get($editor_id);
-    if (!empty($editor['metadata callback'])) {
-      if ($editor['file']) {
-        $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
-        require_once $file_path . '/' . $editor['file'];
-      }
-      if (function_exists($editor['metadata callback'])) {
-        $editor_metadata = $editor['metadata callback']($instance_info, $items);
-        if (!empty($editor_metadata)) {
-          $metadata['custom'] = $editor_metadata;
-        }
-      }
-    }
-  }
-
-  $context = array(
-    'field' => $field,
-    'entity' => $entity,
-    'instance_info' => $instance_info,
-    'items' => $items,
-  );
-  drupal_alter('edit_editor_metadata', $metadata, $editor_id, $context);
-
-  return $metadata;
-}
-
-/**
- * Returns the in-place editor to use for a given field instance.
- *
- * @param array $formatter_type
- *   The field's formatter type, as returned by field_info_formatter_types().
- * @param array $instance
- *   The field's instance info, as returned by field_info_instance().
- * @param array $items
- *   The field's item values.
- * @param string $entity_type
- *   The entity type. Only necessary for node title/author/date.
+ * @param $entity
+ *   The entity being edited.
  * @param string $field_name
- *   The field's name. Only necessary for node title/author/date.
+ *   The name of the field that is being edited.
+ * @param string $langcode
+ *   The name of the language for which the field is being edited.
+ * @param string $view_mode
+ *   The view mode the field should be rerendered in.
+ * @return
+ *   The Ajax response.
  *
- * @return string|NULL
- *   The editor to use, or NULL to not enable in-place editing.
- *
- * @see Drupal 8's Edit's EditorSelector::getEditor()
- */
-function edit_select_editor(array $formatter_type, array $instance, array $items, $entity_type, $field_name, $view_mode) {
-  $alternatives = &drupal_static(__FUNCTION__, NULL);
-  $editors = edit_editor_list();
-
-  // Node title/author/date are not fields, so we have to hard code their editor
-  // mapping instead of selecting the editor dynamically.
-  if (_edit_is_extra_field($entity_type, $field_name)) {
-    $is_full_title = $field_name === 'title' && $view_mode === 'full';
-    return $is_full_title ? 'direct' : 'form';
-  }
-
-  // Build a static cache of the editors that have registered themselves as
-  // alternatives to a certain editor.
-  if (!$alternatives) {
-    foreach ($editors as $alternative_editor_id => $editor) {
-      if (isset($editor['alternativeTo'])) {
-        foreach ($editor['alternativeTo'] as $original_editor_id) {
-          $alternatives[$original_editor_id][] = $alternative_editor_id;
-        }
-      }
-    }
-  }
-
-  // Check if the formatter defines an appropriate in-place editor. For
-  // example, text formatters displaying untrimmed text can choose to use the
-  // 'direct' editor. If the formatter doesn't specify, fall back to the
-  // 'form' editor, since that can work for any field. Formatter definitions
-  // can use 'disabled' to explicitly opt out of in-place editing.
-  $formatter_settings = $formatter_type['settings'];
-  $editor_id = isset($formatter_settings['edit']['editor']) ? $formatter_settings['edit']['editor'] : 'form';
-  if ($editor_id === 'disabled') {
-    return;
-  }
-  elseif ($editor_id === 'form') {
-    return 'form';
-  }
-
-  // No early return, so create a list of all choices.
-  $editor_choices = array($editor_id);
-  if (isset($alternatives[$editor_id])) {
-    $editor_choices = array_merge($editor_choices, $alternatives[$editor_id]);
-  }
-
-  // Make a choice.
-  foreach ($editor_choices as $editor_id) {
-    $editor = edit_editor_get($editor_id);
-    if (!empty($editor['compatibility check callback'])) {
-      if ($editor['file']) {
-        $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
-        require_once $file_path . '/' . $editor['file'];
-      }
-      if ($editor['compatibility check callback']($instance, $items)) {
-        return $editor_id;
-      }
-    }
-  }
-
-  // We still don't have a choice, so fall back to the default 'form' editor.
-  return 'form';
-}
-
-/**
- * Page callback: Provides editing of entity fields.
+ * @see Drupal 8's EditController::fieldForm()
  */
 function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL, $view_mode = NULL) {
-  // Ensure the entity type is valid.
-  if (empty($entity_type)) {
-    return MENU_NOT_FOUND;
-  }
+  $commands = array();
 
-  $entity_info = entity_get_info($entity_type);
-  if (!$entity_info) {
-    return MENU_NOT_FOUND;
-  }
+  // Load entity whose field is to be edited.
+  $entity = entity_load_single($entity_type, $entity_id);
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  $entities = entity_load($entity_type, array($entity_id));
-  if (!$entities) {
-    return MENU_NOT_FOUND;
-  }
-
-  $entity = reset($entities);
-  if (!$entity) {
-    return MENU_NOT_FOUND;
-  }
-
-  if (!isset($langcode) && isset($entity->language)) {
-    $langcode = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
-  }
-
-  // Ensure access to update this particular field is granted.
-  if (!field_access('edit', $field_name, $entity_type, $entity)) {
+  // Ensure the user is allowed to edit this field.
+  module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
+  $accessChecker = new EditEntityFieldAccessCheck();
+  if (!$accessChecker->accessEditEntityField($entity_type, $entity, $field_name)) {
     return MENU_ACCESS_DENIED;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  $is_extra_field = _edit_is_extra_field($entity_type, $field_name);
-  $display = array();
-
-  // This allows us to have limited support for non-field API fields. Currently,
-  // we only have support for node:title, node:author and node:created.
+  // Determine which subform should be used, initialize form state, build form.
   $subform_id = 'edit_field_edit_form';
-  if ($is_extra_field) {
-    $field_instance = TRUE;
-    $subform_id = 'edit_field_node_' . $field_name . '_edit_form';
-    if (!node_access('update', $entity)) {
-      return MENU_ACCESS_DENIED;
-    }
+  if (_edit_is_extra_field($entity_type, $field_name)) {
+    $subform_id = edit_extra_field_info($entity_type, $field_name, 'edit subform id');
   }
-  else {
-    $field_instance = field_info_instance($entity_type, $field_name, $bundle);
-    $display = field_get_display($field_instance, $view_mode, $entity);
-  }
-
-  if (empty($field_instance)) {
-    return MENU_NOT_FOUND;
-  }
-
   $form_state = array(
     'entity_type' => $entity_type,
     'entity' => $entity,
@@ -338,51 +125,36 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     'langcode' => $langcode,
     'view_mode' => $view_mode,
     'no_redirect' => TRUE,
-    'field_instance' => $field_instance,
     'bundle' => $bundle,
     'subform_id' => $subform_id,
   );
-
   $form = drupal_build_form('edit_field_form', $form_state);
 
-  $commands = array();
-
+  // If the form was successfully submitted (executed), then rerender the field.
   if (!empty($form_state['executed'])) {
     $entity = $form_state['entity'];
 
-    if ($is_extra_field) {
-      $inline = FALSE;
-      switch ($field_name) {
-        case 'title':
-          $value = $entity->title;
-          break;
-
-        case 'author':
-          $inline = TRUE;
-          $value = theme('username', array('account' => $entity, 'name' => $entity->name));
-          break;
-
-        case 'created':
-          $inline = TRUE;
-          $value = format_date($entity->created);
-          break;
-      }
-      $data = edit_wrap_pseudofield($value, "node/$id/$field_name/$langcode/$view_mode", $inline);
-      // @todo will need special things for panel nodes most likely.
-      $commands[] = array(
-        'command' => 'editFieldFormSaved',
-        'data' => $data,
-      );
-    }
-    // All other fields.
-    else {
+    if (!_edit_is_extra_field($entity_type, $field_name)) {
       $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
-      $commands[] = array(
-        'command' => 'editFieldFormSaved',
-        'data' => drupal_render($field),
+      $rerendered_field = drupal_render($field);
+    }
+    else {
+      $rerender_callback = edit_extra_field_info($entity_type, $field_name, 'rerender callback');
+      $result = $rerender_callback($entity);
+      $rerendered_field = edit_wrap_pseudofield(
+        $result['value'],
+        "$entity_type/$id/$field_name/$langcode/$view_mode",
+        $result['inline']
       );
     }
+
+    $commands[] = array(
+      'command' => 'editFieldFormSaved',
+      'data' => $rerendered_field,
+    );
   }
+  // Otherwise, render the form. (And if it was insuccessfully submitted, there
+  // will be form validation errors.)
   else {
     $commands[] = array(
       'command' => 'editFieldForm',
@@ -408,46 +180,34 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
 }
 
 /**
- * Page callback: renders a text field without transformation filters.
+ * Page callback: Returns an Ajax response to render a text field without
+ * transformation filters.
+ *
+ * @param $entity
+ *   The entity being edited.
+ * @param string $field_name
+ *   The name of the field that is being edited.
+ * @param string $langcode
+ *   The name of the language for which the field is being edited.
+ * @param string $view_mode
+ *   The view mode the field should be rerendered in.
+ * @return
+ *   The Ajax response.
+ *
+ * @see Drupal 8's EditorController::getUntransformedText()
  */
 function edit_ckeditor_get_untransformed_text($entity_type, $entity_id, $field_name, $langcode = NULL, $view_mode = NULL) {
-  // Ensure the entity type is valid.
-  if (empty($entity_type)) {
-    return MENU_NOT_FOUND;
-  }
+  $commands = array();
 
-  $entity_info = entity_get_info($entity_type);
-  if (!$entity_info) {
-    return MENU_NOT_FOUND;
-  }
-
-  $entities = entity_load($entity_type, array($entity_id));
-  if (!$entities) {
-    return MENU_NOT_FOUND;
-  }
-
-  $entity = reset($entities);
-  if (!$entity) {
-    return MENU_NOT_FOUND;
-  }
-
-  if (!isset($langcode) && isset($entity->language)) {
-    $langcode = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
-  }
-
-  // Ensure access to update this particular field is granted.
-  if (!field_access('edit', $field_name, $entity_type, $entity)) {
-    return MENU_ACCESS_DENIED;
-  }
-
+  $entity = entity_load_single($entity_type, $entity_id);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  $field_instance = field_info_instance($entity_type, $field_name, $bundle);
-  if (empty($field_instance)) {
-    return MENU_NOT_FOUND;
+  // Ensure the user is allowed to edit this field.
+  module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
+  $accessChecker = new EditEntityFieldAccessCheck();
+  if (!$accessChecker->accessEditEntityField($entity_type, $entity, $field_name)) {
+    return MENU_ACCESS_DENIED;
   }
-
-  $commands = array();
 
   // Render the field in our custom display mode; retrieve the re-rendered
   // markup, this is what we're after.
@@ -463,6 +223,17 @@ function edit_ckeditor_get_untransformed_text($entity_type, $entity_id, $field_n
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
+/**
+ * Form constructor; in-place editing form for a (single) Field API or "extra"
+ * field.
+ *
+ * For Field API fields, the edit_field_edit_form subform will be used. For
+ * "extra" fields, the subform indicated in hook_edit_extra_fields_info() will
+ * be used.
+ *
+ * @see edit_field_edit_form()
+ * @ingroup forms
+ */
 function edit_field_form($form, &$form_state) {
   $form['#parents'] = array();
 
@@ -496,21 +267,15 @@ function edit_field_form($form, &$form_state) {
 /**
  * Removes unneeded elements from the field from.
  *
- * @param $form
- * @param $form_state
+ * @see Drupal 8's EditFieldForm::simplify().
  */
 function edit_field_form_simplify(&$form, &$form_state) {
   $field_name = $form_state['field_name'];
   $langcode = $form_state['langcode'];
 
   if (_edit_is_extra_field($form_state['entity_type'], $field_name)) {
-    // This is needed to hide the title properly.
-    $field_mapping = array(
-      'title' => 'title',
-      'author' => 'name',
-      'created' => 'date',
-    );
-    $widget_element = &$form[$field_mapping[$field_name]];
+    $key = edit_extra_field_info($form_state['entity_type'], $field_name, 'form simplification element key');
+    $widget_element = &$form[$key];
   }
   else {
     $widget_element = &$form[$field_name][$langcode];

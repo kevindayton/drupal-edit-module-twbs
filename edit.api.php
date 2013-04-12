@@ -39,16 +39,15 @@ function hook_edit_editor_info_alter(&$editors) {
  * Alter a field metadata that is used by the front-end.
  *
  * @param $metadata
- *   Informations used by the front-end to make the field in-place editable.
- * @param $editor
- *   id of the editor used for the current field.
- * @param $context
- *   - 'field' => $field,
- *   - 'entity' => $entity,
- *   - 'instance_info' => $instance_info,
- *   - 'items' => $items,
+ *   Information used by the front-end to make the field in-place editable.
+ * @param array $context
+ *   An array with the following key-value pairs:
+ *     - 'entity_type': the entity type
+ *     - 'entity': the entity object
+ *     - 'field': the field instance as returned by field_info_instance()
+ *     - 'items': the items of this field on this entity
  */
-function hook_edit_editor_metadata_alter(&$metadata, $editor, $context) {
+function hook_edit_editor_metadata_alter(&$metadata, $context) {
 
 }
 
@@ -57,12 +56,12 @@ function hook_edit_editor_metadata_alter(&$metadata, $editor, $context) {
  *
  * @param $attachments
  *   #attached array returned by the editor attachments callback.
- * @param $editor
+ * @param $editor_id
  *   ID of the currently used editor.
  * @param $metadata
  *   Informations about all the fields currently used on the page.
  */
-function hook_edit_editor_attachments_alter(&$attachments, $editor, $metadata) {
+function hook_edit_editor_attachments_alter(&$attachments, $editor_id, $metadata) {
   if ($editor === 'ckeditor') {
     $attachments['library'][] = array('mymodule', 'myjslibrary');
   }

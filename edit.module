@@ -14,6 +14,9 @@
 // Load filter system metadata additions.
 module_load_include('inc', 'edit', 'includes/filter');
 
+// Load node module "extra fields" support.
+module_load_include('inc', 'edit', 'includes/node');
+
 /**
  * Implements hook_menu().
  */
@@ -317,9 +320,47 @@ function edit_trigger_link() {
 }
 
 /**
- * Indicates whether a field is an "extra field".
+ * Provides metadata of all registered "extra fields".
  *
- * @see hook_field_extra_fields()
+ * All parameters are optional. You can use them to only retrieve metadata that
+ * is relevant for your particular use case.
+ *
+ * @param $entity_type
+ *   Retrieves all "extra fields" metadata for this entity type.
+ * @param $field_name
+ *   Retrieves the "extra fields" metadata for this entity type and field.
+ * @param $key
+ *   Retrieves one key of "extra fields" metadata for this entity type and field.
+ * @param bool $reset
+ *   Resets this function's internal cache when set to TRUE.
+ *
+ * @return array
+ *
+ * @see hook_edit_extra_fields_info()
+ * @see hook_edit_extra_fields_info_alter()
+ */
+function edit_extra_field_info($entity_type = NULL, $field_name = NULL, $key = NULL, $reset = FALSE) {
+  $extra_fields = &drupal_static(__FUNCTION__, NULL);
+  if (!$extra_fields || $reset) {
+    $extra_fields = module_invoke_all('edit_extra_fields_info');
+    drupal_alter('edit_extra_fields_info', $editors);
+  }
+
+  if (isset($entity_type)) {
+    if (isset($field_name)) {
+      if (isset($key)) {
+        return $extra_fields[$entity_type][$field_name][$key];
+      }
+      return $extra_fields[$entity_type][$field_name];
+    }
+    return $extra_fields[$entity_type];
+  }
+
+  return $extra_fields;
+}
+
+/**
+ * Indicates whether a field is an "extra field".
  *
  * @param $entity_type
  *   Machine name of the entity.
@@ -327,11 +368,12 @@ function edit_trigger_link() {
  *   Entity's field name that is being checked.
  *
  * @return bool
+ *
+ * @see hook_edit_extra_field_info()
  */
 function _edit_is_extra_field($entity_type, $field_name) {
-  $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
-  // @todo add a drupal_alter of invoke_all maybe?
-  return $is_special;
+  $extra_fields = edit_extra_field_info();
+  return isset($extra_fields[$entity_type][$field_name]);
 }
 
 /**
@@ -358,12 +400,14 @@ function edit_preprocess_field(&$variables) {
   // Support for field-collection fields.
   if ($entity_type === 'field_collection_item') {
     $host_entity = field_collection_item_get_host_entity($element['#object']);
-    // Only when this field_collection_item field is rendered inside its host
-    // entity, we must inherit the host entity details.
-    if ($host_entity->value()->entity_view_prepared) {
-      $entity_type = $entity->hostEntityType();
-      $field_name = $entity->field_name;
-      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $host_entity);
+
+    // When this field_collection_item entity is rendered as a field inside its
+    // host entity, we should not mark up its fields; the field_collection_item
+    // entity as a whole will already be in-place editable (since the entity is
+    // considered a field in this contect); it does not make sense to make
+    // fields within a field editable.
+    if (isset($host_entity->value()->entity_view_prepared)) {
+      return;
     }
   }
 
@@ -559,12 +603,14 @@ function edit_editor_get($editor) {
  */
 function edit_edit_editor_info() {
   $editors = array();
+  $path = drupal_get_path('module', 'edit');
   $editors['form'] = array(
     'widget' => 'formEditEditor',
     'compatibility check callback' => '_edit_editor_form_is_compatible',
     'metadata callback' => '_edit_editor_form_metadata',
     'attachments callback' => '_edit_editor_form_attachments',
     'file' => 'includes/editor.form.inc',
+    'file path' => $path,
   );
   $editors['direct'] = array(
     'widget' => 'direct',
@@ -572,6 +618,7 @@ function edit_edit_editor_info() {
     'metadata callback' => '_edit_editor_direct_metadata',
     'attachments callback' => '_edit_editor_direct_attachments',
     'file' => 'includes/editor.direct.inc',
+    'file path' => $path,
   );
   if (module_exists('ckeditor')) {
     $editors['ckeditor'] = array(
@@ -581,6 +628,7 @@ function edit_edit_editor_info() {
       'attachments callback' => '_edit_editor_ckeditor_attachments',
       'alternativeTo' => array('direct'),
       'file' => 'includes/editor.ckeditor.inc',
+      'file path' => $path,
     );
   }
   return $editors;
