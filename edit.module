@@ -317,7 +317,9 @@ function edit_trigger_link() {
 }
 
 /**
- * Decides if a field needs to be handled outside of Field API.
+ * Indicates whether a field is an "extra field".
+ *
+ * @see hook_field_extra_fields()
  *
  * @param $entity_type
  *   Machine name of the entity.
@@ -326,7 +328,7 @@ function edit_trigger_link() {
  *
  * @return bool
  */
-function _edit_is_special_field($entity_type, $field_name) {
+function _edit_is_extra_field($entity_type, $field_name) {
   $is_special = ($entity_type === 'node' && in_array($field_name, array('title', 'author', 'created')));
   // @todo add a drupal_alter of invoke_all maybe?
   return $is_special;
@@ -394,7 +396,7 @@ function edit_preprocess_views_view_field(&$variables) {
 
       $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
 
-      $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_special_field($entity_type, $field_name));
+      $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_extra_field($entity_type, $field_name));
     }
   }
 }

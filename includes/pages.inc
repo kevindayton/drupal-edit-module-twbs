@@ -14,9 +14,11 @@
  * @return
  *   The JSON response.
  *
- * @see Drupal 8's Edit's EditController::metadata()
+ * @see Drupal 8's EditController::metadata()
  */
 function edit_metadata() {
+  // module_load_include('inc', 'edit', 'includes/metadata_generator');
+
   $fields = $_POST['fields'];
   $metadata = array();
   $editors = array();
@@ -71,7 +73,7 @@ function _edit_validate_field($field) {
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   // Validate the field name and language.
-  if (!_edit_is_special_field($entity_type, $field_name)) {
+  if (!_edit_is_extra_field($entity_type, $field_name)) {
     if (!$field_name || !($instance = field_info_instance($entity_type, $field_name, $bundle))) {
       return FALSE;
     }
@@ -101,14 +103,22 @@ function _edit_validate_field($field) {
  */
 function edit_metadata_generator($field) {
   list($entity_type, $entity_id, $field_name, $language, $view_mode) = explode('/', $field);
-  $is_special_field = _edit_is_special_field($entity_type, $field_name);
+  $is_extra_field = _edit_is_extra_field($entity_type, $field_name);
 
   $entity = entity_load_single($entity_type, $entity_id);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
+
+  module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
+  $x = new EditEntityFieldAccessCheck();
+  module_load_include('php', 'edit', 'includes/EditMetadataGenerator');
+
+  var_dump($x->accessEditEntityField($entity_type, $entity, $field_name));
+  exit;
+
   // Early-return if user does not have access.
   $entity_access = entity_access('update', $entity_type, $entity);
-  $field_access = $is_special_field ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
+  $field_access = $is_extra_field ? TRUE : field_access('edit', $field_name, $entity_type, $entity);
   if (!$entity_access || !$field_access) {
     return array('access' => FALSE);
   }
@@ -116,7 +126,7 @@ function edit_metadata_generator($field) {
   $instance_info = $items = array();
 
   // Early-return if no editor is available.
-  if (!$is_special_field) {
+  if (!$is_extra_field) {
     $instance_info = field_info_instance($entity_type, $field_name, $bundle);
     $display = field_get_display($instance_info, $view_mode, $entity);
     $formatter_type = field_info_formatter_types($display['type']);
@@ -137,7 +147,7 @@ function edit_metadata_generator($field) {
   }
 
   // Gather metadata, allow the editor to add additional metadata of its own.
-  if (!$is_special_field) {
+  if (!$is_extra_field) {
     $label = $instance_info['label'];
   }
   else {
@@ -158,7 +168,7 @@ function edit_metadata_generator($field) {
     'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
   );
   // Add editor metadata if needed.
-  if (!$is_special_field) {
+  if (!$is_extra_field) {
     $editor = edit_editor_get($editor_id);
     if (!empty($editor['metadata callback'])) {
       if ($editor['file']) {
@@ -210,7 +220,7 @@ function edit_select_editor(array $formatter_type, array $instance, array $items
 
   // Node title/author/date are not fields, so we have to hard code their editor
   // mapping instead of selecting the editor dynamically.
-  if (_edit_is_special_field($entity_type, $field_name)) {
+  if (_edit_is_extra_field($entity_type, $field_name)) {
     $is_full_title = $field_name === 'title' && $view_mode === 'full';
     return $is_full_title ? 'direct' : 'form';
   }
@@ -299,13 +309,13 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  $is_special_field = _edit_is_special_field($entity_type, $field_name);
+  $is_extra_field = _edit_is_extra_field($entity_type, $field_name);
   $display = array();
 
   // This allows us to have limited support for non-field API fields. Currently,
   // we only have support for node:title, node:author and node:created.
   $subform_id = 'edit_field_edit_form';
-  if ($is_special_field) {
+  if ($is_extra_field) {
     $field_instance = TRUE;
     $subform_id = 'edit_field_node_' . $field_name . '_edit_form';
     if (!node_access('update', $entity)) {
@@ -340,7 +350,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   if (!empty($form_state['executed'])) {
     $entity = $form_state['entity'];
 
-    if ($is_special_field) {
+    if ($is_extra_field) {
       $inline = FALSE;
       switch ($field_name) {
         case 'title':
@@ -493,7 +503,7 @@ function edit_field_form_simplify(&$form, &$form_state) {
   $field_name = $form_state['field_name'];
   $langcode = $form_state['langcode'];
 
-  if (_edit_is_special_field($form_state['entity_type'], $field_name)) {
+  if (_edit_is_extra_field($form_state['entity_type'], $field_name)) {
     // This is needed to hide the title properly.
     $field_mapping = array(
       'title' => 'title',
