@@ -13,8 +13,8 @@ Installation
 
 In-place WYSIWYG editing using CKEditor
 ---------------------------------------
-1. Download and install the latest stable release of the CKEditor module from
-   http://drupal.org/project/ckeditor.
+1. Download and install the latest stable release (version 1.13 or newer) of the
+   CKEditor module from http://drupal.org/project/ckeditor.
    Note that *only* the CKEditor module is supported, not any other module, like
    the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
 2. Go to http://ckeditor.com/download and download the Standard or Full package.
