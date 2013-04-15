@@ -14,7 +14,7 @@ window.CKEDITOR_BASEPATH = Drupal.settings.edit.ckeditor.basePath;
 
 // @todo D8: use jQuery UI Widget bridging.
 // @see http://drupal.org/node/1874934#comment-7124904
-jQuery.widget('DrupalEditEditor.ckeditor', jQuery.DrupalEditEditor.direct, {
+jQuery.widget('DrupalEditEditor.ckeditor', jQuery.Create.editWidget, {
 
   textFormat: null,
   textFormatHasTransformations: null,
