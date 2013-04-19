@@ -51,3 +51,9 @@ A: First: precisely because these are just small bits of metadata, there is no
    harm; there is no security risk involved.
    Second: it is by design, this metadata is always added, to not break Drupal's
    render cache.
+Q: Why do I get a 'The filter "<filter name>" has no type specified!'' error?
+A: For Edit module to allow for in-place editing of "processed text" fields
+   (i.e. text passed through Drupal's filter system, via check_markup()), it
+   needs to know about each filter what type of filter it is. For simpler text
+   formats (i.e. with simpler filters), the unfiltered original may not have to
+   be retrieved from the server. See http://drupal.org/node/1817474 for details.
