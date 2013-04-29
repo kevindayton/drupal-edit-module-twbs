@@ -89,13 +89,8 @@
 
       // Insert form container in DOM.
       if ($editorElement.css('display') === 'inline') {
-        // @todo: POSTPONED_ON(Drupal core, title/author/date as Entity Properties)
-        // This is untested in Drupal 8, because in Drupal 8 we don't yet
-        // have the ability to edit the node title/author/date, because they
-        // haven't been converted into Entity Properties yet, and they're the
-        // only examples in core of "display: inline" properties.
         this.$formContainer.prependTo($editorElement.offsetParent());
-
+        // Position the form container to render on top of the field's element.
         var pos = $editorElement.position();
         this.$formContainer.css('left', pos.left).css('top', pos.top);
       }
