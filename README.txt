@@ -59,6 +59,18 @@ A: For Edit module to allow for in-place editing of "processed text" fields
    needs to know about each filter what type of filter it is. For simpler text
    formats (i.e. with simpler filters), the unfiltered original may not have to
    be retrieved from the server. See http://drupal.org/node/1817474 for details.
+Q: I want to disable in-place editing for a field.
+A: Any field that has the #skip_edit property set on it will not be made
+   in-place editable. You can add this property through hook_preprocess_field().
+   You must make sure that your implementation of that hook runs *before* Edit's
+   implementation — you can guarantee that by modifying the weight of your
+   module or implementing hook_module_implements_alter().
+Q: I want to disable in-place editing of fields in a View.
+A: It's possible to disable in-place editing in Views *completely* by
+   implementing hook_module_implements_alter(), and removing
+   edit_preprocess_views_view_field() from the list of implementations.
+   Currently, it's not yet possible to disable in-place editing in only a
+   specific View.
 
 
 Drupal 8 to Drupal 7 backporting considerations
