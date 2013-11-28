@@ -50,12 +50,16 @@ function edit_filter_info_alter(&$info) {
   $contrib_filter_type = array(
     // http://drupal.org/project/caption_filter
     'caption_filter' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
+    // https://drupal.org/project/commons_hashtags
+    'filter_hashtags' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/filter_html_image_secure
     'filter_html_image_secure' => FILTER_TYPE_HTML_RESTRICTOR,
     // http://drupal.org/project/image_resize_filter
     'image_resize_filter' => FILTER_TYPE_TRANSFORM_REVERSIBLE,
     // http://drupal.org/project/markdown
     'filter_markdown' => FILTER_TYPE_MARKUP_LANGUAGE,
+    // https://drupal.org/project/insert_view
+    'insert_view' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/mathjax: see http://drupal.org/node/1900436#comment-7198530
     // http://drupal.org/project/media
     'media_filter' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
