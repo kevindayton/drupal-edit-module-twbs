@@ -18,7 +18,8 @@ In-place WYSIWYG editing using CKEditor
    Note that *only* the CKEditor module is supported, not any other module, like
    the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
 2. Go to http://ckeditor.com/download and download the Standard or Full package.
-3. Extract the dowwnloaded package to sites/all/libraries/ckeditor. For maximum
+   Only version 4.2 or newer of CKEditor is supported.
+3. Extract the downloaded package to sites/all/libraries/ckeditor. For maximum
    security, it is recommended to delete the included "samples" directory at
    sites/all/libraries/ckeditor/samples.
 4. Go to admin/config/content/ckeditor/, enable one of the CKEditor profiles for
@@ -29,6 +30,7 @@ In-place WYSIWYG editing using CKEditor
 5. Find a node that uses e.g. the "Filtered HTML" text format for its body,
    click the "Quick edit" link, then click the node's body, and you should see
    CKEditor's in-place editing!
+
 
 FAQ
 ---
@@ -57,3 +59,12 @@ A: For Edit module to allow for in-place editing of "processed text" fields
    needs to know about each filter what type of filter it is. For simpler text
    formats (i.e. with simpler filters), the unfiltered original may not have to
    be retrieved from the server. See http://drupal.org/node/1817474 for details.
+
+
+Drupal 8 to Drupal 7 backporting considerations
+-----------------------------------------------
+From a Drupal 8 perspective.
+1. Use the Libraries API module to depend on Underscore and Backbone.
+2. Drupal 8's build of CKEditor already includes the sharedspace plugin, in
+   Drupal 7 we must either ship with that plugin or ask users to create a custom
+   CKEditor build.
