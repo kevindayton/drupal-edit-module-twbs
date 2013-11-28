@@ -212,28 +212,15 @@ function edit_library() {
     ),
   );
 
-  // Register underscore as a library.
-  $libraries['underscore'] = array(
-    'title' => 'Underscore.js',
-    'website' => 'http://underscorejs.org',
-    'version' => '1.4.2',
-    'js' => array(
-      $path . '/vendor/underscore/underscore.js' => array(),
-    ),
-  );
+  $libraries['underscore'] = edit_convert_libraries_to_library(libraries_load('underscore'), array(
+    'group' => JS_LIBRARY,
+    'weight' => -20,
+  ));
 
-  // Register backbone as a library.
-  $libraries['backbone'] = array(
-    'title' => 'Backbone.js',
-    'website' => 'http://backbonejs.org',
-    'version' => '0.9.2',
-    'js' => array(
-      $path . '/vendor/backbone/backbone.js' => array(),
-    ),
-    'dependencies' => array(
-      array('edit', 'underscore'),
-    ),
-  );
+  $libraries['backbone'] = edit_convert_libraries_to_library(libraries_load('backbone'), array(
+    'group' => JS_LIBRARY,
+    'weight' => -19,
+  ));
 
   return $libraries;
 }
@@ -765,4 +752,72 @@ function theme_edit_wrap_field($variables) {
     $el = 'span';
   }
   return '<'. $el . drupal_attributes($variables['attributes']) . '><' . $el .' class="field-item">' .  $variables['value'] . '</' . $el . '></' . $el . '>';
+}
+
+/**
+ * Implements hook_libraries_info().
+ *
+ * @see Libraries module.
+ */
+function edit_libraries_info() {
+  $libraries = array();
+
+  $libraries['underscore'] = array(
+    'name' => 'Underscore',
+    'vendor url' => 'http://documentcloud.github.io/backbone/',
+    'download url' => 'https://github.com/documentcloud/underscore/tree/1.4.0',
+    'files' => array(
+      'js' => array(
+        'underscore-min.js',
+      ),
+    ),
+    'version' => '1.4.0',
+  );
+
+  $libraries['backbone'] = array(
+    'name' => 'Backbone',
+    'vendor url' => 'http://documentcloud.github.io/backbone/',
+    'download url' => 'https://github.com/documentcloud/backbone/tree/0.9.2',
+    'files' => array(
+      'js' => array(
+        'backbone-min.js',
+      ),
+    ),
+    'version' => '0.9.2',
+    'dependencies' => array('underscore'),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Converts a libraries module array to a hook_library() array.
+ *
+ * Why is this necessary? I don't see any way from the Libraries module API
+ * to get an array that corresponds to what hook_library() expects.
+ *
+ * @see navbar_convert_libraries_to_library()
+ */
+function edit_convert_libraries_to_library($library, $options) {
+  // If the library wasn't loaded, don't bother converting it.
+  if (!$library['loaded']) {
+    return array();
+  }
+
+  $converted = array(
+    'title' => $library['name'],
+    'website' => $library['vendor url'],
+    'version' => $library['version'],
+  );
+
+  // This is not ideal, but I don't see any other way to convert these files.
+  // It's a bit hard-coded to expect just one file, but that's all we have for
+  // now, so it stays.
+  $filename = array_keys($library['files']['js']);
+  $converted['js'][$library['library path'] . '/' . $filename[0]] = array(
+    'group' => $options['group'],
+    'weight' => $options['weight'],
+  );
+
+  return $converted;
 }

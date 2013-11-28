@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ */
+function edit_requirements($phase) {
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+    // Check for the libraries module.
+    if (!module_exists('libraries')) {
+      $requirements['edit_libraries'] = array(
+        'title' => t('Edit: Libraries module'),
+        'value' => t('Libraries module is missing. Version 2.x or higher is required. Please check your version if you are experiencing trouble with the Edit module.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+    $requirements['edit_libraries_backbone'] = array(
+      'title' => t('Edit: Backbone library'),
+      'value' => t('The Backbone library is not present'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+    $requirements['edit_libraries_underscore'] = array(
+      'title' => t('Edit: Underscore library'),
+      'value' => t('The Underscore library is not present'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+
+    if (function_exists('libraries_get_path')) {
+      // Check for Underscore.
+      $path = libraries_get_path('underscore');
+      if (!empty($path) && file_exists($path . '/underscore-min.js')) {
+        $requirements['edit_libraries_underscore']['value'] = t('The Underscore library is present');
+        $requirements['edit_libraries_underscore']['severity'] = REQUIREMENT_OK;
+      }
+      // Check for Backbone.
+      $path = libraries_get_path('backbone');
+      if (!empty($path) && file_exists($path . '/backbone-min.js')) {
+        $requirements['edit_libraries_backbone']['value'] = t('The Backbone library is present');
+        $requirements['edit_libraries_backbone']['severity'] = REQUIREMENT_OK;
+      }
+    }
+  }
+
+  return $requirements;
+}
