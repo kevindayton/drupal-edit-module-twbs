@@ -17,11 +17,12 @@ In-place WYSIWYG editing using CKEditor
    CKEditor module from http://drupal.org/project/ckeditor.
    Note that *only* the CKEditor module is supported, not any other module, like
    the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
-2. Go to http://ckeditor.com/download and download the Standard or Full package.
+2. Go to http://ckeditor.com/builder, choose any preset you like, then add the
+   "Shared Space" plugin to the list of "Selected plugins". Then click the
+   "Download" button.
    Only version 4.2 or newer of CKEditor is supported.
-   If you use the "Source" button, then you go to http://ckeditor.com/builder,
-   select Standard or Full, add the "Source Dialog" plugin and then download a
-   custom build.
+   NOTE: If you use the "Source" button, also add the "Source Dialog" plugin to
+   the list of "Selected plugins".
 3. Extract the downloaded package to sites/all/libraries/ckeditor. For maximum
    security, it is recommended to delete the included "samples" directory at
    sites/all/libraries/ckeditor/samples.
@@ -81,5 +82,7 @@ Drupal 8 to Drupal 7 backporting considerations
 From a Drupal 8 perspective.
 1. Use the Libraries API module to depend on Underscore and Backbone.
 2. Drupal 8's build of CKEditor already includes the sharedspace plugin, in
-   Drupal 7 we must either ship with that plugin or ask users to create a custom
-   CKEditor build.
+   Drupal 7 we must ask users to create a custom CKEditor build.
+3. Analogously for the sourcedialog CKEditor plugin, except that is only
+   necessary when one of the CKEditor module profiles is configured to use the
+   "Source" button.

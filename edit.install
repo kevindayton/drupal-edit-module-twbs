@@ -30,13 +30,13 @@ function edit_requirements($phase) {
       // Check for Underscore.
       $path = libraries_get_path('underscore');
       if (!empty($path) && file_exists($path . '/underscore-min.js')) {
-        $requirements['edit_libraries_underscore']['value'] = t('The Underscore library is present');
+        $requirements['edit_libraries_underscore']['value'] = t('Exists');
         $requirements['edit_libraries_underscore']['severity'] = REQUIREMENT_OK;
       }
       // Check for Backbone.
       $path = libraries_get_path('backbone');
       if (!empty($path) && file_exists($path . '/backbone-min.js')) {
-        $requirements['edit_libraries_backbone']['value'] = t('The Backbone library is present');
+        $requirements['edit_libraries_backbone']['value'] = t('Exists');
         $requirements['edit_libraries_backbone']['severity'] = REQUIREMENT_OK;
       }
     }
@@ -44,7 +44,7 @@ function edit_requirements($phase) {
     if (module_exists('ckeditor')) {
       $requirements['edit_libraries_ckeditor'] = array(
         'title' => t('Edit: CKEditor library'),
-        'value' => t('The CKEditor library is compatible'),
+        'value' => t('Exists & compatible'),
         'severity' => REQUIREMENT_OK,
       );
 
@@ -54,8 +54,24 @@ function edit_requirements($phase) {
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
 
+      $ckeditor_js = file_get_contents(libraries_get_path('ckeditor') . '/ckeditor.js');
+
+      // Without the "Shared Space" plugin, Edit cannot nicely integrate
+      // CKEditor into in-place editing.
+      $requirements['edit_libraries_ckeditor_sharedspace'] = array(
+        'title' => t('Edit: CKEditor\'s "Shared Space" plugin is included'),
+        'value' => t('<a href="!sharedspace-url">"Shared Space"</a> CKEditor plugin missing', array('!sharedspace-url' => 'http://ckeditor.com/addon/sharedspace')),
+        'description' => t('This plugin is essential for CKEditor to work with in-place editing.<br>Please <a href="!builder-url">create a custom build</a> of CKEditor that includes this plugin.', array('!builder-url' => 'http://ckeditor.com/builder')),
+        'severity' => REQUIREMENT_ERROR,
+      );
+      if (FALSE !== strpos($ckeditor_js, 'CKEDITOR.plugins.add("sharedspace"')) {
+        $requirements['edit_libraries_ckeditor_sharedspace']['value'] = t('Included');
+        $requirements['edit_libraries_ckeditor_sharedspace']['severity'] = REQUIREMENT_OK;
+        unset($requirements['edit_libraries_ckeditor_sharedspace']['description']);
+      }
+
       // If the "Source" button is used in any of the CKEditor "profiles", then
-      // also ensure that the "sourcedialog" plugin is available, because it
+      // also ensure that the "Source Dialog" plugin is available, because it
       // will be necessary for in-place editing.
       module_load_include('inc', 'ckeditor', 'includes/ckeditor.admin');
       $source_button_found = FALSE;
@@ -68,13 +84,12 @@ function edit_requirements($phase) {
       if ($source_button_found) {
         $requirements['edit_libraries_ckeditor_sourcedialog'] = array(
           'title' => t('Edit: CKEditor\'s "Source" button is used'),
-          'value' => t('The <a href="!sourcedialog-url">Source Dialog</a> CKEditor plugin is missing', array('!sourcedialog-url' => 'http://ckeditor.com/addon/sourcedialog')),
+          'value' => t('<a href="!sourcedialog-url">"Source Dialog"</a> CKEditor plugin missing', array('!sourcedialog-url' => 'http://ckeditor.com/addon/sourcedialog')),
           'description' => t('This plugin is necessary to keep the "edit source" functionality while in-place editing.<br>Please <a href="!builder-url">create a custom build</a> of CKEditor that includes this plugin.', array('!builder-url' => 'http://ckeditor.com/builder')),
           'severity' => REQUIREMENT_ERROR,
         );
-        $ckeditor_js = file_get_contents(libraries_get_path('ckeditor') . '/ckeditor.js');
         if (FALSE !== strpos($ckeditor_js, 'CKEDITOR.plugins.add("sourcedialog"')) {
-          $requirements['edit_libraries_ckeditor_sourcedialog']['value'] = t('The Source dialog CKEditor plugin is present');
+          $requirements['edit_libraries_ckeditor_sourcedialog']['value'] = t('"Source Dialog" CKEditor plugin included');
           $requirements['edit_libraries_ckeditor_sourcedialog']['severity'] = REQUIREMENT_OK;
           unset($requirements['edit_libraries_ckeditor_sourcedialog']['description']);
         }
