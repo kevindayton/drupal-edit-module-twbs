@@ -166,6 +166,25 @@ jQuery.widget('DrupalEditEditor.ckeditor', jQuery.Create.editWidget, {
           top: mainToolbarId
         }
       };
+
+      // Find the "Source" button, if any, and replace it with "Sourcedialog".
+      // (The 'sourcearea' plugin only works in CKEditor's iframe mode.)
+      var sourceButtonFound = false;
+      for (var i = 0; !sourceButtonFound && i < settings.toolbar.length; i++) {
+        if (settings.toolbar[i] !== '/') {
+          for (var j = 0; !sourceButtonFound && j < settings.toolbar[i].length; j++) {
+            if (settings.toolbar[i][j] === 'Source') {
+              sourceButtonFound = true;
+              // Swap sourcearea's "Source" button for sourcedialog's.
+              settings.toolbar[i][j] = 'Sourcedialog';
+              settingsOverride.extraPlugins += ',sourcedialog';
+              settingsOverride.removePlugins += ',sourcearea';
+            }
+          }
+        }
+      }
+
+      settings.extraPlugins += ',' + settingsOverride.extraPlugins;
       settings.removePlugins += ',' + settingsOverride.removePlugins;
       settings.sharedSpaces = settingsOverride.sharedSpaces;
     }

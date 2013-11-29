@@ -53,6 +53,30 @@ function edit_requirements($phase) {
         $requirements['edit_libraries_ckeditor']['value'] = t('The CKEditor library is too old, please update to 4.2 or newer!');
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
+
+      // If the "Source" button is used in any of the CKEditor "profiles", then
+      // also ensure that the "sourcedialog" plugin is available, because it
+      // will be necessary for in-place editing.
+      module_load_include('inc', 'ckeditor', 'includes/ckeditor.admin');
+      $source_button_found = FALSE;
+      $profiles = ckeditor_profiles_compile();
+      foreach ($profiles as $format => $profile) {
+        if (FALSE !== strpos($profile['toolbar'], "'Source'")) {
+          $source_button_found = TRUE;
+        }
+      }
+      $requirements['edit_libraries_ckeditor_sourcedialog'] = array(
+        'title' => t('Edit: CKEditor\'s "Source" button is used'),
+        'value' => t('The <a href="!sourcedialog-url">Source Dialog</a> CKEditor plugin is missing', array('!sourcedialog-url' => 'http://ckeditor.com/addon/sourcedialog')),
+        'description' => t('This plugin is necessary to keep the "edit source" functionality while in-place editing.<br>Please <a href="!builder-url">create a custom build</a> of CKEditor that includes this plugin.', array('!builder-url' => 'http://ckeditor.com/builder')),
+        'severity' => REQUIREMENT_ERROR,
+      );
+      $ckeditor_js = file_get_contents(libraries_get_path('ckeditor') . '/ckeditor.js');
+      if (FALSE !== strpos($ckeditor_js, 'CKEDITOR.plugins.add("sourcedialog"')) {
+        $requirements['edit_libraries_ckeditor_sourcedialog']['value'] = t('The Source dialog CKEditor plugin is present');
+        $requirements['edit_libraries_ckeditor_sourcedialog']['severity'] = REQUIREMENT_OK;
+        unset($requirements['edit_libraries_ckeditor_sourcedialog']['description']);
+      }
     }
   }
 

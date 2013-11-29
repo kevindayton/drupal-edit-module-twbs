@@ -19,6 +19,9 @@ In-place WYSIWYG editing using CKEditor
    the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
 2. Go to http://ckeditor.com/download and download the Standard or Full package.
    Only version 4.2 or newer of CKEditor is supported.
+   If you use the "Source" button, then you go to http://ckeditor.com/builder,
+   select Standard or Full, add the "Source Dialog" plugin and then download a
+   custom build.
 3. Extract the downloaded package to sites/all/libraries/ckeditor. For maximum
    security, it is recommended to delete the included "samples" directory at
    sites/all/libraries/ckeditor/samples.
