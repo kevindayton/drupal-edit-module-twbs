@@ -20,7 +20,6 @@ function node_edit_extra_fields_info() {
         'full' => 'plain_text',
         'teaser' => 'plain_text',
       ),
-      'access callback' => 'edit_node_access',
       'edit subform id' => 'edit_field_node_title_edit_form',
       'form simplification element key' => 'title',
       'rerender callback' => 'edit_field_node_title_rerender',
