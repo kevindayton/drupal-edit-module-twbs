@@ -67,12 +67,6 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
       $settings['skin'] = 'moono';
     }
 
-    // Add plugins that are not yet in ckeditor core.
-    $plugins = edit_ckeditor_plugin();
-    // Adds sharedspace plugin, required for toolbar to show up.
-    $settings['loadPlugins']['sharedspace'] = $plugins['sharedspace'];
-    $settings['loadPlugins']['sharedspace']['path'] = $GLOBALS['base_path'] . $plugins['sharedspace']['path'];
-
     //[#1473010]
     // @todo see if this is needed.
     $field = field_info_field($instance['field_name']);
