@@ -30,6 +30,7 @@ function edit_field_edit_form(&$form, &$form_state, $entity, $field_name) {
   );
   field_attach_form($entity_type, $entity, $form, $form_state, $langcode, $options);
 
+  $entity->revision = FALSE;
   // @todo make this not node-specific
   if ($entity_type === 'node') {
     $entity->revision = in_array('revision', variable_get('node_options_' . $bundle, array()));
