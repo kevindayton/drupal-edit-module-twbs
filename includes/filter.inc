@@ -50,6 +50,8 @@ function edit_filter_info_alter(&$info) {
   $contrib_filter_type = array(
     // http://drupal.org/project/caption_filter
     'caption_filter' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
+    // https://drupal.org/project/emptyparagraphkiller
+    'emptyparagraphkiller' => FILTER_TYPE_HTML_RESTRICTOR,
     // https://drupal.org/project/commons_hashtags
     'filter_hashtags' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/filter_html_image_secure
