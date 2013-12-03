@@ -69,12 +69,14 @@ A: Any field that has the #skip_edit property set on it will not be made
    You must make sure that your implementation of that hook runs *before* Edit's
    implementation — you can guarantee that by modifying the weight of your
    module or implementing hook_module_implements_alter().
-Q: I want to disable in-place editing of fields in a View.
-A: It's possible to disable in-place editing in Views *completely* by
-   implementing hook_module_implements_alter(), and removing
-   edit_preprocess_views_view_field() from the list of implementations.
-   Currently, it's not yet possible to disable in-place editing in only a
-   specific View.
+Q: Why do contextual links now appear on node pages?
+A: Edit.module indeed enables contextual links on node pages as well, to allow
+   users to in-place edit not only "teaser" nodes, but also "full" nodes. If you
+   want to disable this behavior (which also means disabling in-place editing on
+   node pages!), then you can undo the changes made by edit_node_view_alter() in
+   another module, by either implementing hook_node_view_alter() yourself, or by
+   implementing hook_module_implements_alter() to prevent edit_node_view_alter()
+   from being executed.
 
 
 Drupal 8 to Drupal 7 backporting considerations

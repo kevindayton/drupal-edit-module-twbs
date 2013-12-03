@@ -403,36 +403,6 @@ function edit_preprocess_field(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_views_view_fields().
- *
- * Still a lot of handwaving for marking up views fields as in-place editable.
- */
-function edit_preprocess_views_view_field(&$variables) {
-  if (user_access('access in-place editing')) {
-    $views_field = $variables['field'];
-
-    // If this Views Field is hidden from display, then don't alter its output.
-    if ($views_field->options['exclude']) {
-      return;
-    }
-
-    if (!empty($variables['row']) && !empty($variables['row']->_field_data)) {
-      $entity_info = end($variables['row']->_field_data);
-
-      $entity_type = $entity_info['entity_type'];
-      $entity = $entity_info['entity'];
-      $field_name = $views_field->field;
-      $language = !empty($entity->language) ? $entity->language : LANGUAGE_NONE;
-      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-      $edit_id = "$entity_type/$id/$field_name/$language/_custom_views";
-
-      $variables['output'] = edit_wrap_pseudofield($variables['output'], $edit_id, _edit_is_extra_field($entity_type, $field_name));
-    }
-  }
-}
-
-/**
  * Implements hook_preprocess_page().
  *
  * Wraps title field when viewing a node page to make it in-place editable.
