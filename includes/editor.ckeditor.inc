@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Callbacks for the "wysiwyg" Create.js PropertyEditor widget.
+ * Defines the "formatted text" in-place editor.
+ *
+ * @see Drupal 8's \Drupal\editor\Plugin\InPlaceEditor\Editor.
  */
 
-// @see Drupal\editor\Plugin\edit\editor\Editor::isCompatible() in Drupal 8.
+// @see Drupal 8's \Drupal\editor\Plugin\edit\editor\Editor::isCompatible().
 function _edit_editor_ckeditor_is_compatible(array $instance, array $items) {
   $field = field_info_field($instance['field_name']);
 
@@ -29,7 +31,7 @@ function _edit_editor_ckeditor_is_compatible(array $instance, array $items) {
   }
 }
 
-// @see Drupal\editor\Plugin\edit\editor\Editor::getMetadata() in Drupal 8.
+// @see Drupal 8's \Drupal\editor\Plugin\edit\editor\Editor::getMetadata().
 function _edit_editor_ckeditor_metadata(array $instance, array $items) {
   $format_id = $items[0]['format'];
   $metadata['format'] = $format_id;
@@ -88,7 +90,7 @@ function _edit_editor_ckeditor_metadata(array $instance, array $items) {
 function _edit_editor_ckeditor_attachments() {
   return array(
     'library' => array(
-      array('edit', 'edit.editorWidget.ckeditor'),
+      array('edit', 'edit.inPlaceEditor.ckeditor'),
     ),
     'js' => array(
       array(

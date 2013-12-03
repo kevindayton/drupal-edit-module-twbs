@@ -24,6 +24,8 @@ function edit_metadata() {
   if (!isset($fields)) {
     return MENU_NOT_FOUND;
   }
+  $entities = (isset($_POST['entities'])) ? $_POST['entities'] : array();
+
   module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
   module_load_include('php', 'edit', 'includes/EditEditorSelector');
   module_load_include('php', 'edit', 'includes/EditMetadataGenerator');
@@ -60,8 +62,14 @@ function edit_metadata() {
       return MENU_NOT_FOUND;
     }
 
+    // If the entity information for this field is requested, include it.
+    $entity_id = $entity_type . '/' . $entity_id;
+    if (is_array($entities) && in_array($entity_id, $entities) && !isset($metadata[$entity_id])) {
+      $metadata[$entity_id] = $metadataGenerator->generateEntity($entity_type, $entity, $langcode);
+    }
+
     // Generate metadata for the current field.
-    $metadata[$field] = $metadataGenerator->generate($entity_type, $entity, $instance, $langcode, $view_mode);
+    $metadata[$field] = $metadataGenerator->generateField($entity_type, $entity, $instance, $langcode, $view_mode);
 
     // Track all editors.
     if ($metadata[$field]['access'] !== FALSE) {
@@ -69,25 +77,44 @@ function edit_metadata() {
     }
   }
 
-  // Build response.
-  $commands = array();
-  $commands[] = array(
-    'command' => 'editMetadata',
-    'results' => $metadata,
-  );
+  drupal_json_output($metadata);
+}
+
+/**
+ * Page callback: Returns AJAX commands to load in-place editors' attachments.
+ *
+ * Given a list of in-place editor IDs as POST parameters, render AJAX
+ * commands to load those in-place editors.
+ *
+ * @return
+ *   The Ajax response.
+ *
+ * @see Drupal 8's EditController::attachments()
+ * @see EditEditorSelector
+ */
+function edit_attachments() {
+  $editors = $_POST['editors'];
+  if (!isset($editors)) {
+    return MENU_NOT_FOUND;
+  }
+
+  module_load_include('php', 'edit', 'includes/EditEditorSelector');
+  $editorSelector = new EditEditorSelector();
 
   // Ensure an AJAX command is generated to load in-place editor attachments.
-  $elements['#attached'] = $editorSelector->getEditorAttachments($editors, $metadata);
+  $elements['#attached'] = $editorSelector->getEditorAttachments($editors);
   drupal_process_attached($elements);
 
-  return array('#type' => 'ajax', '#commands' => $commands);
+  return array('#type' => 'ajax', '#commands' => array());
 }
 
 /**
  * Page callback: Returns a single field edit form as an Ajax response.
  *
- * @param $entity
- *   The entity being edited.
+ * @param $entity_type
+ *   The type of the entity being edited.
+ * @param $entity_id
+ *   The ID of the entity being edited.
  * @param string $field_name
  *   The name of the field that is being edited.
  * @param string $langcode
@@ -113,6 +140,19 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     return MENU_ACCESS_DENIED;
   }
 
+  // Replace entity with TempStore copy if available and not resetting, init
+  // TempStore copy otherwise.
+  ctools_include('object-cache');
+  $tempstore_id = _edit_entity_tempstore_id($entity_type, $entity_id);
+  $tempstore_entity = ctools_object_cache_get('edit', $tempstore_id);
+  if ($tempstore_entity && (!isset($_POST['reset']) || $_POST['reset'] !== 'true')) {
+    $entity = $tempstore_entity;
+  }
+  else {
+    ctools_object_cache_clear('edit', $tempstore_id);
+    ctools_object_cache_set('edit', $tempstore_id, $entity);
+  }
+
   // Determine which subform should be used, initialize form state, build form.
   $subform_id = 'edit_field_edit_form';
   if (_edit_is_extra_field($entity_type, $field_name)) {
@@ -120,6 +160,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   }
   $form_state = array(
     'entity_type' => $entity_type,
+    'entity_id' => $entity_id,
     'entity' => $entity,
     'field_name' => $field_name,
     'langcode' => $langcode,
@@ -127,34 +168,53 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     'no_redirect' => TRUE,
     'bundle' => $bundle,
     'subform_id' => $subform_id,
+    'build_info' => array(
+      'args' => array($entity, $field_name),
+    ),
   );
   $form = drupal_build_form('edit_field_form', $form_state);
 
   // If the form was successfully submitted (executed), then rerender the field.
   if (!empty($form_state['executed'])) {
-    $entity = $form_state['entity'];
+    // The form submission saved the entity in TempStore. Return the
+    // updated view of the field from the TempStore copy.
+    $entity = ctools_object_cache_get('edit', $tempstore_id);
 
-    if (!_edit_is_extra_field($entity_type, $field_name)) {
-      // The form submission took care of saving the updated entity. Return the
-      // updated view of the field.
-      $entities = entity_load($entity_type, array($id), TRUE);
-      $entity = reset($entities);
-      $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
-      $rerendered_field = drupal_render($field);
+    // Render the field. If the view mode ID is not an Entity Display view
+    // mode ID, then the field was rendered using a custom render pipeline,
+    // that is: not the Entity/Field API render pipeline.
+    // An example could be Views' render pipeline. In the example of Views,
+    // the view mode ID would probably contain the View's ID, display and the
+    // row index.
+    $entity_info = entity_get_info($entity_type);
+    $entity_view_mode_ids = array_keys($entity_info['view modes']);
+    if (in_array($view_mode, $entity_view_mode_ids)) {
+      if (!_edit_is_extra_field($entity_type, $field_name)) {
+        $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
+        $output = drupal_render($field);
+      }
+      else {
+        $rerender_callback = edit_extra_field_info($entity_type, $field_name, 'rerender callback');
+        $result = $rerender_callback($entity);
+        $output = edit_wrap_pseudofield(
+          $result['value'],
+          "$entity_type/$id/$field_name/$langcode/$view_mode",
+          $result['inline']
+        );
+      }
     }
     else {
-      $rerender_callback = edit_extra_field_info($entity_type, $field_name, 'rerender callback');
-      $result = $rerender_callback($entity);
-      $rerendered_field = edit_wrap_pseudofield(
-        $result['value'],
-        "$entity_type/$id/$field_name/$langcode/$view_mode",
-        $result['inline']
-      );
+      // Each part of a custom (non-Entity Display) view mode ID is separated
+      // by a dash; the first part must be the module name.
+      $mode_parts = explode('-', $view_mode, 2);
+      $module = reset($mode_parts);
+      $rendered_field = module_invoke($module, 'edit_render_field', $entity_type, $entity, $field_name, $view_mode, $langcode);
+      $output = drupal_render($rendered_field);
     }
 
     $commands[] = array(
       'command' => 'editFieldFormSaved',
-      'data' => $rerendered_field,
+      'data' => $output,
     );
   }
   // Otherwise, render the form. (And if it was insuccessfully submitted, there
@@ -180,6 +240,44 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     drupal_static_reset('drupal_add_js');
   }
 
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Page callback: Saves an entity into the database, from TempStore.
+ *
+ * @param $entity_type
+ *   The type of the entity being saved.
+ * @param $entity_id
+ *   The ID of the entity being saved.
+ *
+ * @return
+ *   The Ajax response.
+ *
+ * @see Drupal 8's EditController::entitySave()
+ */
+function edit_entity_save($entity_type, $entity_id) {
+  // Take the entity from TempStore and save in entity storage. fieldForm()
+  // ensures that the TempStore copy exists ahead.
+  ctools_include('object-cache');
+  $tempstore_id = _edit_entity_tempstore_id($entity_type, $entity_id);
+  $entity = ctools_object_cache_get('edit', $tempstore_id);
+  ctools_object_cache_clear('edit', $tempstore_id);
+  entity_save($entity_type, $entity);
+
+  // Return information about the entity that allows a front end application
+  // to identify it.
+  $output = array(
+    'entity_type' => $entity_type,
+    'entity_id' => $entity_id,
+  );
+
+  // Respond to client that the entity was saved properly.
+  $commands = array();
+  $commands[] = array(
+    'command' => 'editEntitySaved',
+    'data' => $output,
+  );
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -238,13 +336,13 @@ function edit_ckeditor_get_untransformed_text($entity_type, $entity_id, $field_n
  * @see edit_field_edit_form()
  * @ingroup forms
  */
-function edit_field_form($form, &$form_state) {
+function edit_field_form($form, &$form_state, $entity, $field_name) {
   $form['#parents'] = array();
 
   form_load_include($form_state, 'inc', 'edit', 'includes/fape');
 
   if ($form_state['subform_id'] && function_exists($form_state['subform_id'])) {
-    $form_state['subform_id']($form, $form_state);
+    $form_state['subform_id']($form, $form_state, $entity, $field_name);
   }
 
   // Add a submit button. Give it a class for easy JavaScript targeting.

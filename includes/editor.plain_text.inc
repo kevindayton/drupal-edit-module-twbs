@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Callbacks for the "direct" Create.js PropertyEditor widget.
+ * Defines the "plain text" in-place editor.
+ *
+ * @see Drupal 8's \Drupal\edit\Plugin\InPlaceEditor\PlainTextEditor.
  */
 
-function _edit_editor_direct_is_compatible(array $instance, array $items) {
+function _edit_editor_plain_text_is_compatible(array $instance, array $items) {
   $field = field_info_field($instance['field_name']);
 
   // This editor is incompatible with multivalued fields.
@@ -16,14 +18,14 @@ function _edit_editor_direct_is_compatible(array $instance, array $items) {
   return $cardinality_allows && $no_text_processing;
 }
 
-function _edit_editor_direct_metadata(array $instance, array $items) {
+function _edit_editor_plain_text_metadata(array $instance, array $items) {
   return array();
 }
 
-function _edit_editor_direct_attachments() {
+function _edit_editor_plain_text_attachments() {
   return array(
     'library' => array(
-      array('edit', 'edit.editorWidget.direct'),
+      array('edit', 'edit.inPlaceEditor.plainText'),
     ),
   );
 }

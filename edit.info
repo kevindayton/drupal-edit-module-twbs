@@ -3,6 +3,10 @@ description = In-place content editing.
 package = Spark
 core = 7.x
 
+files[] = tests/edit_loading.test
+
+dependencies[] = contextual
 dependencies[] = entity
 dependencies[] = field (>=7.22)
 dependencies[] = libraries (>=2.x)
+dependencies[] = ctools

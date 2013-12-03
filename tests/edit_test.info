@@ -1,0 +1,5 @@
+name = Edit test
+description = 'Support module for the Edit module tests.'
+package = Spark
+core = 7.x
+hidden = TRUE
