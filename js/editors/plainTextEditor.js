@@ -2,7 +2,8 @@
  * @file
  * contentEditable-based in-place editor for plain text content.
  */
-(function ($, _, Backbone, Drupal) {
+
+(function ($, _, Drupal) {
 
 "use strict";
 
@@ -104,4 +105,4 @@ Drupal.edit.editors.plain_text = Drupal.edit.EditorView.extend({
 
 });
 
-})(jQuery, _, Backbone, Drupal);
+})(jQuery, _, Drupal);

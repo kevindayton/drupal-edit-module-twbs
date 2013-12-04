@@ -2,7 +2,7 @@
  * @file
  * A Backbone View that provides an entity level toolbar.
  */
-(function ($, Backbone, Drupal, debounce) {
+(function ($, _, Backbone, Drupal, debounce) {
 
 "use strict";
 
@@ -442,6 +442,7 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
   show: function (toolgroup) {
     this.$el.removeClass('edit-animate-invisible');
   }
+
 });
 
-})(jQuery, Backbone, Drupal, Drupal.edit.util.debounce);
+})(jQuery, _, Backbone, Drupal, Drupal.edit.util.debounce);
