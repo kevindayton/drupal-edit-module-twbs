@@ -329,6 +329,13 @@ function edit_preprocess_field(&$variables) {
   }
 
   $entity_type = $element['#entity_type'];
+
+  // The 'comment' entity type will never support in-place editing, since it
+  // doesn't get Contextual Links.
+  if ($entity_type === 'comment') {
+    return;
+  }
+
   $field_name = $element['#field_name'];
   $language = $element['#language'];
   $view_mode = $element['#view_mode'];
