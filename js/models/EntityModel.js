@@ -13,6 +13,12 @@ Drupal.edit.EntityModel = Backbone.Model.extend({
     // entities in the DOM to EntityModels in memory.
     el: null,
     // An entity ID, of the form "<entity type>/<entity ID>", e.g. "node/1".
+    entityID: null,
+    // An entity instance ID. The first intance of a specific entity (i.e. with
+    // a given entity ID) is assigned 0, the second 1, and so on.
+    entityInstanceID: null,
+    // The unique ID of this entity instance on the page, of the form "<entity
+    // type>/<entity ID>[entity instance ID]", e.g. "node/1[0]".
     id: null,
     // The label of the entity.
     label: null,
@@ -248,7 +254,7 @@ Drupal.edit.EntityModel = Backbone.Model.extend({
           // signifying just that may be rendered.
           fieldModel.set('inTempStore', true);
           // Remember that this field is in TempStore, restore when rerendered.
-          fieldsInTempStore.push(fieldModel.id);
+          fieldsInTempStore.push(fieldModel.get('fieldID'));
           fieldsInTempStore = _.uniq(fieldsInTempStore);
           entityModel.set('fieldsInTempStore', fieldsInTempStore);
         }
@@ -256,7 +262,7 @@ Drupal.edit.EntityModel = Backbone.Model.extend({
         // 'inactive' state, then this is a field for this entity that got
         // rerendered. Restore its previous 'inTempStore' attribute value.
         else if (fieldState === 'candidate' && fieldModel.previous('state') === 'inactive') {
-          fieldModel.set('inTempStore', _.intersection([fieldModel.id], fieldsInTempStore).length > 0);
+          fieldModel.set('inTempStore', _.intersection([fieldModel.get('fieldID')], fieldsInTempStore).length > 0);
         }
         break;
 
@@ -273,7 +279,7 @@ Drupal.edit.EntityModel = Backbone.Model.extend({
         // 'inactive' state, then this is a field for this entity that got
         // rerendered. Restore its previous 'inTempStore' attribute value.
         else if (fieldState === 'candidate' && fieldModel.previous('state') === 'inactive') {
-          fieldModel.set('inTempStore', _.intersection([fieldModel.id], fieldsInTempStore).length > 0);
+          fieldModel.set('inTempStore', _.intersection([fieldModel.get('fieldID')], fieldsInTempStore).length > 0);
         }
 
         // Attempt to save the entity. If the entity's fields are not yet all in
@@ -335,7 +341,7 @@ Drupal.edit.EntityModel = Backbone.Model.extend({
     var $el = $('#edit-entity-toolbar').find('.action-save'); // This is the span element inside the button.
     // Create a Drupal.ajax instance to save the entity.
     var entitySaverAjax = new Drupal.ajax(id, $el, {
-      url: Drupal.edit.util.buildUrl(entityModel.id, drupalSettings.edit.entitySaveURL),
+      url: Drupal.edit.util.buildUrl(entityModel.get('entityID'), drupalSettings.edit.entitySaveURL),
       event: 'edit-save.edit',
       progress: { type: 'none' }
     });

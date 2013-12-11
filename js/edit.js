@@ -55,10 +55,34 @@ var fieldsAvailableQueue = [];
  */
 var contextualLinksQueue = [];
 
+/**
+ * Tracks how many instances exist for each unique entity. Contains key-value
+ * pairs:
+ * - String entityID
+ * - Number count
+ */
+var entityInstancesTracker = {};
+
 Drupal.behaviors.edit = {
   attach: function (context) {
     // Initialize the Edit app once per page load.
     $('body').once('edit-init', initEdit);
+
+    // Process each entity element: identical entities that appear multiple
+    // times will get a numeric identifier, starting at 0.
+    $(context).find('[data-edit-entity-id]').once('edit').each(function (index, entityElement) {
+      var entityID = entityElement.getAttribute('data-edit-entity-id');
+      if (!entityInstancesTracker.hasOwnProperty(entityID)) {
+        entityInstancesTracker[entityID] = 0;
+      }
+      else {
+        entityInstancesTracker[entityID]++;
+      }
+
+      // Set the calculated entity instance ID for this element.
+      var entityInstanceID = entityInstancesTracker[entityID];
+      entityElement.setAttribute('data-edit-entity-instance-id', entityInstanceID);
+    });
 
     // Detect contextual links on entities annotated by Edit; queue these to be
     // processed.
@@ -67,6 +91,7 @@ Drupal.behaviors.edit = {
       if ($region.is('[data-edit-entity-id]')) {
         var contextualLink = {
           entityID: $region.attr('data-edit-entity-id'),
+          entityInstanceID: $region.attr('data-edit-entity-instance-id'),
           el: contextualLinkElement,
           region: $region[0]
         };
@@ -173,13 +198,20 @@ function processField (fieldElement) {
   var metadata = Drupal.edit.metadata;
   var fieldID = fieldElement.getAttribute('data-edit-field-id');
   var entityID = extractEntityID(fieldID);
+  // Figure out the instance ID by looking at the ancestor [data-edit-entity-id]
+  // element's data-edit-entity-instance-id attribute.
+  var entityInstanceID = $(fieldElement)
+    .closest('[data-edit-entity-id="' + entityID + '"]')
+    .get(0)
+    .getAttribute('data-edit-entity-instance-id');
 
   // Early-return if metadata for this field is missing.
   if (!metadata.has(fieldID)) {
     fieldsMetadataQueue.push({
       el: fieldElement,
       fieldID: fieldID,
-      entityID: entityID
+      entityID: entityID,
+      entityInstanceID: entityInstanceID
     });
     return;
   }
@@ -190,13 +222,13 @@ function processField (fieldElement) {
 
   // If an EntityModel for this field already exists (and hence also a "Quick
   // edit" contextual link), then initialize it immediately.
-  if (Drupal.edit.collections.entities.where({ id: entityID }).length > 0) {
-    initializeField(fieldElement, fieldID);
+  if (Drupal.edit.collections.entities.where({ entityID: entityID, entityInstanceID: entityInstanceID }).length > 0) {
+    initializeField(fieldElement, fieldID, entityID, entityInstanceID);
   }
   // Otherwise: queue the field. It is now available to be set up when its
   // corresponding entity becomes in-place editable.
   else {
-    fieldsAvailableQueue.push({ el: fieldElement, fieldID: fieldID, entityID: entityID });
+    fieldsAvailableQueue.push({ el: fieldElement, fieldID: fieldID, entityID: entityID, entityInstanceID: entityInstanceID });
   }
 }
 
@@ -207,17 +239,24 @@ function processField (fieldElement) {
  *   The field's DOM element.
  * @param String fieldID
  *   The field's ID.
+ * @param String entityID
+ *   The field's entity's ID.
+ * @param String entityInstanceID
+ *   The field's entity's instance ID.
  */
-function initializeField (fieldElement, fieldID) {
-  var entityId = extractEntityID(fieldID);
-  var entity = Drupal.edit.collections.entities.where({ id: entityId })[0];
+function initializeField (fieldElement, fieldID, entityID, entityInstanceID) {
+  var entity = Drupal.edit.collections.entities.where({
+    entityID: entityID,
+    entityInstanceID: entityInstanceID
+  })[0];
 
   $(fieldElement).addClass('edit-field');
 
   // The FieldModel stores the state of an in-place editable entity field.
   var field = new Drupal.edit.FieldModel({
     el: fieldElement,
-    id: fieldID,
+    fieldID: fieldID,
+    id: fieldID + '[' + entity.get('entityInstanceID') + ']',
     entity: entity,
     metadata: Drupal.edit.metadata.get(fieldID),
     acceptStateChange: _.bind(Drupal.edit.app.acceptEditorStateChange, Drupal.edit.app)
@@ -279,8 +318,7 @@ function loadMissingEditors (callback) {
   var loadedEditors = _.keys(Drupal.edit.editors);
   var missingEditors = [];
   Drupal.edit.collections.fields.each(function (fieldModel) {
-    var id = fieldModel.id;
-    var metadata = Drupal.edit.metadata.get(id);
+    var metadata = Drupal.edit.metadata.get(fieldModel.get('fieldID'));
     if (metadata.access && _.indexOf(loadedEditors, metadata.editor) === -1) {
       missingEditors.push(metadata.editor);
     }
@@ -327,8 +365,11 @@ function loadMissingEditors (callback) {
  *
  * @param Object contextualLink
  *   An object with the following properties:
- *     - String entity: an Edit entity identifier, e.g. "node/1" or
+ *     - String entityID: an Edit entity identifier, e.g. "node/1" or
  *       "custom_block/5".
+ *     - String entityInstanceID: an Edit entity instance identifier, e.g. 0, 1
+ *       or n (depending on whether it's the first, second, or n+1st instance of
+ *       this entity).
  *     - DOM el: element pointing to the contextual links placeholder for this
  *       entity.
  *     - DOM region: element pointing to the contextual region for this entity.
@@ -357,8 +398,11 @@ function initializeEntityContextualLink (contextualLink) {
     return fieldIDs.length === metadata.intersection(fieldIDs).length;
   }
 
-  // Find all fields for this entity and collect their field IDs.
-  var fields = _.where(fieldsAvailableQueue, { entityID: contextualLink.entityID });
+  // Find all fields for this entity instance and collect their field IDs.
+  var fields = _.where(fieldsAvailableQueue, {
+    entityID: contextualLink.entityID,
+    entityInstanceID: contextualLink.entityInstanceID
+  });
   var fieldIDs = _.pluck(fields, 'fieldID');
 
   // No fields found yet.
@@ -371,7 +415,9 @@ function initializeEntityContextualLink (contextualLink) {
   else if (hasFieldWithPermission(fieldIDs)) {
     var entityModel = new Drupal.edit.EntityModel({
       el: contextualLink.region,
-      id: contextualLink.entityID,
+      entityID: contextualLink.entityID,
+      entityInstanceID: contextualLink.entityInstanceID,
+      id: contextualLink.entityID + '[' + contextualLink.entityInstanceID + ']',
       label: Drupal.edit.metadata.get(contextualLink.entityID, 'label')
     });
     Drupal.edit.collections.entities.add(entityModel);
@@ -385,7 +431,7 @@ function initializeEntityContextualLink (contextualLink) {
 
     // Initialize all queued fields within this entity (creates FieldModels).
     _.each(fields, function (field) {
-      initializeField(field.el, field.fieldID);
+      initializeField(field.el, field.fieldID, contextualLink.entityID, contextualLink.entityInstanceID);
     });
     fieldsAvailableQueue = _.difference(fieldsAvailableQueue, fields);
 

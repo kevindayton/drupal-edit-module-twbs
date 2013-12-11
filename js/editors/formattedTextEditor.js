@@ -28,7 +28,7 @@ Drupal.edit.editors.ckeditor = Drupal.edit.EditorView.extend({
   initialize: function (options) {
     Drupal.edit.EditorView.prototype.initialize.call(this, options);
 
-    var metadata = Drupal.edit.metadata.get(this.fieldModel.id, 'custom');
+    var metadata = Drupal.edit.metadata.get(this.fieldModel.get('fieldID'), 'custom');
     // @todo use Drupal.settings.edit.ckeditor.editorSettings[this.textFormat] ???
     this.ckeditorSettings = metadata.ckeditorSettings;
     this.textFormatHasTransformations = metadata.formatHasTransformations;
@@ -154,7 +154,7 @@ Drupal.edit.editors.ckeditor = Drupal.edit.EditorView.extend({
    * @see \Drupal\editor\Ajax\GetUntransformedTextCommand
    */
   _getUntransformedText: function (callback) {
-    var fieldID = this.fieldModel.id;
+    var fieldID = this.fieldModel.get('fieldID');
 
     // Create a Drupal.ajax instance to load the form.
     var textLoaderAjax = new Drupal.ajax(fieldID, this.$el, {
