@@ -686,7 +686,7 @@ function theme_edit_wrap_field($variables) {
   if ($variables['inline']) {
     $el = 'span';
   }
-  return '<'. $el . drupal_attributes($variables['attributes']) . '><' . $el .' class="field-item">' .  $variables['value'] . '</' . $el . '></' . $el . '>';
+  return '<'. $el . drupal_attributes($variables['attributes']) . '>' .  $variables['value'] . '</' . $el . '>';
 }
 
 /**
