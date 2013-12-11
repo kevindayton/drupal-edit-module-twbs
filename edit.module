@@ -99,7 +99,7 @@ function edit_page_build(&$page) {
 function edit_theme() {
   return array(
     'edit_wrap_field' => array(
-      'variables' => array('value' => NULL, 'edit_id' => NULL),
+      'variables' => array('value' => NULL, 'edit_field_id' => NULL),
     ),
   );
 }
