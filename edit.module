@@ -127,7 +127,7 @@ function edit_library() {
       $path . '/js/models/EditorModel.js' => $options,
       // Views.
       $path . '/js/views/AppView.js' => $options,
-      $path . '/js/views/EditorDecorationView.js' => $options,
+      $path . '/js/views/FieldDecorationView.js' => $options,
       $path . '/js/views/EntityDecorationView.js' => $options,
       $path . '/js/views/EntityToolbarView.js' => $options,
       $path . '/js/views/ContextualLinkView.js' => $options,
