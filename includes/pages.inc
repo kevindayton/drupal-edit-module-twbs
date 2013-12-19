@@ -109,6 +109,64 @@ function edit_attachments() {
 }
 
 /**
+ * Renders a field.
+ *
+ * If the view mode ID is not an Entity Display view mode ID, then the field
+ * was rendered using a custom render pipeline (not the Entity/Field API
+ * render pipeline).
+ *
+ * An example could be Views' render pipeline. In that case, the view mode ID
+ * would probably contain the View's ID, display and the row index.
+ *
+ * @param $entity_type
+ *   The type of the entity being edited.
+ * @param $entity
+ *   The entity being edited.
+ * @param string $field_name
+ *   The name of the field that is being edited.
+ * @param string $langcode
+ *   The name of the language for which the field is being edited.
+ * @param string $view_mode
+ *   The view mode the field should be rerendered in. Either an Entity Display
+ *   view mode ID, or a custom one. See hook_edit_render_field().
+ *
+ * @return string
+ *   Rendered HTML.
+ *
+ * @see hook_edit_render_field()
+ */
+function _edit_render_field($entity_type, $entity, $field_name, $langcode, $view_mode) {
+  $entity_info = entity_get_info($entity_type);
+  $entity_view_mode_ids = array_keys($entity_info['view modes']);
+  if (in_array($view_mode, $entity_view_mode_ids)) {
+    if (!_edit_is_extra_field($entity_type, $field_name)) {
+      $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
+      $output = drupal_render($field);
+    }
+    else {
+      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+      $rerender_callback = edit_extra_field_info($entity_type, $field_name, 'rerender callback');
+      $result = $rerender_callback($entity);
+      $output = edit_wrap_pseudofield(
+        $result['value'],
+        "$entity_type/$id/$field_name/$langcode/$view_mode",
+        $result['inline']
+      );
+    }
+  }
+  else {
+    // Each part of a custom (non-Entity Display) view mode ID is separated
+    // by a dash; the first part must be the module name.
+    $mode_parts = explode('-', $view_mode, 2);
+    $module = reset($mode_parts);
+    $rendered_field = module_invoke($module, 'edit_render_field', $entity_type, $entity, $field_name, $view_mode, $langcode);
+    $output = drupal_render($rendered_field);
+  }
+
+  return $output;
+}
+
+/**
  * Page callback: Returns a single field edit form as an Ajax response.
  *
  * @param $entity_type
@@ -180,41 +238,21 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
     // updated view of the field from the TempStore copy.
     $entity = ctools_object_cache_get('edit', $tempstore_id);
 
-    // Render the field. If the view mode ID is not an Entity Display view
-    // mode ID, then the field was rendered using a custom render pipeline,
-    // that is: not the Entity/Field API render pipeline.
-    // An example could be Views' render pipeline. In the example of Views,
-    // the view mode ID would probably contain the View's ID, display and the
-    // row index.
-    $entity_info = entity_get_info($entity_type);
-    $entity_view_mode_ids = array_keys($entity_info['view modes']);
-    if (in_array($view_mode, $entity_view_mode_ids)) {
-      if (!_edit_is_extra_field($entity_type, $field_name)) {
-        $field = field_view_field($entity_type, $entity, $field_name, $view_mode, $langcode);
-        $output = drupal_render($field);
-      }
-      else {
-        $rerender_callback = edit_extra_field_info($entity_type, $field_name, 'rerender callback');
-        $result = $rerender_callback($entity);
-        $output = edit_wrap_pseudofield(
-          $result['value'],
-          "$entity_type/$id/$field_name/$langcode/$view_mode",
-          $result['inline']
-        );
-      }
-    }
-    else {
-      // Each part of a custom (non-Entity Display) view mode ID is separated
-      // by a dash; the first part must be the module name.
-      $mode_parts = explode('-', $view_mode, 2);
-      $module = reset($mode_parts);
-      $rendered_field = module_invoke($module, 'edit_render_field', $entity_type, $entity, $field_name, $view_mode, $langcode);
-      $output = drupal_render($rendered_field);
+    // Re-render the updated field.
+    $output = _edit_render_field($entity_type, $entity, $field_name, $langcode, $view_mode);
+
+    // Re-render the updated field for other view modes (i.e. for other
+    // instances of the same logical field on the user's page).
+    $other_view_mode_ids = isset($_POST['other_view_modes']) ? $_POST['other_view_modes'] : array();
+    $other_view_modes = array();
+    foreach ($other_view_mode_ids as $other_view_mode_id) {
+      $other_view_modes[$other_view_mode_id] = _edit_render_field($entity_type, $entity, $field_name, $langcode, $other_view_mode_id);
     }
 
     $commands[] = array(
       'command' => 'editFieldFormSaved',
       'data' => $output,
+      'other_view_modes' => $other_view_modes,
     );
   }
   // Otherwise, render the form. (And if it was insuccessfully submitted, there

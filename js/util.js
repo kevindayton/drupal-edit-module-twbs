@@ -131,6 +131,8 @@ Drupal.edit.util.form = {
    *   An object with the following keys:
    *    - nocssjs: (required) boolean indicating whether no CSS and JS should be
    *      returned (necessary when the form is invisible to the user).
+   *    - other_view_modes: (required) array containing view mode IDs (of other
+   *      instances of this field on the page).
    * @return Drupal.ajax
    *   A Drupal.ajax instance.
    */
@@ -141,7 +143,10 @@ Drupal.edit.util.form = {
       setClick: true,
       event: 'click.edit',
       progress: { type: null },
-      submit: { nocssjs : options.nocssjs },
+      submit: {
+        nocssjs : options.nocssjs,
+        other_view_modes : options.other_view_modes
+      },
       // Reimplement the success handler to ensure Drupal.attachBehaviors() does
       // not get called on the form.
       success: function (response, status) {

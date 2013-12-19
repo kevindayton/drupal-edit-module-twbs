@@ -168,7 +168,8 @@ Drupal.edit.editors.form = Drupal.edit.EditorView.extend({
 
     // Create an AJAX object for the form associated with the field.
     var formSaveAjax = Drupal.edit.util.form.ajaxifySaving({
-      nocssjs: false
+      nocssjs: false,
+      other_view_modes: fieldModel.findOtherViewModes()
     }, $submit);
 
     // Work-around for https://drupal.org/node/2019481 in Drupal 7.
@@ -177,8 +178,14 @@ Drupal.edit.editors.form = Drupal.edit.EditorView.extend({
     // Successfully saved.
     formSaveAjax.commands.editFieldFormSaved = function (ajax, response, status) {
       cleanUpAjax();
-      // First, transition the state to 'saved'.
-      fieldModel.set('state', 'saved');
+      // First, transition the state to 'saved'. Also set the
+      // 'htmlForOtherViewModes' attribute, so that when this field is
+      // rerendered, the change can be propagated to other instances of this
+      // field, which may be displayed in different view modes.
+      fieldModel.set({
+        'state': 'saved',
+        'htmlForOtherViewModes': response.other_view_modes
+      });
       // Then, set the 'html' attribute on the field model. This will cause the
       // field to be rerendered.
       _.defer(function () {
