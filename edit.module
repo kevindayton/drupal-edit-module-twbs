@@ -89,6 +89,11 @@ function edit_page_build(&$page) {
     return;
   }
 
+  // In-place editing is only supported on the front-end.
+  if (path_is_admin(current_path())) {
+    return;
+  }
+
   $children = element_children($page);
   $page[$children[0]]['#attached']['library'][] = array('edit', 'edit');
 }
