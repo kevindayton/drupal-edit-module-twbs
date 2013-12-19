@@ -68,13 +68,18 @@ function edit_requirements($phase) {
     if (module_exists('ckeditor')) {
       $requirements['edit_libraries_ckeditor'] = array(
         'title' => t('Edit: CKEditor library'),
-        'value' => t('Exists & compatible'),
+        'value' => t('Exists, compatible and correct location'),
         'severity' => REQUIREMENT_OK,
       );
 
       $ckeditor_version = _ckeditor_requirements_getinstalledversion();
       if (version_compare($ckeditor_version, '4.2.0') == -1) {
         $requirements['edit_libraries_ckeditor']['value'] = t('The CKEditor library is too old, please update to 4.2 or newer!');
+        $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
+      }
+
+      if (strpos(libraries_get_path('ckeditor'), 'sites/all/libraries') === FALSE) {
+        $requirements['edit_libraries_ckeditor']['value'] = t('The CKEditor library is installed in the wrong location, it should be installed in <code>sites/all/libraries/ckeditor</code>, not in the CKEditor module directory!');
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
 
