@@ -32,6 +32,32 @@ Drupal.edit.util.buildUrl = function (id, urlFormat) {
   });
 };
 
+/**
+ * Shows a network error modal dialog.
+ *
+ * @param String title
+ *   The title to use in the modal dialog.
+ * @param String message
+ *   The message to use in the modal dialog.
+ */
+Drupal.edit.util.networkErrorModal = function (title, message) {
+  var networkErrorModal = new Drupal.edit.ModalView({
+    title: title,
+    dialogClass: 'edit-network-error',
+    message: message,
+    buttons: [
+      {
+        action: 'ok',
+        type: 'submit',
+        classes: 'action-save edit-button',
+        label: Drupal.t('OK')
+      }
+    ],
+    callback: function () { return; }
+  });
+  networkErrorModal.render();
+};
+
 Drupal.edit.util.form = {
 
   /**
@@ -67,7 +93,20 @@ Drupal.edit.util.form = {
         nocssjs : options.nocssjs,
         reset : options.reset
       },
-      progress: { type : null } // No progress indicator.
+      progress: { type : null }, // No progress indicator.
+      error: function (xhr, url) {
+        $el.off('edit-internal.edit');
+
+        // Show a modal to inform the user of the network error.
+        var fieldLabel = Drupal.edit.metadata.get(fieldID, 'label');
+        var message = Drupal.t('Could not load the form for <q>@field-label</q>, either due to a website problem or a network connection problem.<br>Please try again.', { '@field-label' : fieldLabel });
+        Drupal.edit.util.networkErrorModal(Drupal.t('Sorry!'), message);
+
+        // Change the state back to "candidate", to allow the user to start
+        // in-place editing of the field again.
+        var fieldModel = Drupal.edit.app.model.get('activeField');
+        fieldModel.set('state', 'candidate');
+      }
     });
     // Work-around for https://drupal.org/node/2019481 in Drupal 7.
     formLoaderAjax.commands = {};

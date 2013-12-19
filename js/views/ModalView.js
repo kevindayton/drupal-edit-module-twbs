@@ -44,7 +44,7 @@ Drupal.edit.ModalView = Backbone.View.extend({
     this.setElement(Drupal.theme('editModal', {}));
     this.$el.appendTo('body');
     // Template.
-    this.$('.main p').text(this.message);
+    this.$('.main p').html(this.message);
     var $actions = $(Drupal.theme('editButtons', { 'buttons' : this.buttons}));
     this.$('.actions').append($actions);
 
