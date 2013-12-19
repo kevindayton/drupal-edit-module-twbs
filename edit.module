@@ -155,6 +155,7 @@ function edit_library() {
       ),
     ),
     'css' => array(
+      $path . '/css/contextual-zindex-fix-1102156.css' => array(),
       $path . '/css/edit.module.css' => array(),
       $path . '/css/edit.theme.css' => array(),
       $path . '/css/edit.icons.css' => array(),
