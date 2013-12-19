@@ -12,9 +12,9 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
 
   events: function () {
     var map = {
-      'click.edit button.action-save': 'onClickSave',
-      'click.edit button.action-cancel': 'onClickCancel',
-      'mouseenter.edit': 'onMouseenter'
+      'click button.action-save': 'onClickSave',
+      'click button.action-cancel': 'onClickCancel',
+      'mouseenter': 'onMouseenter'
     };
     return map;
   },

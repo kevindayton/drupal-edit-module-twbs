@@ -88,11 +88,6 @@ Drupal.edit.FieldModel = Drupal.edit.BaseModel.extend({
    * {@inheritdoc}
    */
   validate: function (attrs, options) {
-    // We only care about validating the 'state' attribute.
-    if (!_.has(attrs, 'state')) {
-      return;
-    }
-
     var current = this.get('state');
     var next = attrs.state;
     if (current !== next) {

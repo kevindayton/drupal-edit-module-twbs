@@ -414,29 +414,38 @@ Drupal.edit.AppView = Backbone.View.extend({
    *   The FieldModel whose 'html' attribute changed.
    */
   renderUpdatedField: function (fieldModel) {
-    // Get data necessary to rerender property before it is unavailable.
-    var html = fieldModel.get('html');
-    var $fieldWrapper = $(fieldModel.get('el'));
-    var $context = $fieldWrapper.parent();
+    // Deferred because renderUpdatedField is reacting to a field model change
+    // event, and we want to make sure that event fully propagates before making
+    // another change to the same model.
+    _.defer(function () {
+      // Get data necessary to rerender property before it is unavailable.
+      var html = fieldModel.get('html');
+      var $fieldWrapper = $(fieldModel.get('el'));
+      var $context = $fieldWrapper.parent();
 
-    // First set the state to 'candidate', to allow all attached views to
-    // clean up all their "active state"-related changes.
-    fieldModel.set('state', 'candidate');
+      // First set the state to 'candidate', to allow all attached views to
+      // clean up all their "active state"-related changes.
+      fieldModel.set('state', 'candidate');
 
-    // Set the field's state to 'inactive', to enable the updating of its DOM
-    // value.
-    fieldModel.set('state', 'inactive', { reason: 'rerender' });
+      // Similarly, the above .set() call's change event must fully propagate
+      // before calling it again.
+      _.defer(function () {
+        // Set the field's state to 'inactive', to enable the updating of its DOM
+        // value.
+        fieldModel.set('state', 'inactive', { reason: 'rerender' });
 
-    // Destroy the field model; this will cause all attached views to be
-    // destroyed too, and removal from all collections in which it exists.
-    fieldModel.destroy();
+        // Destroy the field model; this will cause all attached views to be
+        // destroyed too, and removal from all collections in which it exists.
+        fieldModel.destroy();
 
-    // Replace the old content with the new content.
-    $fieldWrapper.replaceWith(html);
+        // Replace the old content with the new content.
+        $fieldWrapper.replaceWith(html);
 
-    // Attach behaviors again to the modified piece of HTML; this will create
-    // a new field model and call rerenderedFieldToCandidate() with it.
-    Drupal.attachBehaviors($context);
+        // Attach behaviors again to the modified piece of HTML; this will create
+        // a new field model and call rerenderedFieldToCandidate() with it.
+        Drupal.attachBehaviors($context);
+      });
+    });
   },
 
   /**

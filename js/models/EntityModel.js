@@ -82,9 +82,11 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
     var to = state;
     switch (to) {
       case 'closed':
-        this.set('isActive', false);
-        this.set('inTempStore', false);
-        this.set('isDirty', false);
+        this.set({
+          'isActive': false,
+          'inTempStore': false,
+          'isDirty': false
+        });
         break;
 
       case 'launching':
@@ -104,18 +106,9 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
 
       case 'committing':
         // The user indicated they want to save the entity.
-        // For fields already in a candidate-ish state, trigger a change
-        // event so that the entityModel can move to the next state in
-        // committing.
-        this.get('fields').chain()
-          .filter(function (fieldModel) {
-            return _.intersection([fieldModel.get('state')], Drupal.edit.app.readyFieldStates).length;
-          })
-          .each(function (fieldModel) {
-            fieldModel.trigger('change:state', fieldModel, fieldModel.get('state'), options);
-          });
+        var fields = this.get('fields');
         // For fields that are in an active state, transition them to candidate.
-        this.get('fields').chain()
+        fields.chain()
           .filter(function (fieldModel) {
             return _.intersection([fieldModel.get('state')], ['active']).length;
           })
@@ -124,7 +117,7 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
           });
         // For fields that are in a changed state, field values must first be
         // stored in TempStore.
-        this.get('fields').chain()
+        fields.chain()
           .filter(function (fieldModel) {
             return _.intersection([fieldModel.get('state')], Drupal.edit.app.changedFieldStates).length;
           })
@@ -194,17 +187,55 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
   },
 
   /**
+   * Updates a Field and Entity model's "inTempStore" when appropriate.
+   *
+   * Helper function.
+   *
+   * @param Drupal.edit.EntityModel entityModel
+   *   The model of the entity for which a field's state attribute has changed.
+   * @param Drupal.edit.FieldModel fieldModel
+   *   The model of the field whose state attribute has changed.
+   *
+   * @see fieldStateChange()
+   */
+  _updateInTempStoreAttributes: function (entityModel, fieldModel) {
+    var current = fieldModel.get('state');
+    var previous = fieldModel.previous('state');
+    var fieldsInTempStore = entityModel.get('fieldsInTempStore');
+    // If the fieldModel changed to the 'saved' state: remember that this
+    // field was saved to TempStore.
+    if (current === 'saved') {
+      // Mark the entity as saved in TempStore, so that we can pass the
+      // proper "reset TempStore" boolean value when communicating with the
+      // server.
+      entityModel.set('inTempStore', true);
+      // Mark the field as saved in TempStore, so that visual indicators
+      // signifying just that may be rendered.
+      fieldModel.set('inTempStore', true);
+      // Remember that this field is in TempStore, restore when rerendered.
+      fieldsInTempStore.push(fieldModel.get('fieldID'));
+      fieldsInTempStore = _.uniq(fieldsInTempStore);
+      entityModel.set('fieldsInTempStore', fieldsInTempStore);
+    }
+    // If the fieldModel changed to the 'candidate' state from the
+    // 'inactive' state, then this is a field for this entity that got
+    // rerendered. Restore its previous 'inTempStore' attribute value.
+    else if (current === 'candidate' && previous === 'inactive') {
+      fieldModel.set('inTempStore', _.intersection([fieldModel.get('fieldID')], fieldsInTempStore).length > 0);
+    }
+  },
+
+  /**
    * Reacts to state changes in this entity's fields.
    *
    * @param Drupal.edit.FieldModel fieldModel
-   *   The model of the field whose state property changed.
+   *   The model of the field whose state attribute changed.
    * @param String state
    *   The state of the associated field. One of Drupal.edit.FieldModel.states.
    */
   fieldStateChange: function (fieldModel, state) {
     var entityModel = this;
     var fieldState = state;
-    var fieldsInTempStore = this.get('fieldsInTempStore');
     // Switch on the entityModel state.
     // The EntityModel responds to FieldModel state changes as a function of its
     // state. For example, a field switching back to 'candidate' state when its
@@ -246,43 +277,22 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
         if (fieldState === 'changed') {
           entityModel.set('isDirty', true);
         }
-        // If the fieldModel changed to the 'saved' state: remember that this
-        // field was saved to TempStore.
-        else if (fieldState === 'saved') {
-          // Mark the entity as saved in TempStore, so that we can pass the
-          // proper "reset TempStore" boolean value when communicating with the
-          // server.
-          entityModel.set('inTempStore', true);
-          // Mark the field as saved in TempStore, so that visual indicators
-          // signifying just that may be rendered.
-          fieldModel.set('inTempStore', true);
-          // Remember that this field is in TempStore, restore when rerendered.
-          fieldsInTempStore.push(fieldModel.get('fieldID'));
-          fieldsInTempStore = _.uniq(fieldsInTempStore);
-          entityModel.set('fieldsInTempStore', fieldsInTempStore);
-        }
-        // If the fieldModel changed to the 'candidate' state from the
-        // 'inactive' state, then this is a field for this entity that got
-        // rerendered. Restore its previous 'inTempStore' attribute value.
-        else if (fieldState === 'candidate' && fieldModel.previous('state') === 'inactive') {
-          fieldModel.set('inTempStore', _.intersection([fieldModel.get('fieldID')], fieldsInTempStore).length > 0);
+        else {
+          this._updateInTempStoreAttributes(entityModel, fieldModel);
         }
         break;
 
       case 'committing':
         // If the field save returned a validation error, set the state of the
-        // entity back to opened.
+        // entity back to 'opened'.
         if (fieldState === 'invalid') {
           // A state change in reaction to another state change must be deferred.
           _.defer(function() {
             entityModel.set('state', 'opened', { reason: 'invalid' });
           });
         }
-        // If the fieldModel changed to the 'candidate' state from the
-        // 'inactive' state, then this is a field for this entity that got
-        // rerendered. Restore its previous 'inTempStore' attribute value.
-        else if (fieldState === 'candidate' && fieldModel.previous('state') === 'inactive') {
-          fieldModel.set('inTempStore', _.intersection([fieldModel.get('fieldID')], fieldsInTempStore).length > 0);
+        else {
+          this._updateInTempStoreAttributes(entityModel, fieldModel);
         }
 
         // Attempt to save the entity. If the entity's fields are not yet all in
