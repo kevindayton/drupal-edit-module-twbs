@@ -792,3 +792,30 @@ function _edit_entity_save_to_tempstore($entity_type, $entity_id, $entity) {
   $tempstore_id = _edit_entity_tempstore_id($entity_type, $entity_id);
   ctools_object_cache_set('edit', $tempstore_id, $entity);
 }
+
+/**
+ * Implements hook_css_alter().
+ *
+ * @see css/bartik.css
+ * @see https://drupal.org/node/2149261#comment-8290547
+ */
+function edit_css_alter(&$css) {
+  $bartik_style_css = drupal_get_path('theme', 'bartik') . '/css/style.css';
+  if (isset($css[$bartik_style_css])) {
+    $bartik_fix_css = drupal_get_path('module', 'edit') . '/css/bartik.css';
+    $css[$bartik_fix_css] = array(
+      'data' => $bartik_fix_css,
+      // Same properties as edit.(module|theme|icons).css, except for weight.
+      'group' => 100,
+      'type' => 'file',
+      'weight' => 1.00,
+      'every_page' => FALSE,
+      'media' => 'all',
+      'preprocess' => TRUE,
+      'browsers' => array(
+        'IE' => TRUE,
+        '!IE' => TRUE,
+      ),
+    );
+  }
+}
