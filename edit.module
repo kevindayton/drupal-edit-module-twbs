@@ -121,6 +121,7 @@ function edit_library() {
       $path . '/js/edit.js' => $options,
       $path . '/js/util.js' => $options,
       // Models.
+      $path . '/js/models/BaseModel.js' => $options,
       $path . '/js/models/AppModel.js' => $options,
       $path . '/js/models/EntityModel.js' => $options,
       $path . '/js/models/FieldModel.js' => $options,
@@ -700,25 +701,25 @@ function edit_libraries_info() {
   $libraries['underscore'] = array(
     'name' => 'Underscore',
     'vendor url' => 'http://documentcloud.github.io/backbone/',
-    'download url' => 'https://github.com/documentcloud/underscore/tree/1.4.0',
+    'download url' => 'https://github.com/documentcloud/underscore/tree/1.5.2',
     'files' => array(
       'js' => array(
         'underscore-min.js',
       ),
     ),
-    'version' => '1.4.0',
+    'version' => '1.5.2',
   );
 
   $libraries['backbone'] = array(
     'name' => 'Backbone',
     'vendor url' => 'http://documentcloud.github.io/backbone/',
-    'download url' => 'https://github.com/documentcloud/backbone/tree/0.9.2',
+    'download url' => 'https://github.com/documentcloud/backbone/tree/1.1.0',
     'files' => array(
       'js' => array(
         'backbone-min.js',
       ),
     ),
-    'version' => '0.9.2',
+    'version' => '1.1.0',
     'dependencies' => array('underscore'),
   );
 

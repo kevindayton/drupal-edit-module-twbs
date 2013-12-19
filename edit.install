@@ -30,14 +30,38 @@ function edit_requirements($phase) {
       // Check for Underscore.
       $path = libraries_get_path('underscore');
       if (!empty($path) && file_exists($path . '/underscore-min.js')) {
-        $requirements['edit_libraries_underscore']['value'] = t('Exists');
-        $requirements['edit_libraries_underscore']['severity'] = REQUIREMENT_OK;
+        $underscore_js = file_get_contents($path . '/underscore-min.js');
+        $underscore_version = NULL;
+        $matches = array();
+        if (preg_match('#VERSION *\W *[\'\"]{1}(.*?)[\'\"]{1}#', $underscore_js, $matches)) {
+          $underscore_version = $matches[1];
+        }
+        if (version_compare($underscore_version, '1.5.0') == -1) {
+          $requirements['edit_libraries_underscore']['value'] = t('The Underscore library is too old, please update to 1.5.0 or newer!');
+          $requirements['edit_libraries_underscore']['severity'] = REQUIREMENT_ERROR;
+        }
+        else {
+          $requirements['edit_libraries_underscore']['value'] = t('Exists & compatible');
+          $requirements['edit_libraries_underscore']['severity'] = REQUIREMENT_OK;
+        }
       }
       // Check for Backbone.
       $path = libraries_get_path('backbone');
       if (!empty($path) && file_exists($path . '/backbone-min.js')) {
-        $requirements['edit_libraries_backbone']['value'] = t('Exists');
-        $requirements['edit_libraries_backbone']['severity'] = REQUIREMENT_OK;
+        $bb_js = file_get_contents($path . '/backbone-min.js');
+        $bb_version = NULL;
+        $matches = array();
+        if (preg_match('#VERSION *\W *[\'\"]{1}(.*?)[\'\"]{1}#', $bb_js, $matches)) {
+          $bb_version = $matches[1];
+        }
+        if (version_compare($bb_version, '1.0.0') == -1) {
+          $requirements['edit_libraries_backbone']['value'] = t('The Backbone library is too old, please update to 1.0.0 or newer!');
+          $requirements['edit_libraries_backbone']['severity'] = REQUIREMENT_ERROR;
+        }
+        else {
+          $requirements['edit_libraries_backbone']['value'] = t('Exists & compatible');
+          $requirements['edit_libraries_backbone']['severity'] = REQUIREMENT_OK;
+        }
       }
     }
 

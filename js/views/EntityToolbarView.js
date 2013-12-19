@@ -28,11 +28,11 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
     this.$entity = $(this.model.get('el'));
 
     // Rerender whenever the entity state changes.
-    this.model.on('change:isActive change:isDirty change:state', this.render, this);
+    this.listenTo(this.model, 'change:isActive change:isDirty change:state', this.render);
     // Also rerender whenever a different field is highlighted or activated.
-    this.appModel.on('change:highlightedField change:activeField', this.render, this);
+    this.listenTo(this.appModel, 'change:highlightedField change:activeField', this.render);
     // Rerender when a field of the entity changes state.
-    this.model.get('fields').on('change:state', this.fieldStateChange, this);
+    this.listenTo(this.model.get('fields'), 'change:state', this.fieldStateChange);
 
     // Reposition the entity toolbar as the viewport and the position within the
     // viewport changes.
@@ -118,7 +118,13 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
    * {@inheritdoc}
    */
   remove: function () {
+    // Remove additional DOM elements controlled by this View.
     this.$fence.remove();
+
+    // Stop listening to DOM events.
+    $(window).off('resize.edit scroll.edit');
+    $(document).off('drupalViewportOffsetChange.edit');
+
     Backbone.View.prototype.remove.call(this);
   },
 

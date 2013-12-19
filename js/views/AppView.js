@@ -36,20 +36,22 @@ Drupal.edit.AppView = Backbone.View.extend({
     this.changedFieldStates = ['changed', 'saving', 'saved', 'invalid'];
     this.readyFieldStates = ['candidate', 'highlighted'];
 
-    options.entitiesCollection
+    this.listenTo(options.entitiesCollection, {
       // Track app state.
-      .on('change:state', this.appStateChange, this)
-      .on('change:isActive', this.enforceSingleActiveEntity, this);
+      'change:state': this.appStateChange,
+      'change:isActive': this.enforceSingleActiveEntity
+    });
 
-    options.fieldsCollection
+    this.listenTo(options.fieldsCollection, {
       // Track app state.
-      .on('change:state', this.editorStateChange, this)
+      'change:state': this.editorStateChange,
       // Respond to field model HTML representation change events.
-      .on('change:html', this.renderUpdatedField, this)
+      'change:html': this.renderUpdatedField,
       // Respond to addition.
-      .on('add', this.rerenderedFieldToCandidate, this)
+      'add': this.rerenderedFieldToCandidate,
       // Respond to destruction.
-      .on('destroy', this.teardownEditor, this);
+      'destroy': this.teardownEditor
+    });
   },
 
   /**
@@ -447,10 +449,10 @@ Drupal.edit.AppView = Backbone.View.extend({
    *   A field that was just added to the collection of fields.
    */
   rerenderedFieldToCandidate: function (fieldModel) {
-    var activeEntity = Drupal.edit.collections.entities.where({isActive: true})[0];
+    var activeEntity = Drupal.edit.collections.entities.findWhere({isActive: true});
 
     // Early-return if there is no active entity.
-    if (activeEntity === null) {
+    if (!activeEntity) {
       return;
     }
 
