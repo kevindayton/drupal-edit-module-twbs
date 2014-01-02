@@ -78,8 +78,8 @@ function edit_requirements($phase) {
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
 
-      if (strpos(libraries_get_path('ckeditor'), 'sites/all/libraries') === FALSE) {
-        $requirements['edit_libraries_ckeditor']['value'] = t('The CKEditor library is installed in the wrong location, it should be installed in <code>sites/all/libraries/ckeditor</code>, not in the CKEditor module directory!');
+      if (!libraries_get_path('ckeditor')) {
+        $requirements['edit_libraries_ckeditor']['value'] = t('Install the CKEditor library in a standard location. (!doc)', array('!doc' => l(t('Documentation'), 'https://drupal.org/node/1440066', array('external' => TRUE))));
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
 
