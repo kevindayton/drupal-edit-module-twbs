@@ -60,7 +60,7 @@ Drupal.edit.EntityModel = Drupal.edit.BaseModel.extend({
     this.set('fields', new Drupal.edit.FieldCollection());
 
     // Respond to entity state changes.
-    this.listenTo(this, 'change:state', this.stateChange, this);
+    this.listenTo(this, 'change:state', this.stateChange);
 
     // The state of the entity is largely dependent on the state of its
     // fields.
