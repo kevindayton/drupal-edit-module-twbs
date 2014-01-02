@@ -8,8 +8,12 @@ Like Drupal 8's implementation of in-place editing, IE>=9 is supported.
 Installation
 ------------
 1. Install like any other Drupal module.
-2. Grant the 'Access in-place editing' permission to relevant roles.
-3. Contextual links on nodes will now have a 'Quick edit' link. Clicking it will
+2. Download Underscore 1.5.x and Backbone 1.x from http://underscorejs.org/ and
+   http://backbonejs.org/, respectively and put them in sites/all/libraries, in
+   a "underscore" and a "backbone" subdirectory, respectively. Either the
+   development or production version will work.
+3. Grant the 'Access in-place editing' permission to relevant roles.
+4. Contextual links on nodes will now have a 'Quick edit' link. Clicking it will
    start in-place editing of that node!
 
 
