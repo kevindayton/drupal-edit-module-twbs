@@ -56,6 +56,9 @@ function edit_filter_info_alter(&$info) {
     'filter_hashtags' => FILTER_TYPE_TRANSFORM_IRREVERSIBLE,
     // http://drupal.org/project/filter_html_image_secure
     'filter_html_image_secure' => FILTER_TYPE_HTML_RESTRICTOR,
+    // https://drupal.org/project/htmlpurifier
+    'htmlpurifier_basic' => FILTER_TYPE_HTML_RESTRICTOR,
+    'htmlpurifier_advanced' => FILTER_TYPE_HTML_RESTRICTOR,
     // http://drupal.org/project/image_resize_filter
     'image_resize_filter' => FILTER_TYPE_TRANSFORM_REVERSIBLE,
     // http://drupal.org/project/markdown
