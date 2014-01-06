@@ -166,9 +166,9 @@ Drupal.edit.editors.ckeditor = Drupal.edit.EditorView.extend({
 
     // Work-around for https://drupal.org/node/2019481 in Drupal 7.
     textLoaderAjax.commands = {};
-    // Implement a scoped editGetUntransformedText AJAX command: calls the
-    // callback.
-    textLoaderAjax.commands.editorGetUntransformedText = function (ajax, response, status) {
+    // Implement a scoped editCKEditorGetUntransformedText AJAX command: calls
+    // the callback.
+    textLoaderAjax.commands.editCKEditorGetUntransformedText = function (ajax, response, status) {
       callback(response.data);
     };
 
