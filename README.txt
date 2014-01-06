@@ -63,6 +63,14 @@ A: First: precisely because these are just small bits of metadata, there is no
    harm; there is no security risk involved.
    Second: it is by design, this metadata is always added, to not break Drupal's
    render cache.
+Q: The status report says "The theme strips the content region class". How do I
+   fix this?
+A: Your theme is stripping either just the "region-content" class on the
+   "content" region wrapper, or it is stripping that wrapper entirely. Edit
+   depends on this.
+   E.g. the Zen theme does this by default. Drupal user loopduplicate has posted
+   a work-around, see https://drupal.org/comment/8310077#comment-8310077 and
+   https://drupal.org/comment/8310093#comment-8310093.
 Q: Why do I get a 'The filter "<filter name>" has no type specified!'' error?
 A: For Edit module to allow for in-place editing of "processed text" fields
    (i.e. text passed through Drupal's filter system, via check_markup()), it

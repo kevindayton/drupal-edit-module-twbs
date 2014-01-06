@@ -124,6 +124,35 @@ function edit_requirements($phase) {
         }
       }
     }
+
+    // Best-effort check that the theme is compatible.
+    $query = new EntityFieldQuery();
+    $query
+      ->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->range(0, 1);
+    $result = $query->execute();
+    if (isset($result['node'])) {
+      $requirements['edit_theme'] = array(
+        'title' => t('Edit: theme compatibility'),
+        'value' => t('The theme strips the content region class'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+
+      // Request the first published node's HTML.
+      $node_ids = array_keys($result['node']);
+      $response = drupal_http_request(url('node/' . $node_ids[0], array('absolute' => TRUE)));
+
+      // Check whether a "content-region" class exists in the HTML.
+      $dom = new \DOMDocument();
+      @$dom->loadHTML($response->data);
+      $xpath = new \DOMXPath($dom);
+      // See http://stackoverflow.com/a/6366390/80305.
+      if ($xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' region-content ')]")->length > 0) {
+        $requirements['edit_theme']['value'] = t('Content region class exists');
+        $requirements['edit_theme']['severity'] = REQUIREMENT_OK;
+      }
+    }
   }
 
   return $requirements;
