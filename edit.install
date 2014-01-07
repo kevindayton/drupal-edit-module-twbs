@@ -135,22 +135,59 @@ function edit_requirements($phase) {
     if (isset($result['node'])) {
       $requirements['edit_theme'] = array(
         'title' => t('Edit: theme compatibility'),
-        'value' => t('The theme strips the content region class'),
-        'severity' => REQUIREMENT_ERROR,
+        'value' => t('The theme appears compatible'),
+        'severity' => REQUIREMENT_OK,
       );
 
       // Request the first published node's HTML.
       $node_ids = array_keys($result['node']);
-      $response = drupal_http_request(url('node/' . $node_ids[0], array('absolute' => TRUE)));
+      $node_id = $node_ids[0];
+      $response = drupal_http_request(url('node/' . $node_id, array('absolute' => TRUE)));
 
       // Check whether a "content-region" class exists in the HTML.
       $dom = new \DOMDocument();
       @$dom->loadHTML($response->data);
       $xpath = new \DOMXPath($dom);
+
+      $errors = array();
+
+      // There should be at least one DOM element with a data-edit-entity-id
+      // attribute that begins with "node/<node ID>". "at least one" because
+      // there may be multiple entities on this page.
+      if ($xpath->query("//*[starts-with(@data-edit-entity-id, 'node/" . $node_id . "')]")->length == 0) {
+        $errors[] = t("Edit's attributes on entities are missing");
+      }
+
+      // There should be at least as many DOM elements with a data-edit-field-id
+      // attribute that begin with "node/<node ID>" as there are visible fields
+      // in the default view mode. "at least as many", because it is impossible
+      // for code to know whether the "date" and "author" fields are visible,
+      // but also because there may be multiple entities on the page.
+      $bundle = $result['node'][$node_id]->type;
+      $instances = field_info_instances('node', $bundle);
+      $visible_field_count = 0;
+      foreach ($instances as $instance) {
+        if ($instance['display']['default']['type'] != 'hidden') {
+          $visible_field_count++;
+        }
+      }
+      $node_type = node_type_get_type($bundle);
+      if ($node_type->has_title) {
+        $visible_field_count++;
+      }
+      if ($xpath->query("//*[starts-with(@data-edit-field-id, 'node/" . $node_id . "')]")->length < $visible_field_count) {
+        $errors[] = t("Edit's attributes on fields are missing");
+      }
+
+      // The "content" region must be identifiable through a class.
       // See http://stackoverflow.com/a/6366390/80305.
-      if ($xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' region-content ')]")->length > 0) {
-        $requirements['edit_theme']['value'] = t('Content region class exists');
-        $requirements['edit_theme']['severity'] = REQUIREMENT_OK;
+      if ($xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' region-content ')]")->length == 0) {
+        $errors[] = t('The content region class is missing');
+      }
+
+      if ($errors) {
+        $requirements['edit_theme']['value'] = theme('item_list', array('items' => $errors));
+        $requirements['edit_theme']['severity'] = REQUIREMENT_ERROR;
       }
     }
   }

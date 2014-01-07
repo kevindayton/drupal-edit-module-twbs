@@ -44,9 +44,10 @@ In-place WYSIWYG editing using CKEditor
 
 FAQ
 ---
-Q: I want to make the "Quick edit" link look different.
-A: No problem! Disable the block, and output edit_trigger_link()'s render array
-   somewhere else on the page.
+Q: I can't see any contextual links, what now?
+A: Your theme is probably stripping them. Your theme's templates must always
+   print "$title_suffix".
+   See https://drupal.org/documentation/modules/contextual.
 Q: Edit breaks my node titles!
 A: This probably means you're using a theme that inappropriately uses the node
    title as a "title" attribute as well, without stripping any HTML used in the
@@ -63,7 +64,17 @@ A: First: precisely because these are just small bits of metadata, there is no
    harm; there is no security risk involved.
    Second: it is by design, this metadata is always added, to not break Drupal's
    render cache.
-Q: The status report says "The theme strips the content region class". How do I
+Q: The status report says "Edit's attributes on entities are missing" or "Edit's
+   attributes on fields are missing.". How do I fix these?
+A: Your theme is probably stripping them. Your theme's templates must always
+   print "$attributes" for entities and fields. This implies that a wrapper for
+   each field is a requirement. If you're not using a wrapper yet for e.g. your
+   fields, you'll want to do something like this:
+     -<?php print render($items); ?>
+     +<div <?php print $attributes; ?>>
+     +  <?php print render($items); ?>
+     +</div>
+Q: The status report says "The content region class is missing". How do I
    fix this?
 A: Your theme is stripping either just the "region-content" class on the
    "content" region wrapper, or it is stripping that wrapper entirely. Edit
@@ -71,7 +82,7 @@ A: Your theme is stripping either just the "region-content" class on the
    E.g. the Zen theme does this by default. Drupal user loopduplicate has posted
    a work-around, see https://drupal.org/comment/8310077#comment-8310077 and
    https://drupal.org/comment/8310093#comment-8310093.
-Q: Why do I get a 'The filter "<filter name>" has no type specified!'' error?
+Q: Why do I get a 'The filter "<filter name>" has no type specified!' error?
 A: For Edit module to allow for in-place editing of "processed text" fields
    (i.e. text passed through Drupal's filter system, via check_markup()), it
    needs to know about each filter what type of filter it is. For simpler text
