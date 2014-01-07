@@ -343,6 +343,13 @@ function edit_preprocess_field(&$variables) {
     return;
   }
 
+  // For now, Edit only supports 'node' entities. Therefor, don't annotate
+  // fields of other entity types with Edit's metadata.
+  // @todo https://drupal.org/node/2168725
+  if ($entity_type != 'node') {
+    return;
+  }
+
   $field_name = $element['#field_name'];
   $language = $element['#language'];
   $view_mode = $element['#view_mode'];
