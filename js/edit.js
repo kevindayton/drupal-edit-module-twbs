@@ -88,10 +88,20 @@ Drupal.behaviors.edit = {
     // processed.
     $(context).find('.contextual-links').once('edit-contextual').each(function (index, contextualLinkElement) {
       var $region = $(contextualLinkElement).closest('.contextual-links-region');
-      if ($region.is('[data-edit-entity-id]')) {
+      // Either the contextual link is set directly on the entity DOM element,
+      // or it is set on a container of the entity DOM element that is its
+      // contextual region.
+      if ($region.is('[data-edit-entity-id]') || $region.is('[data-edit-is-contextual-region-for-entity]')) {
+        var entityElement;
+        if ($region.is('[data-edit-entity-id]')) {
+          entityElement = $region.get(0);
+        }
+        else {
+          entityElement = $region.find('[data-edit-entity-id]').get(0);
+        }
         var contextualLink = {
-          entityID: $region.attr('data-edit-entity-id'),
-          entityInstanceID: $region.attr('data-edit-entity-instance-id'),
+          entityID: entityElement.getAttribute('data-edit-entity-id'),
+          entityInstanceID: entityElement.getAttribute('data-edit-entity-instance-id'),
           el: contextualLinkElement,
           region: $region[0]
         };

@@ -159,3 +159,9 @@ From a Drupal 8 perspective.
 22. The concurrent editing prevention from Drupal 8 is impossible to backport to
     Drupal 7. See https://drupal.org/node/1901100#comment-7794939 and
     http://drupalcode.org/project/drupal.git/commitdiff/36a7dd83bbdd5912023122fcce0e1c55ccb5d3e3.
+23. To support Panels, and particularly the embedding of an existing node in a
+    Panels Pane (which renders nodes using the default render pipeline), it was
+    necessary to introduce a new "data-edit-contextual-region-for-entity" data-
+    attribute, to allow the contextual links not to be set on the node entity
+    DOM element itself, but on the Panels Pane. This has been forward-ported, to
+    also allow the future Drupal 8 contrib version of Panels to do this.

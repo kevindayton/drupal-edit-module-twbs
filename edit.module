@@ -458,10 +458,17 @@ function edit_preprocess_panels_pane(&$variables) {
   $view_mode = !empty($variables['pane']->configuration['build_mode']) ? $variables['pane']->configuration['build_mode'] : 'default';
   $edit_id_suffix = "$language/$view_mode";
 
+  // Set data-edit-is-contextual-region-for-entity attribute, to indicate that
+  // this Panels pane contains an in-place editable entity, yet the contextual
+  // region is not the DOM element of that entity itself, but this Panels pane.
+  // The data-edit-entity-id attribute is already being set on the node's DOM
+  // element, since Panels just uses the standard render pipeline.
+  $variables['attributes_array']['data-edit-is-contextual-region-for-entity'] = '';
+
   $node_type = node_type_get_type($node->type);
   if ($node_type->has_title) {
     // Title needs some special handling. Only wraps it when it hasn't been
-    // overridden. There is now way to update the panels configuration in edit
+    // overridden. There is no way to update the panels configuration in Edit
     // module currently.
     $configuration = $variables['pane']->configuration;
     if (!$configuration['override_title']) {
