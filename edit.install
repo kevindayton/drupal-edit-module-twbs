@@ -77,6 +77,11 @@ function edit_requirements($phase) {
         $requirements['edit_libraries_ckeditor']['value'] = t('The CKEditor library is too old, please update to 4.2 or newer!');
         $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_ERROR;
       }
+      if ($ckeditor_version == '%VERSION%') {
+        $requirements['edit_libraries_ckeditor']['value'] = t('Exists, but is a development version');
+        $requirements['edit_libraries_ckeditor']['description'] = t('You are using the source version of CKEditor <strong>at your own risk</strong>, in case of using an outdated version some things may not work as expected. The latest stable version of CKEditor (an optimized release version) is recommended.');
+        $requirements['edit_libraries_ckeditor']['severity'] = REQUIREMENT_WARNING;
+      }
 
       if (!libraries_get_path('ckeditor')) {
         $requirements['edit_libraries_ckeditor']['value'] = t('Install the CKEditor library in a standard location. (!doc)', array('!doc' => l(t('Documentation'), 'https://drupal.org/node/1440066', array('external' => TRUE))));
