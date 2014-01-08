@@ -229,8 +229,8 @@ class EditLoadingTest extends DrupalWebTestCase {
       );
       $post += $edit + $this->getAjaxPageStatePostData();
 
-      // Submit field form and check response. This should store the
-      // updated entity in TempStore on the server.
+      // Submit field form and check response. This should store the updated
+      // entity in TempStore on the server.
       $response = $this->drupalPostCustom('edit/form/' . 'node/1/body/und/full', 'application/vnd.drupal-ajax', $post);
       $this->assertResponse(200);
       $ajax_commands = drupal_json_decode($response);
@@ -459,7 +459,54 @@ class EditLoadingTest extends DrupalWebTestCase {
     }
   }
 
-   /**
+  /**
+   * Tests Edit with concurrent node / Edit use.
+   */
+  function testConcurrentEdit() {
+    $this->drupalLogin($this->editor_user);
+
+    // Retrieving the form for this field should result in a 200 response,
+    // containing only an editFieldForm command.
+    $post = array('nocssjs' => 'true', 'reset' => 'true') + $this->getAjaxPageStatePostData();
+    $response = $this->drupalPostCustom('edit/form/' . 'node/1/body/und/full', 'application/vnd.drupal-ajax', $post);
+    $this->assertResponse(200);
+    $ajax_commands = drupal_json_decode($response);
+
+    // Prepare form values for submission. drupalPostAJAX() is not suitable
+    // for handling pages with JSON responses, so we need our own solution
+    // here.
+    $form_tokens_found = preg_match('/\sname="form_token" value="([^"]+)"/', $ajax_commands[0]['data'], $token_match) && preg_match('/\sname="form_build_id" value="([^"]+)"/', $ajax_commands[0]['data'], $build_id_match);
+    $this->assertTrue($form_tokens_found, 'Form tokens found in output.');
+
+    if ($form_tokens_found) {
+      $post = array();
+      $post['form_id'] = 'edit_field_form';
+      $post['form_token'] = $token_match[1];
+      $post['form_build_id'] = $build_id_match[1];
+      $post['body[und][0][summary]'] = '';
+      $post['body[und][0][value]'] = '<p>Fine thanks.</p>';
+      $post['body[und][0][format]'] = 'filtered_html';
+      $post['op'] = t('Save');
+
+      // Save the node on the regular node edit form.
+      $this->drupalPost('node/1/edit', array(), t('Save'));
+      // Ensure different save timestamps for field editing.
+      sleep(2);
+
+      // Submit field form and check response. Should throw a validation error
+      // because the node was changed in the meantime.
+      // $response = $this->submitFieldForm('node/1/body/und/full', $edit);
+      $response = $this->drupalPostCustom('edit/form/' . 'node/1/body/und/full', 'application/vnd.drupal-ajax', $post);
+      $this->assertResponse(200);
+      $ajax_commands = drupal_json_decode($response);
+      $this->assertIdentical(2, count($ajax_commands), 'The field form HTTP request results in two AJAX commands.');
+      $this->assertIdentical('settings', $ajax_commands[0]['command'], 'The first AJAX command is a settings command.');
+      $this->assertIdentical('editFieldFormValidationErrors', $ajax_commands[1]['command'], 'The second AJAX command is an editFieldFormValidationErrors command.');
+      $this->assertTrue(strpos($ajax_commands[1]['data'], t('The copy of the content being edited is outdated. Reload the page to edit an up-to-date version.')), 'Error message returned to user.');
+    }
+  }
+
+  /**
    * Perform a POST HTTP request in a non-form context.
    *
    * @param string $path

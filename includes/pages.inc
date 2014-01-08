@@ -190,6 +190,7 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   // Load entity whose field is to be edited.
   $entity = entity_load_single($entity_type, $entity_id);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $latest_entity_timestamp = $entity->changed;
 
   // Ensure the user is allowed to edit this field.
   module_load_include('php', 'edit', 'includes/EditEntityFieldAccessCheck');
@@ -204,6 +205,10 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   $tempstore_id = _edit_entity_tempstore_id($entity_type, $entity_id);
   $tempstore_entity = ctools_object_cache_get('edit', $tempstore_id);
   if ($tempstore_entity && (!isset($_POST['reset']) || $_POST['reset'] !== 'true')) {
+    // @todo: https://drupal.org/node/2158977 implemented content locking only
+    // for nodes, because Drupal 7 only implements it for nodes. We may need to
+    // disable content locking for other entity types, sadly.
+    $tempstore_entity_timestamp = $tempstore_entity->changed;
     $entity = $tempstore_entity;
   }
   else {
@@ -232,43 +237,57 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
   );
   $form = drupal_build_form('edit_field_form', $form_state);
 
-  // If the form was successfully submitted (executed), then rerender the field.
-  if (!empty($form_state['executed'])) {
-    // The form submission saved the entity in TempStore. Return the
-    // updated view of the field from the TempStore copy.
-    $entity = ctools_object_cache_get('edit', $tempstore_id);
 
-    // Re-render the updated field.
-    $output = _edit_render_field($entity_type, $entity, $field_name, $langcode, $view_mode);
-
-    // Re-render the updated field for other view modes (i.e. for other
-    // instances of the same logical field on the user's page).
-    $other_view_mode_ids = isset($_POST['other_view_modes']) ? $_POST['other_view_modes'] : array();
-    $other_view_modes = array();
-    foreach ($other_view_mode_ids as $other_view_mode_id) {
-      $other_view_modes[$other_view_mode_id] = _edit_render_field($entity_type, $entity, $field_name, $langcode, $other_view_mode_id);
-    }
+  // Detect an edit conflict if the current entity timestamp is different
+  // from the TempStore entity timestamp (whch is a copy from when the
+  // editing process started).
+  if (!empty($latest_entity_timestamp) && !empty($tempstore_entity_timestamp) && ($latest_entity_timestamp != $tempstore_entity_timestamp)) {
+    drupal_set_message(t('The copy of the content being edited is outdated. Reload the page to edit an up-to-date version.'), 'error');
 
     $commands[] = array(
-      'command' => 'editFieldFormSaved',
-      'data' => $output,
-      'other_view_modes' => $other_view_modes,
+      'command' => 'editFieldFormValidationErrors',
+      'data' => theme('status_messages'),
     );
   }
-  // Otherwise, render the form. (And if it was insuccessfully submitted, there
-  // will be form validation errors.)
   else {
-    $commands[] = array(
-      'command' => 'editFieldForm',
-      'data' => drupal_render($form),
-    );
+    // If the form was successfully submitted (executed), then rerender the field.
+    if (!empty($form_state['executed'])) {
+      // The form submission saved the entity in TempStore. Return the
+      // updated view of the field from the TempStore copy.
+      $entity = ctools_object_cache_get('edit', $tempstore_id);
 
-    $errors = form_get_errors();
-    if (count($errors)) {
+      // Re-render the updated field.
+      $output = _edit_render_field($entity_type, $entity, $field_name, $langcode, $view_mode);
+
+      // Re-render the updated field for other view modes (i.e. for other
+      // instances of the same logical field on the user's page).
+      $other_view_mode_ids = isset($_POST['other_view_modes']) ? $_POST['other_view_modes'] : array();
+      $other_view_modes = array();
+      foreach ($other_view_mode_ids as $other_view_mode_id) {
+        $other_view_modes[$other_view_mode_id] = _edit_render_field($entity_type, $entity, $field_name, $langcode, $other_view_mode_id);
+      }
+
       $commands[] = array(
-        'command' => 'editFieldFormValidationErrors',
-        'data' => theme('status_messages'),
+        'command' => 'editFieldFormSaved',
+        'data' => $output,
+        'other_view_modes' => $other_view_modes,
       );
+    }
+    // Otherwise, render the form. (And if it was insuccessfully submitted, there
+    // will be form validation errors.)
+    else {
+      $commands[] = array(
+        'command' => 'editFieldForm',
+        'data' => drupal_render($form),
+      );
+
+      $errors = form_get_errors();
+      if (count($errors)) {
+        $commands[] = array(
+          'command' => 'editFieldFormValidationErrors',
+          'data' => theme('status_messages'),
+        );
+      }
     }
   }
 
