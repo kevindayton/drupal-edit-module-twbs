@@ -16,6 +16,9 @@ Installation
 4. Contextual links on nodes will now have a 'Quick edit' link. Clicking it will
    start in-place editing of that node!
 
+If you're using Panels, then you'll want to apply a patch that fixes a bug in
+Panels which prevents Edit from working: https://drupal.org/node/2169571.
+
 
 In-place WYSIWYG editing using CKEditor
 ---------------------------------------
