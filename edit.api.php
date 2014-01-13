@@ -47,11 +47,17 @@ function hook_edit_editor_info_alter(&$editors) {
  *   An array with the following key-value pairs:
  *     - 'entity_type': the entity type
  *     - 'entity': the entity object
- *     - 'field': the field instance as returned by field_info_instance()
- *     - 'items': the items of this field on this entity
+ *     - 'field_name': the field name
+ *     - 'field': (not provided for "extra" fields) the field instance as
+ *       returned by field_info_instance()
+ *     - 'items': (not provided for "extra" fields) the items of this field on
+ *       this entity
  */
 function hook_edit_editor_metadata_alter(&$metadata, $context) {
-
+  // Exclude every node title from in-place editing.
+  if ($context['entity_type'] === 'node' && $context['field_name'] === 'title') {
+    $metadata['access'] = FALSE;
+  }
 }
 
 /**

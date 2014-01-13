@@ -100,6 +100,11 @@ class EditMetadataGenerator implements EditMetadataGeneratorInterface {
       'editor' => $editor_id,
       'aria' => t('Entity @type @id, field @field', array('@type' => $entity_type, '@id' => $id, '@field' => $label)),
     );
+    $alter_hook_context = array(
+      'entity_type' => $entity_type,
+      'entity' => $entity,
+      'field_name' => $field_name,
+    );
     if (!_edit_is_extra_field($entity_type, $field_name)) {
       $editor = edit_editor_get($editor_id);
       if (!empty($editor['metadata callback'])) {
@@ -114,15 +119,14 @@ class EditMetadataGenerator implements EditMetadataGeneratorInterface {
         }
       }
 
-      // Allow the metadata to be altered.
-      $context = array(
-        'entity_type' => $entity_type,
-        'entity' => $entity,
+      $alter_hook_context += array(
         'field' => $instance,
         'items' => $items,
       );
-      drupal_alter('edit_editor_metadata', $metadata, $editor_id, $context);
     }
+
+    // Allow the metadata to be altered.
+    drupal_alter('edit_editor_metadata', $metadata, $alter_hook_context);
 
     return $metadata;
   }
