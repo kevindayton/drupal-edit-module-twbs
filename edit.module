@@ -224,12 +224,14 @@ function edit_library() {
     );
   }
 
-  $libraries['underscore'] = edit_convert_libraries_to_library(libraries_load('underscore'), array(
+  module_load_include('inc', 'edit', 'includes/libraries');
+
+  $libraries['underscore'] = _edit_convert_libraries_to_library(libraries_detect('underscore'), array(
     'group' => JS_LIBRARY,
     'weight' => -20,
   ));
 
-  $libraries['backbone'] = edit_convert_libraries_to_library(libraries_load('backbone'), array(
+  $libraries['backbone'] = _edit_convert_libraries_to_library(libraries_detect('backbone'), array(
     'group' => JS_LIBRARY,
     'weight' => -19,
   ));
@@ -716,66 +718,124 @@ function theme_edit_wrap_field($variables) {
  * @see Libraries module.
  */
 function edit_libraries_info() {
+  module_load_include('inc', 'edit', 'includes/libraries');
+
   $libraries = array();
+
+  $common = array(
+    'version callback' => '_edit_libraries_get_version',
+    'variant order' => array('minified', 'source'),
+  );
 
   $libraries['underscore'] = array(
     'name' => 'Underscore',
     'vendor url' => 'http://documentcloud.github.io/backbone/',
-    'download url' => 'https://github.com/documentcloud/underscore/tree/1.5.2',
-    'files' => array(
-      'js' => array(
-        'underscore-min.js',
+    'download url' => 'https://github.com/jashkenas/underscore/archive/1.5.2.zip',
+    'version arguments' => array(
+      'variants' => array(
+        'source' => array(
+          'file' => 'underscore.js',
+          // @todo Document an actual example version string.
+          'pattern' => '#VERSION *\W *[\'\"]{1}(.*?)[\'\"]{1}#',
+          // In the unminified Underscore.js 1.5.2, the version is defined on
+          // line 68.
+          'lines' => 100,
+        ),
+        'minified' => array(
+          'file' => 'underscore-min.js',
+          'pattern' => '#Underscore.js\s([\d\.]+)#',
+        ),
       ),
     ),
-    'version' => '1.5.2',
+    'versions' => array(
+      // Means ">=1.5.0": matches 1.5.0, 1.5.2, etc.
+      '1.5.0' => array(
+        'variants' => array(
+          'source' => array(
+            'files' => array(
+              'js' => array(
+                'underscore.js',
+              ),
+            ),
+            // Without a variant callback, the variant is assumed to be
+            // installed.
+            'variant callback' => '_edit_libraries_variant_exists',
+            'variant arguments' => array('underscore.js'),
+          ),
+          'minified' => array(
+            'files' => array(
+              'js' => array(
+                'underscore-min.js',
+              ),
+            ),
+            // Without a variant callback, the variant is assumed to be
+            // installed.
+            'variant callback' => '_edit_libraries_variant_exists',
+            'variant arguments' => array('underscore-min.js'),
+          ),
+        ),
+      ),
+    ),
   );
+  $libraries['underscore'] += $common;
 
   $libraries['backbone'] = array(
     'name' => 'Backbone',
     'vendor url' => 'http://documentcloud.github.io/backbone/',
-    'download url' => 'https://github.com/documentcloud/backbone/tree/1.1.0',
-    'files' => array(
-      'js' => array(
-        'backbone-min.js',
+    'download url' => 'https://github.com/jashkenas/backbone/archive/1.1.0.zip',
+    'version arguments' => array(
+      'variants' => array(
+        'source' => array(
+          'file' => 'backbone.js',
+          // @todo Document an actual example version string.
+          'pattern' => '#VERSION *\W *[\'\"]{1}(.*?)[\'\"]{1}#',
+          // In the unminified Backbone.js 1.1.0, the version is defined on line
+          // 38.
+          'lines' => 50,
+        ),
+        'minified' => array(
+          'file' => 'backbone-min.js',
+          'pattern' => '#Backbone.js\s([\d\.]+)#',
+        ),
       ),
     ),
-    'version' => '1.1.0',
-    'dependencies' => array('underscore'),
+    'versions' => array(
+      // Means ">=1.0.0": matches 1.0.0, 1.1.0, etc.
+      '1.0.0' => array(
+        'variants' => array(
+          'source' => array(
+            'name' => 'Backbone',
+            'files' => array(
+              'js' => array(
+                'backbone.js',
+              ),
+            ),
+            // Without a variant callback, the variant is assumed to be
+            // installed.
+            'variant callback' => '_edit_libraries_variant_exists',
+            'variant arguments' => array('backbone.js'),
+            'dependencies' => array('underscore (>=1.5.0)'),
+          ),
+          'minified' => array(
+            'name' => 'Backbone',
+            'files' => array(
+              'js' => array(
+                'backbone-min.js',
+              ),
+            ),
+            // Without a variant callback, the variant is assumed to be
+            // installed.
+            'variant callback' => '_edit_libraries_variant_exists',
+            'variant arguments' => array('backbone-min.js'),
+            'dependencies' => array('underscore (>=1.5.0)'),
+          ),
+        ),
+      ),
+    ),
   );
+  $libraries['backbone'] += $common;
 
   return $libraries;
-}
-
-/**
- * Converts a libraries module array to a hook_library() array.
- *
- * Why is this necessary? I don't see any way from the Libraries module API
- * to get an array that corresponds to what hook_library() expects.
- *
- * @see navbar_convert_libraries_to_library()
- */
-function edit_convert_libraries_to_library($library, $options) {
-  // If the library wasn't loaded, don't bother converting it.
-  if (!$library['loaded']) {
-    return array();
-  }
-
-  $converted = array(
-    'title' => $library['name'],
-    'website' => $library['vendor url'],
-    'version' => $library['version'],
-  );
-
-  // This is not ideal, but I don't see any other way to convert these files.
-  // It's a bit hard-coded to expect just one file, but that's all we have for
-  // now, so it stays.
-  $filename = array_keys($library['files']['js']);
-  $converted['js'][$library['library path'] . '/' . $filename[0]] = array(
-    'group' => $options['group'],
-    'weight' => $options['weight'],
-  );
-
-  return $converted;
 }
 
 /**
