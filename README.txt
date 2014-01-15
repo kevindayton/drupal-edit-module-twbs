@@ -95,10 +95,14 @@ A: For Edit module to allow for in-place editing of "processed text" fields
    be retrieved from the server. See http://drupal.org/node/1817474 for details.
 Q: I want to disable in-place editing for a field.
 A: Any field that has the #skip_edit property set on it will not be made
-   in-place editable. You can add this property through hook_preprocess_field().
-   You must make sure that your implementation of that hook runs *before* Edit's
-   implementation — you can guarantee that by modifying the weight of your
-   module or implementing hook_module_implements_alter().
+   in-place editable. You can add this property through
+   hook_field_attach_view_alter(). e.g.:
+     function MYMODULE_field_attach_view_alter(&$output, $context) {
+       // Disable in-place editing for 'body' fields on 'node' entities.
+       if ($context['entity_type'] === 'node' && isset($output['body'])) {
+         $output['body']['#skip_edit'] = TRUE;
+       }
+     }
 Q: Why do contextual links now appear on node pages?
 A: Edit.module indeed enables contextual links on node pages as well, to allow
    users to in-place edit not only "teaser" nodes, but also "full" nodes. If you
