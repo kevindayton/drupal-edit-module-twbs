@@ -24,7 +24,7 @@ function edit_requirements($phase) {
             '@version' => $library['version'],
             // @todo This is problematic, because there is no way to enforce a
             //   certain variant.
-            '@variant' => _navbar_libraries_get_preferred_variant_name($library),
+            '@variant' => _edit_libraries_get_preferred_variant_name($library),
           ));
           $requirements['edit_libraries_' . $lib]['severity'] = REQUIREMENT_OK;
         }
