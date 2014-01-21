@@ -98,15 +98,9 @@ function edit_page_build(&$page) {
   $page['page_top']['#attached']['library'][] = array('edit', 'edit');
 
   // Certain themes don't add region wrappers, so we can't assume region
-  // wrappers are present. Therefor, Edit must inject its own alternative: start
-  // and end markers for the "content" region.
-  $content_region_prefix = array('edit_content_region_prefix' => array(
-    '#markup' => '<div data-edit-content-region-start></div>',
-  ));
-  $content_region_suffix = array('edit_content_region_suffix' => array(
-    '#markup' => '<div data-edit-content-region-end></div>',
-  ));
-  $page['content'] = $content_region_prefix + $page['content'] + $content_region_suffix;
+  // wrappers are present. Therefore, Edit must inject its own alternative:
+  // start and end markers for the "content" region.
+  $page['content']['#theme_wrappers'][] = 'edit_wrap_content_region';
 }
 
 /**
@@ -114,6 +108,9 @@ function edit_page_build(&$page) {
  */
 function edit_theme() {
   return array(
+    'edit_wrap_content_region' => array(
+      'render element' => 'element',
+    ),
     'edit_wrap_field' => array(
       'variables' => array('value' => NULL, 'edit_field_id' => NULL),
     ),
@@ -721,6 +718,18 @@ function theme_edit_wrap_field($variables) {
     $el = 'span';
   }
   return '<'. $el . drupal_attributes($variables['attributes']) . '>' .  $variables['value'] . '</' . $el . '>';
+}
+
+/**
+ * Injects start and end markers before and after the content region.
+ *
+ * Certain themes don't add region wrappers, so we can't assume region
+ * wrappers are present. Therefore, Edit must inject its own alternative: start
+ * and end markers for the "content" region.
+ */
+function theme_edit_wrap_content_region($variables) {
+  $element = $variables['element'];
+  return '<div data-edit-content-region-start></div>' . $element['#children'] . '<div data-edit-content-region-end></div>';
 }
 
 /**

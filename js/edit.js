@@ -218,7 +218,8 @@ function processField (fieldElement) {
   if (entityElement.length === 0) {
     entityElement = $('[data-edit-content-region-start]')
       .nextUntil('[data-edit-content-region-end]')
-      .find(entityElementSelector);
+      .find(entityElementSelector)
+      .addBack(entityElementSelector);
   }
   var entityInstanceID = entityElement
     .get(0)
