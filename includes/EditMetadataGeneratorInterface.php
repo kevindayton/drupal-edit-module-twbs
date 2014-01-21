@@ -25,7 +25,7 @@ interface EditMetadataGeneratorInterface {
    *   An array containing metadata with the following keys:
    *   - label: the user-visible label for the entity in the given language.
    */
-  public function generateEntity($entity_type, $entity, $langcode);
+  public function generateEntityMetadata($entity_type, $entity, $langcode);
 
   /**
    * Generates in-place editing metadata for an entity field.
@@ -48,6 +48,6 @@ interface EditMetadataGeneratorInterface {
    *   - aria: the ARIA label.
    *   - custom: (optional) any additional metadata that the editor provides.
    */
-  public function generateField($entity_type, $entity, array $instance, $langcode, $view_mode);
+  public function generateFieldMetadata($entity_type, $entity, array $instance, $langcode, $view_mode);
 
 }

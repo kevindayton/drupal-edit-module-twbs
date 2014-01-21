@@ -65,11 +65,11 @@ function edit_metadata() {
     // If the entity information for this field is requested, include it.
     $entity_id = $entity_type . '/' . $entity_id;
     if (is_array($entities) && in_array($entity_id, $entities) && !isset($metadata[$entity_id])) {
-      $metadata[$entity_id] = $metadataGenerator->generateEntity($entity_type, $entity, $langcode);
+      $metadata[$entity_id] = $metadataGenerator->generateEntityMetadata($entity_type, $entity, $langcode);
     }
 
     // Generate metadata for the current field.
-    $metadata[$field] = $metadataGenerator->generateField($entity_type, $entity, $instance, $langcode, $view_mode);
+    $metadata[$field] = $metadataGenerator->generateFieldMetadata($entity_type, $entity, $instance, $langcode, $view_mode);
 
     // Track all editors.
     if ($metadata[$field]['access'] !== FALSE) {

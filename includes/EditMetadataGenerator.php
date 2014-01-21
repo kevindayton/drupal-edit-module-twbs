@@ -44,18 +44,18 @@ class EditMetadataGenerator implements EditMetadataGeneratorInterface {
   }
 
   /**
-   * Implements EditMetadataGeneratorInterface::generateEntity().
+   * Implements EditMetadataGeneratorInterface::generateEntityMetadata().
    */
-  public function generateEntity($entity_type, $entity, $langcode) {
+  public function generateEntityMetadata($entity_type, $entity, $langcode) {
     return array(
       'label' => $entity->title,
     );
   }
 
   /**
-   * Implements EditMetadataGeneratorInterface::generateField().
+   * Implements EditMetadataGeneratorInterface::generateFieldMetadata().
    */
-  public function generateField($entity_type, $entity, array $instance, $langcode, $view_mode) {
+  public function generateFieldMetadata($entity_type, $entity, array $instance, $langcode, $view_mode) {
     $field_name = $instance['field_name'];
 
     // Early-return if user does not have access.
