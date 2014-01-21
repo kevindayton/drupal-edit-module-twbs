@@ -96,6 +96,17 @@ function edit_page_build(&$page) {
 
   $children = element_children($page);
   $page[$children[0]]['#attached']['library'][] = array('edit', 'edit');
+
+  // Certain themes don't add region wrappers, so we can't assume region
+  // wrappers are present. Therefor, Edit must inject its own alternative: start
+  // and end markers for the "content" region.
+  $content_region_prefix = array('edit_content_region_prefix' => array(
+    '#markup' => '<div data-edit-content-region-start></div>',
+  ));
+  $content_region_suffix = array('edit_content_region_suffix' => array(
+    '#markup' => '<div data-edit-content-region-end></div>',
+  ));
+  $page['content'] = $content_region_prefix + $page['content'] + $content_region_suffix;
 }
 
 /**

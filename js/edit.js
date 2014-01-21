@@ -216,7 +216,9 @@ function processField (fieldElement) {
   // outside of "the entity DOM node": it's rendered as the page title. So in
   // this case, we must find the entity in the mandatory "content" region.
   if (entityElement.length === 0) {
-    entityElement = $('.region-content').find(entityElementSelector);
+    entityElement = $('[data-edit-content-region-start]')
+      .nextUntil('[data-edit-content-region-end]')
+      .find(entityElementSelector);
   }
   var entityInstanceID = entityElement
     .get(0)
