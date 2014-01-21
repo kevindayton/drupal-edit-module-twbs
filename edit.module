@@ -101,6 +101,33 @@ function edit_page_build(&$page) {
   // wrappers are present. Therefore, Edit must inject its own alternative:
   // start and end markers for the "content" region.
   $page['content']['#theme_wrappers'][] = 'edit_wrap_content_region';
+
+  // Provide the user ID and permissions hash in Drupal.settings to allow
+  // JavaScript code to maintain client-side caches.
+  // @see Drupal 8's user_page_build()
+  // @see Drupal 8's \Drupal\user\PermissionsHash
+  // @see https://drupal.org/node/2005644
+  global $user;
+  $roles = array_keys($user->roles);
+  $serialized_roles = implode(',', $roles);
+  if ($cache = cache_get("edit_user_permissions_hash:$serialized_roles", 'cache_page')) {
+    $permissions_hash = $cache->data;
+  }
+  else {
+    $permissions_hash = hash('sha256', drupal_get_hash_salt() . serialize(user_role_permissions($user->roles)));
+    // Use the 'cache_page' bin along with CACHE_TEMPORARY, because the submit
+    // callback for the form responsible for changing user permissions calls
+    // cache_clear_all() without arguments, which clears the page cache, and
+    // hence it will also clear this cache entry.
+    cache_set("edit_user_permissions_hash:$serialized_roles", $permissions_hash, 'cache_page', CACHE_TEMPORARY);
+  }
+  $page['page_top']['#attached']['js'][] = array(
+    'type' => 'setting',
+    'data' => array('edit' => array('user' => array(
+      'uid' => $user->uid,
+      'permissionsHash' => $permissions_hash,
+    ))),
+  );
 }
 
 /**
