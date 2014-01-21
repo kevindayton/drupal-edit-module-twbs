@@ -106,17 +106,11 @@ class EditMetadataGenerator implements EditMetadataGeneratorInterface {
       'field_name' => $field_name,
     );
     if (!_edit_is_extra_field($entity_type, $field_name)) {
-      $editor = edit_editor_get($editor_id);
-      if (!empty($editor['metadata callback'])) {
-        if ($editor['file']) {
-          require_once $editor['file path'] . '/' . $editor['file'];
-        }
-        if (function_exists($editor['metadata callback'])) {
-          $custom_metadata = $editor['metadata callback']($instance, $items);
-          if (count($custom_metadata)) {
-            $metadata['custom'] = $custom_metadata;
-          }
-        }
+      $editor_plugin = _edit_get_editor_plugin($editor_id);
+      $attachments[$editor_id] = $editor_plugin->getAttachments();
+      $custom_metadata = $editor_plugin->getMetadata($instance, $items);
+      if (count($custom_metadata)) {
+        $metadata['custom'] = $custom_metadata;
       }
 
       $alter_hook_context += array(

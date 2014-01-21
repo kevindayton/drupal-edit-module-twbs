@@ -67,11 +67,8 @@ class EditEditorSelector implements EditEditorSelectorInterface {
 
     // Make a choice.
     foreach ($editor_choices as $editor_id) {
-      $editor = $editors[$editor_id];
-      if ($editor['file']) {
-        require_once $editor['file path'] . '/' . $editor['file'];
-      }
-      if ($editor['compatibility check callback']($instance, $items)) {
+      $editor_plugin = _edit_get_editor_plugin($editor_id);
+      if ($editor_plugin->isCompatible($instance, $items)) {
         return $editor_id;
       }
     }
@@ -89,17 +86,10 @@ class EditEditorSelector implements EditEditorSelectorInterface {
 
     // Editor plugins' attachments.
     foreach ($editor_ids as $editor_id) {
-      $editor = edit_editor_get($editor_id);
-      if (!empty($editor['attachments callback'])) {
-        if ($editor['file']) {
-          require_once  $editor['file path'] . '/' . $editor['file'];
-        }
-        if (function_exists($editor['attachments callback'])) {
-          $attachments[$editor_id] = $editor['attachments callback']();
-          // Allows contrib to declare additional dependencies for the editor.
-          drupal_alter('edit_editor_attachments', $attachments[$editor_id], $editor_id);
-        }
-      }
+      $editor_plugin = _edit_get_editor_plugin($editor_id);
+      $attachments[$editor_id] = $editor_plugin->getAttachments();
+      // Allows contrib to declare additional dependencies for the editor.
+      drupal_alter('edit_editor_attachments', $attachments[$editor_id], $editor_id);
     }
 
     return drupal_array_merge_deep_array($attachments);

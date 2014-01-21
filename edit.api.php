@@ -11,19 +11,46 @@
  */
 
 /**
- * Declare editors that can be used with CreateJS.
+ * Declares in-place editor plugins provided by a module.
+ *
+ * In Drupal 8, we use plugin annotations for this.
  *
  * @return array
+ *   An array whose keys are (unique) in-place editor plugin IDs and whose value
+ *   is an array of plugin metadata. Plugin metadata arrays contain the
+ *   following key-value pairs:
+ *   - alternativeTo: an array of in-place editors plugin IDs that have
+ *     registered themselves as alternatives to this in-place editor.
+ *   - file: the Drupal root-relative file path to the PHP file that should be
+ *     loaded to be able to use the in-place editor plugin class
+ *   - class: the name of the class that represents this in-place editor.
+ *
+ * @see Drupal 8's \Drupal\edit\Annotation\InPlaceEditor
+ * @see Drupal 8's \Drupal\edit\Plugin\InPlaceEditorBase
  */
 function hook_edit_editor_info() {
-  $editors['form'] = array(
-    'widget' => 'drupalFormWidget',
-    'compatibility check callback' => '_edit_editor_form_is_compatible',
-    'metadata callback' => '_edit_editor_form_metadata',
-    'attachments callback' => '_edit_editor_form_attachments',
-    'file' => 'includes/editor.form.inc',
-    'file path' => drupal_get_path('module', 'edit'),
+  $path = drupal_get_path('module', 'edit') . '/InPlaceEditors';
+
+  // The "plain_text" in-place editor only works for text fields without a text
+  // format.
+  $editors['plain_text'] = array(
+    'file' => $path . '/plainTextEditor.php',
+    'class' => 'PlainTextEditor',
   );
+
+  // The "ckeditor" in-place editor only works for text fields with a text
+  // format, and only those text formats that are configured to use CKEditor.
+  if (module_exists('ckeditor')) {
+    $editors['ckeditor'] = array(
+      // Therefor, the "ckeditor" in-place editor is marked as an alternative to
+      // the "plain_text" in-place editor. Thanks to both plugins'
+      // implementations of EditInPlaceEditorInterface::isCompatible(), it is
+      // ensured that the right in-place editor is used.
+      'alternativeTo' => array('plain_text'),
+      'file' => $path . '/CKEditor.php',
+      'class' => 'CKEditor',
+    );
+  }
 
   return $editors;
 }

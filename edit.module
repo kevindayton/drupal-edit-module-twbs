@@ -534,85 +534,52 @@ function edit_editor_get($editor) {
  * Implements hook_edit_editor_info().
  *
  * @see Drupal 8's \Drupal\edit\Plugin\InPlaceEditorManager.
- * @see Drupal 8's \Drupal\edit\EditPluginInterface.
+ * @see Drupal 8's \Drupal\edit\Plugin\InPlaceEditorInterface.
  */
 function edit_edit_editor_info() {
   $editors = array();
-  $path = drupal_get_path('module', 'edit');
+  $path = drupal_get_path('module', 'edit') . '/InPlaceEditors';
   $editors['form'] = array(
-    'compatibility check callback' => '_edit_editor_form_is_compatible',
-    'metadata callback' => '_edit_editor_form_metadata',
-    'attachments callback' => '_edit_editor_form_attachments',
-    'file' => 'includes/editor.form.inc',
-    'file path' => $path,
+    'file' => $path . '/formEditor.php',
+    'class' => 'FormEditor',
   );
   $editors['plain_text'] = array(
-    'compatibility check callback' => '_edit_editor_plain_text_is_compatible',
-    'metadata callback' => '_edit_editor_plain_text_metadata',
-    'attachments callback' => '_edit_editor_plain_text_attachments',
-    'file' => 'includes/editor.plain_text.inc',
-    'file path' => $path,
+    'file' => $path . '/plainTextEditor.php',
+    'class' => 'PlainTextEditor',
   );
   if (module_exists('ckeditor')) {
     $editors['ckeditor'] = array(
-      'compatibility check callback' => '_edit_editor_ckeditor_is_compatible',
-      'metadata callback' => '_edit_editor_ckeditor_metadata',
-      'attachments callback' => '_edit_editor_ckeditor_attachments',
       'alternativeTo' => array('plain_text'),
-      'file' => 'includes/editor.ckeditor.inc',
-      'file path' => $path,
+      'file' => $path . '/CKEditor.php',
+      'class' => 'CKEditor',
     );
   }
   return $editors;
 }
 
 /**
- * Returns all editor attachments, ready for use with #attached.
+ * Helper to get a get an instance of an in-place editor plugin class.
  *
- * @param $editors
- *   List of editors we need the attachments for.
- * @param $metadata
- *   List of all fields and their configurations in use on the page.
+ * @param string $editor_id
+ *   ID of the in-place editor plugin.
+ * @param bool $reset
+ *   Whether to reset the static cache of in-place editor plugin objects.
  *
- * @return array
- *   The attachments.
- *
- * @see drupal_process_attached()
+ * @return EditInPlaceEditorInterface
+ *   An in-place editor plugin object.
  */
-function edit_get_all_editor_attachments($editors = array(), $metadata = array()) {
-  $attachments = array();
-  $settings = array();
+function _edit_get_editor_plugin($editor_id, $reset = FALSE) {
+  $editors = edit_editor_list();
 
-  // Editor plugins' attachments.
-  foreach (array_unique($editors) as $editor_id) {
-    $editor = edit_editor_get($editor_id);
-    if (!empty($editor['attachments callback'])) {
-      if ($editor['file']) {
-        $file_path = !empty($editor['file path']) ? $editor['file path'] : drupal_get_path('module', 'edit');
-        require_once $file_path . '/' . $editor['file'];
-      }
-      if (function_exists($editor['attachments callback'])) {
-        $attachments[$editor_id] = $editor['attachments callback']($metadata);
-        // Allows contrib to declare additional dependencies for the editor.
-        drupal_alter('edit_editor_attachments', $attachments[$editor_id], $editor_id, $metadata);
-      }
+  $plugins = &drupal_static(__FUNCTION__, NULL);
+  if (!$plugins || $reset) {
+    foreach ($editors as $editor_plugin_id => $editor) {
+      require_once $editor['file'];
+      $plugins[$editor_plugin_id] = new $editor['class'];
     }
-    $settings[$editor_id] = array('widget' => $editor['widget']);
   }
 
-  if (!empty($settings)) {
-    $attachments['settings'] = array(
-      // This will be used in Create.js' propertyEditorWidgetsConfiguration.
-      'js' => array(
-        array(
-          'type' => 'setting',
-          'data' => array('edit' => array('editors' => $settings)),
-        )
-      ),
-    );
-  }
-
-  return drupal_array_merge_deep_array($attachments);
+  return $plugins[$editor_id];
 }
 
 /**

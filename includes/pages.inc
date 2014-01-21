@@ -314,6 +314,11 @@ function edit_field_edit($entity_type, $entity_id, $field_name, $langcode = NULL
  * @see Drupal 8's EditController::entitySave()
  */
 function edit_entity_save($entity_type, $entity_id) {
+  // Ensure the user is allowed to edit this entity.
+  if (!entity_access('update', $entity_type, entity_load_single($entity_type, $entity_id))) {
+    return MENU_ACCESS_DENIED;
+  }
+
   // Take the entity from TempStore and save in entity storage. fieldForm()
   // ensures that the TempStore copy exists ahead.
   ctools_include('object-cache');
