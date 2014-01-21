@@ -94,8 +94,8 @@ function edit_page_build(&$page) {
     return;
   }
 
-  $children = element_children($page);
-  $page[$children[0]]['#attached']['library'][] = array('edit', 'edit');
+  // Abuse the 'page_top' region for attaching our libraries.
+  $page['page_top']['#attached']['library'][] = array('edit', 'edit');
 
   // Certain themes don't add region wrappers, so we can't assume region
   // wrappers are present. Therefor, Edit must inject its own alternative: start
