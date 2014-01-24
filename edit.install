@@ -139,8 +139,9 @@ function edit_requirements($phase) {
       $bundle = $result['node'][$node_id]->type;
       $instances = field_info_instances('node', $bundle);
       $visible_field_count = 0;
-      foreach ($instances as $instance) {
-        if ($instance['display']['default']['type'] != 'hidden') {
+      $node = entity_load_single('node', $node_id);
+      foreach ($instances as $field_id => $instance) {
+        if (!empty($node->$field_id) && $instance['display']['default']['type'] != 'hidden') {
           $visible_field_count++;
         }
       }
