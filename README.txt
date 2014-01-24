@@ -28,9 +28,11 @@ In-place WYSIWYG editing using CKEditor
    CKEditor module from http://drupal.org/project/ckeditor.
    Note that *only* the CKEditor module is supported, not any other module, like
    the "Wysiwyg" module (http://drupal.org/project/wysiwyg).
-2. Go to http://ckeditor.com/builder, choose any preset you like, then add the
-   "Shared Space" plugin to the list of "Selected plugins". Then click the
-   "Download" button.
+2. Download this Edit-optimized build of CKEditor:
+   http://download.cksource.com/CKEditor%20for%20Drupal/edit/ckeditor_4.3.2_edit.zip
+   Alternatively, go to http://ckeditor.com/builder, choose any preset you like,
+   then add the "Shared Space" plugin to the list of "Selected plugins". Then
+   click the "Download" button.
    Only version 4.2 or newer of CKEditor is supported.
    NOTE: If you use the "Source" button, also add the "Source Dialog" plugin to
    the list of "Selected plugins".
