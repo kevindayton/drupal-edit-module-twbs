@@ -94,7 +94,7 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
         // The saving throbber is not managed by AJAX system. The
         // EntityToolbarView manages this visual element.
         $button
-          .removeClass('action-saving icon-throbber icon-end')
+          .removeClass('action-saving edit-icon-throbber edit-icon-end')
           .text(Drupal.t('Save'))
           .removeAttr('disabled')
           .attr('aria-hidden', !isDirty);
@@ -102,7 +102,7 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
       // The changes to the fields of the entity are being committed.
       case 'committing':
         $button
-          .addClass('action-saving icon-throbber icon-end')
+          .addClass('action-saving edit-icon-throbber edit-icon-end')
           .text(Drupal.t('Saving'))
           .attr('disabled', 'disabled');
         break;
@@ -361,7 +361,7 @@ Drupal.edit.EntityToolbarView = Backbone.View.extend({
           },
           {
             label: Drupal.t('Close'),
-            classes: 'action-cancel edit-button icon icon-close icon-only'
+            classes: 'action-cancel edit-button icon edit-icon-close edit-icon-only'
           }
         ]
       }));

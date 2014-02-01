@@ -36,7 +36,7 @@ Drupal.theme.prototype.editEntityToolbar = function (settings) {
   html += '<div id="' + settings.id + '" class="edit edit-toolbar-container clearfix">';
   html += '<i class="edit-toolbar-pointer"></i>';
   html += '<div class="edit-toolbar-content">';
-  html += '<div class="edit-toolbar edit-toolbar-entity clearfix icon icon-pencil">';
+  html += '<div class="edit-toolbar edit-toolbar-entity clearfix icon edit-icon-pencil">';
   html += '<div class="edit-toolbar-label" />';
   html += '</div>';
   html += '<div class="edit-toolbar edit-toolbar-field clearfix" />';
