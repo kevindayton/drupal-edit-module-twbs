@@ -1,9 +1,6 @@
 name = Edit
 description = In-place content editing.
-package = Spark
-core = 7.x
-php = 5.3
+package = Core
+core = 8.x
 
-dependencies[] = navbar
-dependencies[] = entity
-dependencies[] = fape
+dependencies[] = field

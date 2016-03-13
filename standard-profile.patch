@@ -1,0 +1,12 @@
+diff --git a/core/profiles/standard/standard.info b/core/profiles/standard/standard.info
+index fae6d76..e091541 100644
+--- a/core/profiles/standard/standard.info
++++ b/core/profiles/standard/standard.info
+@@ -11,6 +11,7 @@ dependencies[] = config
+ dependencies[] = comment
+ dependencies[] = contextual
+ dependencies[] = contact
++dependencies[] = edit
+ dependencies[] = help
+ dependencies[] = image
+ dependencies[] = menu

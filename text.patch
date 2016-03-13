@@ -1,0 +1,62 @@
+ .../lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php |    3 +++
+ .../lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php   |    3 +++
+ .../text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php   |    3 +++
+ .../lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php |    3 +++
+ 4 files changed, 12 insertions(+)
+
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
+index 6b34ba9..72c9a8a 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextDefaultFormatter.php
+@@ -23,6 +23,9 @@
+  *     "text",
+  *     "text_long",
+  *     "text_with_summary"
++ *   },
++ *   edit = {
++ *     "editor" = "direct"
+  *   }
+  * )
+  */
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
+index 0f7b615..694c53f 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextPlainFormatter.php
+@@ -23,6 +23,9 @@
+  *     "text",
+  *     "text_long",
+  *     "text_with_summary"
++ *   },
++ *   edit = {
++ *     "editor" = "direct"
+  *   }
+  * )
+  */
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
+index 11f0c14..bb82254 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextSummaryOrTrimmedFormatter.php
+@@ -22,6 +22,9 @@
+  *   },
+  *   settings = {
+  *     "trim_length" = "600"
++ *   },
++ *   edit = {
++ *     "editor" = "form"
+  *   }
+  * )
+  */
+diff --git a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
+index 349cf63..37709b5 100644
+--- a/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
++++ b/core/modules/text/lib/Drupal/text/Plugin/field/formatter/TextTrimmedFormatter.php
+@@ -31,6 +31,9 @@
+  *   },
+  *   settings = {
+  *     "trim_length" = "600"
++ *   },
++ *   edit = {
++ *     "editor" = "form"
+  *   }
+  * )
+  */
