@@ -2,8 +2,11 @@ name = Edit
 description = In-place content editing.
 package = Spark
 core = 7.x
-php = 5.3
 
-dependencies[] = navbar
+files[] = tests/edit_loading.test
+
+dependencies[] = contextual
 dependencies[] = entity
-dependencies[] = fape
+dependencies[] = field (>=7.22)
+dependencies[] = libraries (>=2.x)
+dependencies[] = ctools
