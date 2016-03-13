@@ -1,809 +1,578 @@
-(function ($) {
+/**
+ * @file
+ * Attaches behavior for the Edit module.
+ *
+ * Everything happens asynchronously, to allow for:
+ *   - dynamically rendered contextual links
+ *   - asynchronously retrieved (and cached) per-field in-place editing metadata
+ *   - asynchronous setup of in-place editable field and "Quick edit" link
+ *
+ * To achieve this, there are several queues:
+ *   - fieldsMetadataQueue: fields whose metadata still needs to be fetched.
+ *   - fieldsAvailableQueue: queue of fields whose metadata is known, and for
+ *     which it has been confirmed that the user has permission to edit them.
+ *     However, FieldModels will only be created for them once there's a
+ *     contextual link for their entity: when it's possible to initiate editing.
+ *   - contextualLinksQueue: queue of contextual links on entities for which it
+ *     is not yet known whether the user has permission to edit at >=1 of them.
+ */
 
-Drupal.edit = Drupal.edit || {};
-Drupal.edit.wysiwyg = Drupal.edit.wysiwyg || {};
+(function ($, _, Backbone, Drupal, drupalSettings, JSON, storage) {
+
+"use strict";
+
+var options = $.extend(drupalSettings.edit,
+  // Merge strings on top of drupalSettings so that they are not mutable.
+  {
+    strings: {
+      quickEdit: Drupal.t('Quick edit')
+    }
+  }
+);
 
 /**
- * Attach toggling behavior and in-place editing.
+ * Tracks fields without metadata. Contains objects with the following keys:
+ *   - DOM el
+ *   - String fieldID
+ *   - String entityID
  */
+var fieldsMetadataQueue = [];
+
+/**
+ * Tracks fields ready for use. Contains objects with the following keys:
+ *   - DOM el
+ *   - String fieldID
+ *   - String entityID
+ */
+var fieldsAvailableQueue = [];
+
+/**
+ * Tracks contextual links on entities. Contains objects with the following
+ * keys:
+ *   - String entityID
+ *   - DOM el
+ *   - DOM region
+ */
+var contextualLinksQueue = [];
+
+/**
+ * Tracks how many instances exist for each unique entity. Contains key-value
+ * pairs:
+ * - String entityID
+ * - Number count
+ */
+var entityInstancesTracker = {};
+
 Drupal.behaviors.edit = {
-  attach: function(context) {
-    $('#edit_view-edit-toggles').once('edit-init', Drupal.edit.init);
-    $('#edit_view-edit-toggles').once('edit-toggle', Drupal.edit.toggle.render);
+  attach: function (context) {
+    // Initialize the Edit app once per page load.
+    $('body').once('edit-init', initEdit);
 
-    // TODO: remove this; this is to make the current prototype somewhat usable.
-    $('a.edit_view-edit-toggle').click(function() {
-      $(this).trigger('click.edit');
-    });
-  }
-};
-
-Drupal.edit.const = {};
-Drupal.edit.const.transitionEnd = "transitionEnd.edit webkitTransitionEnd.edit transitionend.edit msTransitionEnd.edit oTransitionEnd.edit";
-
-Drupal.edit.init = function() {
-  Drupal.edit.state = {};
-  // We always begin in view mode.
-  Drupal.edit.state.isViewing = true;
-  Drupal.edit.state.entityBeingHighlighted = [];
-  Drupal.edit.state.fieldBeingHighlighted = [];
-  Drupal.edit.state.fieldBeingEdited = [];
-  Drupal.edit.state.higlightedEditable = null;
-  Drupal.edit.state.editedEditable = null;
-  Drupal.edit.state.queues = {};
-  Drupal.edit.state.wysiwygReady = false;
-
-  // Build inventory.
-  var IDMapper = function() { return Drupal.edit.getID($(this)); };
-  Drupal.edit.state.entities = Drupal.edit.findEditableEntities().map(IDMapper);
-  Drupal.edit.state.fields = Drupal.edit.findEditableFields().map(IDMapper);
-  console.log('Entities:', Drupal.edit.state.entities.length, ';', Drupal.edit.state.entities);
-  console.log('Fields:', Drupal.edit.state.fields.length, ';', Drupal.edit.state.fields);
-
-  // Form preloader.
-  Drupal.edit.state.queues.preload = Drupal.edit.findEditableFields().filter('.edit-type-form').map(IDMapper);
-  console.log('Fields with (server-generated) forms:', Drupal.edit.state.queues.preload);
-
-  // Initialize WYSIWYG, if any.
-  if (Drupal.settings.edit.wysiwyg) {
-    $(document).bind('edit-wysiwyg-ready.edit', function() {
-      Drupal.edit.state.wysiwygReady = true;
-      console.log('edit: WYSIWYG ready');
-    });
-    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].init();
-  }
-
-  // Create a backstage area.
-  $(Drupal.theme('editBackstage', {})).appendTo('body');
-
-  // Transition between view/edit states.
-  $("a.edit_view-edit-toggle").bind('click.edit', function() {
-    var wasViewing = Drupal.edit.state.isViewing;
-    var isViewing  = Drupal.edit.state.isViewing = $(this).hasClass('edit-view');
-    // Swap active class among the two links.
-    $('a.edit_view-edit-toggle').parent().removeClass('active');
-    $('a.edit_view-edit-toggle.edit-' + (isViewing ? 'view' : 'edit')).parent().addClass('active');
-
-    if (wasViewing && !isViewing) {
-      $(Drupal.theme('editOverlay', {}))
-      .appendTo('body')
-      .addClass('edit-animate-slow edit-animate-invisible')
-      .bind('click.edit', Drupal.edit.clickOverlay);;
-
-      var $f = Drupal.edit.findEditableFields();
-      Drupal.edit.startEditableFields($f);
-      var $e = Drupal.edit.findEditableEntities();
-      // Drupal.edit.startEditableEntities($e);
-
-      // TODO: preload forms. We could do one request per form, but that's more
-      // RTTs than needed. Instead, the server should support batch requests.
-      console.log('Preloading forms that we might need!', Drupal.edit.state.queues.preload);
-
-      // Animations.
-      $('#edit_overlay').css('top', Drupal.navbar.height() + Drupal.navbar.drawerHeight());
-      $('#edit_overlay').removeClass('edit-animate-invisible');
-
-      // Disable contextual links in edit mode.
-      $('.contextual-links-region')
-      .addClass('edit-contextual-links-region')
-      .removeClass('contextual-links-region');
-    }
-    else if (!wasViewing && isViewing) {
-      // Animations.
-      $('#edit_overlay')
-      .addClass('edit-animate-invisible')
-      .bind(Drupal.edit.const.transitionEnd, function(e) {
-        $('#edit_overlay, .edit-form-container, .edit-toolbar-container, #edit_modal, #edit_backstage, .edit-curtain').remove();
-      });
-
-      var $f = Drupal.edit.findEditableFields();
-      Drupal.edit.stopEditableFields($f);
-      var $e = Drupal.edit.findEditableEntities();
-      Drupal.edit.stopEditableEntities($e);
-
-      // Re-enable contextual links in view mode.
-      $('.edit-contextual-links-region')
-      .addClass('contextual-links-region')
-      .removeClass('edit-contextual-links-region');
-    }
-    else {
-      // No state change.
-    }
-    return false;
-  });
-};
-
-Drupal.edit.findEditableEntities = function(context) {
-  return $('.edit-entity.edit-allowed', context || Drupal.settings.edit.context);
-};
-
-Drupal.edit.findEditableFields = function(context) {
-  return $('.edit-field.edit-allowed', context || Drupal.settings.edit.context);
-};
-
-/*
- * findEditableFields() just looks for fields that are editable, i.e. for the
- * field *wrappers*. Depending on the field, however, either the whole field wrapper
- * will be marked as editable (in this case, an inline form will be used for editing),
- * *or* a specific (field-specific even!) DOM element within that field wrapper will be
- * marked as editable.
- * This function is for finding the *editables* themselves, given the *editable fields*.
- */
-Drupal.edit.findEditablesForFields = function($fields) {
-  var $editables = $();
-
-  // type = form
-  $editables = $editables.add($fields.filter('.edit-type-form'));
-
-  // type = direct
-  var $direct = $fields.filter('.edit-type-direct');
-  $editables = $editables.add($direct.find('.field-item'));
-  // Edge case: "title" pseudofield on pages with lists of nodes.
-  $editables = $editables.add($direct.filter('h2').find('a'));
-  // Edge case: "title" pseudofield on node pages.
-  $editables = $editables.add($direct.find('h1'));
-
-  return $editables;
-};
-
-Drupal.edit.getID = function($field) {
-  return $field.data('edit-id');
-};
-
-Drupal.edit.findFieldForID = function(id, context) {
-  return $('[data-edit-id="' + id + '"]', context || $('#content'));
-};
-
-Drupal.edit.findFieldForEditable = function($editable) {
-  return $editable.filter('.edit-type-form').length ? $editable : $editable.closest('.edit-type-direct');
-};
-
-Drupal.edit.findEntityForField = function($f) {
-  var $e = $f.closest('.edit-entity');
-  if ($e.length == 0) {
-    var entity_edit_id = $f.data('edit-id').split(':').slice(0,2).join(':');
-    $e = $('.edit-entity[data-edit-id="' + entity_edit_id + '"]');
-  }
-  return $e;
-};
-
-Drupal.edit.findEntityForEditable = function($editable) {
-  return Drupal.edit.findEntityForField(Drupal.edit.findFieldForEditable($editable));
-};
-
-Drupal.edit.startEditableEntities = function($e) {
-  $e
-  .once('edit')
-  .addClass('edit-animate-fast')
-  .addClass('edit-candidate edit-editable')
-  .bind('mouseenter.edit', function(e) {
-    var $e = $(this);
-    Drupal.edit.util.ignoreHoveringVia(e, '.edit-toolbar-container', function() {
-      if (Drupal.edit.state.fieldBeingEdited.length > 0) {
-        return;
-      }
-
-      console.log('entity:mouseenter');
-      Drupal.edit.entityEditables.startHighlight($e);
-    });
-  })
-  .bind('mouseleave.edit', function(e) {
-    var $e = $(this);
-    Drupal.edit.util.ignoreHoveringVia(e, '.edit-toolbar-container', function() {
-      console.log('entity:mouseleave');
-      Drupal.edit.entityEditables.stopHighlight($e);
-    });
-  })
-  // Hang a curtain over the comments if they're inside the entity.
-  .find('.comment-wrapper').prepend(Drupal.theme('editCurtain', {}))
-  .map(function() {
-    var height = $(this).height();
-    $(this).find('.edit-curtain')
-    .css('height', height)
-    .data('edit-curtain-height', height);
-  });
-};
-
-Drupal.edit.stopEditableEntities = function($e) {
-  $e
-  .removeClass('edit-processed edit-candidate edit-editable edit-highlighted')
-  .unbind('mouseenter.edit mouseleave.edit')
-  .find('.comment-wrapper .edit-curtain').remove();
-};
-
-Drupal.edit.startEditableFields = function($fields) {
-  var $fields = $fields.once('edit');
-  // Ignore fields that need a WYSIWYG editor if no WYSIWYG editor is present
-  if (!Drupal.settings.edit.wysiwyg) {
-    $fields = $fields.filter(':not(.edit-type-direct-with-wysiwyg)');
-  }
-  var $editables = Drupal.edit.findEditablesForFields($fields);
-
-  $editables
-  .addClass('edit-animate-fast')
-  .addClass('edit-candidate edit-editable')
-  .bind('mouseenter.edit', function(e) {
-    var $editable = $(this);
-    Drupal.edit.util.ignoreHoveringVia(e, '.edit-toolbar-container', function() {
-      console.log('field:mouseenter');
-      if (!$editable.hasClass('edit-editing')) {
-        Drupal.edit.editables.startHighlight($editable);
-      }
-      // Prevents the entity's mouse enter event from firing, in case their borders are one and the same.
-      e.stopPropagation();
-    });
-  })
-  .bind('mouseleave.edit', function(e) {
-    var $editable = $(this);
-    Drupal.edit.util.ignoreHoveringVia(e, '.edit-toolbar-container', function() {
-      console.log('field:mouseleave');
-      if (!$editable.hasClass('edit-editing')) {
-        Drupal.edit.editables.stopHighlight($editable);
-        // Leaving a field won't trigger the mouse enter event for the entity
-        // because the entity contains the field. Hence, do it manually.
-        var $e = Drupal.edit.findEntityForEditable($editable);
-        Drupal.edit.entityEditables.startHighlight($e);
-      }
-      // Prevent triggering the entity's mouse leave event.
-      e.stopPropagation();
-    });
-  })
-  .bind('click.edit', function() {
-    Drupal.edit.editables.startEdit($(this)); return false;
-  })
-  // Some transformations are editable-specific.
-  .map(function() {
-    $(this).data('edit-background-color', Drupal.edit.util.getBgColor($(this)));
-  });
-};
-
-Drupal.edit.stopEditableFields = function($fields) {
-  var $editables = Drupal.edit.findEditablesForFields($fields);
-
-  $fields
-  .removeClass('edit-processed');
-
-  $editables
-  .removeClass('edit-candidate edit-editable edit-highlighted edit-editing edit-belowoverlay')
-  .unbind('mouseenter.edit mouseleave.edit click.edit edit-content-changed.edit')
-  .removeAttr('contenteditable')
-  .removeData(['edit-content-original', 'edit-content-changed']);
-};
-
-Drupal.edit.clickOverlay = function(e) {
-  console.log('clicked overlay');
-
-  if (Drupal.edit.modal.get().length == 0) {
-    Drupal.edit.toolbar.get(Drupal.edit.state.fieldBeingEdited)
-    .find('a.close').trigger('click.edit');
-  }
-};
-
-/*
-1. Editable Entities
-2. Editable Fields (are associated with Editable Entities, but are not
-   necessarily *inside* Editable Entities — e.g. title)
-    -> contains exactly one Editable, in which the editing itself occurs, this
-       can be either:
-         a. type=direct, here some child element of the Field element is marked as editable
-         b. type=form, here the field itself is marked as editable, upon edit, a form is used
- */
-
-// Entity editables.
-Drupal.edit.entityEditables = {
-  startHighlight: function($editable) {
-    return;
-    console.log('entityEditables.startHighlight');
-    if (Drupal.edit.toolbar.create($editable)) {
-      var label = Drupal.t('Edit !entity', { '!entity': $editable.data('edit-entity-label') });
-      var $toolbar = Drupal.edit.toolbar.get($editable);
-
-      $toolbar
-      .find('.edit-toolbar.primary:not(:has(.edit-toolgroup.entity))')
-      .append(Drupal.theme('editToolgroup', {
-        classes: 'entity',
-        buttons: [
-          { url: $editable.data('edit-entity-edit-url'), label: label, classes: 'blue-button label' },
-        ]
-      }))
-      .delegate('a.label', 'click.edit', function(e) {
-        // Disable edit mode, then let the normal behavior (i.e. open the full
-        // entity edit form) go through.
-        $('#edit_view-edit-toggle input[value="view"]').trigger('click.edit');
-      });
-
-      // TODO: improve this; currently just a hack for Garland compatibility.
-      if ($editable.css('margin-left')) {
-        $toolbar.css('margin-left', $editable.css('margin-left'));
-      }
-    }
-
-    // Animations.
-    setTimeout(function() {
-      $editable.addClass('edit-highlighted');
-      Drupal.edit.toolbar.show($editable, 'primary', 'entity');
-    }, 0);
-
-    Drupal.edit.state.entityBeingHighlighted = $editable;
-  },
-
-  stopHighlight: function($editable) {
-    return;
-    console.log('entityEditables.stopHighlight');
-
-    // Animations.
-    $editable.removeClass('edit-highlighted');
-    Drupal.edit.toolbar.remove($editable);
-
-    Drupal.edit.state.entityBeingHiglighted = [];
-  }
-};
-
-// Field editables.
-Drupal.edit.editables = {
-  startHighlight: function($editable) {
-    console.log('editables.startHighlight');
-    if (Drupal.edit.state.entityBeingHighlighted.length > 0) {
-      var $e = Drupal.edit.findEntityForEditable($editable);
-      Drupal.edit.entityEditables.stopHighlight($e);
-    }
-    if (Drupal.edit.toolbar.create($editable)) {
-      var label = $editable.filter('.edit-type-form').data('edit-field-label')
-        || $editable.closest('.edit-type-direct').data('edit-field-label');
-
-      Drupal.edit.toolbar.get($editable)
-      .find('.edit-toolbar.primary:not(:has(.edit-toolgroup.info))')
-      .append(Drupal.theme('editToolgroup', {
-        classes: 'info',
-        buttons: [
-          { url: '#', label: label, classes: 'blank-button label' },
-        ]
-      }))
-      .delegate('a.label', 'click.edit', function(e) {
-        // Clicking the label equals clicking the editable itself.
-        $editable.trigger('click.edit');
-        return false;
-      });
-    }
-
-    // Animations.
-    setTimeout(function() {
-      $editable.addClass('edit-highlighted');
-      Drupal.edit.toolbar.show($editable, 'primary', 'info');
-    }, 0);
-
-    Drupal.edit.state.fieldBeingHighlighted = $editable;
-    Drupal.edit.state.higlightedEditable = Drupal.edit.getID(Drupal.edit.findFieldForEditable($editable));
-  },
-
-  stopHighlight: function($editable) {
-    console.log('editables.stopHighlight');
-    if ($editable.length == 0) {
+    // Find all in-place editable fields, if any.
+    var $fields = $(context).find('[data-edit-field-id]').once('edit');
+    if ($fields.length === 0) {
       return;
     }
 
-    // Animations.
-    Drupal.edit.toolbar.remove($editable);
-    $editable.removeClass('edit-highlighted');
-
-    Drupal.edit.state.fieldBeingHighlighted = [];
-    Drupal.edit.state.highlightedEditable = null;
-  },
-
-  startEdit: function($editable) {
-    if ($editable.hasClass('edit-editing')) {
-      return;
-    }
-
-    console.log('editables.startEdit: ', $editable);
-    var self = this;
-    var $field = Drupal.edit.findFieldForEditable($editable);
-
-    // Highlight if not already highlighted.
-    if (Drupal.edit.state.fieldBeingHighlighted[0] != $editable[0]) {
-      Drupal.edit.editables.startHighlight($editable);
-    }
-
-    $editable
-    .addClass('edit-editing')
-    .bind('edit-content-changed.edit', function(e) {
-      self._buttonFieldSaveToBlue(e, $editable, $field);
-    })
-    // Some transformations are editable-specific.
-    .map(function() {
-      $(this).css('background-color', $(this).data('edit-background-color'));
-    });
-
-    // While editing, don't show *any* other field or entity as editable.
-    $('.edit-candidate').not('.edit-editing').removeClass('edit-editable');
-    // Hide the curtain while editing, the above already prevents comments from
-    // showing up.
-    Drupal.edit.findEntityForField($field).find('.comment-wrapper .edit-curtain').height(0);
-
-    // Toolbar (already created in the highlight).
-    Drupal.edit.toolbar.get($editable)
-    .addClass('edit-editing')
-    .find('.edit-toolbar.secondary:not(:has(.edit-toolgroup.ops))')
-    .append(Drupal.theme('editToolgroup', {
-      classes: 'ops',
-      buttons: [
-        { url: '#', label: Drupal.t('Save'), classes: 'field-save save gray-button' },
-        { url: '#', label: '<span class="close"></span>', classes: 'field-close close gray-button' }
-      ]
-    }))
-    .delegate('a.field-save', 'click.edit', function(e) {
-      return self._buttonFieldSaveClicked(e, $editable, $field);
-    })
-    .delegate('a.field-close', 'click.edit', function(e) {
-      return self._buttonFieldCloseClicked(e, $editable, $field);
-    });
-
-    // Changes to $editable based on the type.
-    var callback = ($field.hasClass('edit-type-direct'))
-      ? self._updateDirectEditable
-      : self._updateFormEditable;
-    callback($editable);
-
-    // Regardless of the type, load the form for this field. We always use forms
-    // to submit the changes.
-    self._loadForm($editable, $field);
-
-    Drupal.edit.state.fieldBeingEdited = $editable;
-    Drupal.edit.state.editedEditable = Drupal.edit.getID($field);
-  },
-
-  stopEdit: function($editable) {
-    console.log('editables.stopEdit: ', $editable);
-    var self = this;
-    var $field = Drupal.edit.findFieldForEditable($editable);
-    if ($editable.length == 0) {
-      return;
-    }
-
-    $editable
-    .removeClass('edit-highlighted edit-editing edit-belowoverlay')
-    // Some transformations are editable-specific.
-    .map(function() {
-      $(this).css('background-color', '');
-    });
-
-    // Make the other fields and entities editable again.
-    $('.edit-candidate').addClass('edit-editable');
-    // Restore curtain to original height.
-    var $curtain = Drupal.edit.findEntityForEditable($editable)
-                   .find('.comment-wrapper .edit-curtain');
-    $curtain.height($curtain.data('edit-curtain-height'));
-
-    // Changes to $editable based on the type.
-    var callback = ($field.hasClass('edit-type-direct'))
-      ? self._restoreDirectEditable
-      : self._restoreFormEditable;
-    callback($editable);
-
-    Drupal.edit.toolbar.remove($editable);
-    Drupal.edit.form.remove($editable);
-
-    Drupal.edit.state.fieldBeingEdited = [];
-    Drupal.edit.state.editedEditable = null;
-  },
-
-  _loadRerenderedProcessedText: function($editable, $field) {
-    // Indicate in the 'info' toolgroup that the form is loading.
-    Drupal.edit.toolbar.addClass($editable, 'primary', 'info', 'loading');
-
-    var edit_id = Drupal.edit.getID($field);
-    var element_settings = {
-      url      : Drupal.edit.util.calcRerenderProcessedTextURL(edit_id),
-      event    : 'edit-internal-load-rerender.edit',
-      $field   : $field,
-      $editable: $editable,
-      submit   : { nocssjs : true },
-      progress : { type : null }, // No progress indicator.
-    };
-    if (Drupal.ajax.hasOwnProperty(edit_id)) {
-      delete Drupal.ajax[edit_id];
-      $editable.unbind('edit-internal-load-rerender.edit');
-    }
-    Drupal.ajax[edit_id] = new Drupal.ajax(edit_id, $editable, element_settings);
-    $editable.trigger('edit-internal-load-rerender.edit');
-  },
-
-  // Attach, activate and show the WYSIWYG editor.
-  _wysiwygify: function($editable) {
-    $editable.addClass('edit-wysiwyg-attached');
-    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].attach($editable);
-    Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].activate($editable);
-    Drupal.edit.toolbar.show($editable, 'primary', 'wysiwyg');
-  },
-
-  _updateDirectEditable: function($editable) {
-    Drupal.edit.editables._padEditable($editable);
-
-    var $field = Drupal.edit.findFieldForEditable($editable);
-    if ($field.hasClass('edit-type-direct-with-wysiwyg')) {
-      Drupal.edit.toolbar.get($editable)
-      .find('.edit-toolbar.primary:not(:has(.edit-toolgroup.wysiwyg))')
-      .append(Drupal.theme('editToolgroup', {
-        classes: 'wysiwyg' + ' aloha', /* @TODO: remove the latter once our custom UI has its own CSS. It's here just to make sure AE's CSS still applies. */
-        buttons: []
-      }));
-
-      // When transformation filters have been been applied to the processed
-      // text of this field, then we'll need to load a re-rendered version of
-      // it without the transformation filters.
-      if ($field.hasClass('edit-text-with-transformation-filters')) {
-        Drupal.edit.editables._loadRerenderedProcessedText($editable, $field);
-        // Also store the "real" original content, i.e. the transformed one.
-        $editable.data('edit-content-original-transformed', $editable.html())
+    // Process each entity element: identical entities that appear multiple
+    // times will get a numeric identifier, starting at 0.
+    $(context).find('[data-edit-entity-id]').once('edit').each(function (index, entityElement) {
+      var entityID = entityElement.getAttribute('data-edit-entity-id');
+      if (!entityInstancesTracker.hasOwnProperty(entityID)) {
+        entityInstancesTracker[entityID] = 0;
       }
-      // When no transformation filters have been applied: start WYSIWYG editing
-      // immediately!
       else {
-        setTimeout(function() {
-          Drupal.edit.editables._wysiwygify($editable);
-        }, 0);
+        entityInstancesTracker[entityID]++;
       }
-    }
-    else {
-      $editable.attr('contenteditable', true);
-    }
 
-    $editable
-    .data('edit-content-original', $editable.html())
-    .data('edit-content-changed', false);
+      // Set the calculated entity instance ID for this element.
+      var entityInstanceID = entityInstancesTracker[entityID];
+      entityElement.setAttribute('data-edit-entity-instance-id', entityInstanceID);
+    });
 
-    // Detect content changes ourselves only when not using a WYSIWYG editor.
-    var markContentChanged = function() {
-      $editable.data('edit-content-changed', true);
-      $editable.trigger('edit-content-changed.edit');
-    };
-    if (!$field.hasClass('edit-type-direct-with-wysiwyg')) {
-      // We cannot use Drupal.behaviors.formUpdated here because we're not dealing
-      // with a form!
-      $editable.bind('blur.edit keyup.edit paste.edit', function() {
-        if ($editable.html() != $editable.data('edit-content-original')) {
-          markContentChanged();
+    // Detect contextual links on entities annotated by Edit; queue these to be
+    // processed.
+    $(context).find('.contextual-links').once('edit-contextual').each(function (index, contextualLinkElement) {
+      var $region = $(contextualLinkElement).closest('.contextual-links-region');
+      // Either the contextual link is set directly on the entity DOM element,
+      // or it is set on a container of the entity DOM element that is its
+      // contextual region.
+      if ($region.is('[data-edit-entity-id]') || $region.is('[data-edit-is-contextual-region-for-entity]')) {
+        var entityElement;
+        if ($region.is('[data-edit-entity-id]')) {
+          entityElement = $region.get(0);
         }
-      });
-    }
-    else {
-      $editable.bind('edit-wysiwyg-content-changed.edit', function() {
-        markContentChanged();
-      });
-    }
-  },
-
-  _restoreDirectEditable: function($editable) {
-    if (Drupal.edit.findFieldForEditable($editable).hasClass('edit-type-direct-with-wysiwyg')
-        && $editable.hasClass('edit-wysiwyg-attached'))
-    {
-      $editable.removeClass('edit-wysiwyg-attached');
-      Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].detach($editable);
-    }
-    else {
-      $editable.removeAttr('contenteditable');
-    }
-
-    Drupal.edit.editables._unpadEditable($editable);
-
-    $editable
-    .removeData(['edit-content-original', 'edit-content-changed', 'edit-content-original-transformed'])
-    .unbind('blur.edit keyup.edit paste.edit edit-content-changed.edit');
-
-    // Not only clean up the changes to $editable, but also clean up the
-    // backstage area, where we hid the form that we used to send the changes.
-    $('#edit_backstage form').remove();
-  },
-
-  _padEditable: function($editable) {
-    // Add 5px padding for readability. This means we'll freeze the current
-    // width and *then* add 5px padding, hence ensuring the padding is added "on
-    // the outside".
-    // 1) Freeze the width (if it's not already set); don't use animations.
-    if ($editable[0].style.width === "") {
-      $editable
-      .data('edit-width-empty', true)
-      .addClass('edit-animate-disable-width')
-      .css('width', $editable.width());
-    }
-    // 2) Add padding; use animations.
-    var posProp = Drupal.edit.util.getPositionProperties($editable);
-    var $toolbar = Drupal.edit.toolbar.get($editable);
-    setTimeout(function() {
-      // Re-enable width animations (padding changes affect width too!).
-      $editable.removeClass('edit-animate-disable-width');
-
-      // The whole toolbar must move to the top when it's an inline editable.
-      if ($editable.css('display') == 'inline') {
-        $toolbar.css('top', Drupal.edit.util.stripPX($toolbar.css('top')) - 5 + 'px');
-      }
-
-      // The primary toolgroups must move to the top and the left.
-      $toolbar.find('.edit-toolbar.primary .edit-toolgroup')
-      .addClass('edit-animate-exception-grow')
-      .css({'position': 'relative', 'top': '-5px', 'left': '-5px'});
-
-      // The secondary toolgroups must move to the top and the right.
-      $toolbar.find('.edit-toolbar.secondary .edit-toolgroup')
-      .addClass('edit-animate-exception-grow')
-      .css({'position': 'relative', 'top': '-5px', 'left': '5px'});
-
-      // The clipping (to get rid of the bottom box-shadow) needs to be updated.
-      $toolbar
-      .delegate('.edit-toolbar', Drupal.edit.const.transitionEnd, function(e) {
-        var $this = $(this);
-        if (!$this.data('edit-toolbar-updating-clipping')) {
-          $this.data('edit-toolbar-updating-clipping', true);
-
-          var parts = $this.css('clip').split(' ');
-          parts[2] = Drupal.edit.util.stripPX(parts[2]) - 5 + 'px';
-          $this.css('clip', parts.join(' '));
+        else {
+          entityElement = $region.find('[data-edit-entity-id]').get(0);
         }
-      });
-
-      // Pad the editable.
-      $editable
-      .css({
-        'position': 'relative',
-        'top':  posProp['top']  - 5 + 'px',
-        'left': posProp['left'] - 5 + 'px',
-        'padding-top'   : posProp['padding-top']    + 5 + 'px',
-        'padding-left'  : posProp['padding-left']   + 5 + 'px',
-        'padding-right' : posProp['padding-right']  + 5 + 'px',
-        'padding-bottom': posProp['padding-bottom'] + 5 + 'px',
-        'margin-bottom':  posProp['margin-bottom'] - 10 + 'px',
-      });
-    }, 0);
-  },
-
-  _unpadEditable: function($editable) {
-    // 1) Set the empty width again.
-    if ($editable.data('edit-width-empty') === true) {
-      console.log('restoring width');
-      $editable
-      .addClass('edit-animate-disable-width')
-      .css('width', '');
-    }
-    // 2) Remove padding; use animations (these will run simultaneously with)
-    // the fading out of the toolbar as its gets removed).
-    var posProp = Drupal.edit.util.getPositionProperties($editable);
-    var $toolbar = Drupal.edit.toolbar.get($editable);
-    setTimeout(function() {
-      // Re-enable width animations (padding changes affect width too!).
-      $editable.removeClass('edit-animate-disable-width');
-
-      // Move the toolbar & toolgroups to their original positions.
-      if ($editable.css('display') == 'inline') {
-        $toolbar.css('top', Drupal.edit.util.stripPX($toolbar.css('top')) + 5 + 'px');
+        var contextualLink = {
+          entityID: entityElement.getAttribute('data-edit-entity-id'),
+          entityInstanceID: entityElement.getAttribute('data-edit-entity-instance-id'),
+          el: contextualLinkElement,
+          region: $region[0]
+        };
+        // Queue contextual link to be set up later.
+        contextualLinksQueue.push(contextualLink);
       }
-      $toolbar.find('.edit-toolgroup')
-      .removeClass('edit-animate-exception-grow')
-      .css({'position': '', 'top': '', 'left': ''});
+    });
 
-      // Undo our changes to the clipping (to prevent the bottom box-shadow).
-      $toolbar
-      .undelegate('.edit-toolbar', Drupal.edit.const.transitionEnd)
-      .find('.edit-toolbar').css('clip', '');
+    // Process each field element: queue to be used or to fetch metadata.
+    // When a field is being rerendered after editing, it will be processed
+    // immediately. New fields will be unable to be processed immediately, but
+    // will instead be queued to have their metadata fetched, which occurs below
+    // in fetchMissingMetaData().
+    $fields.each(function (index, fieldElement) {
+      processField(fieldElement);
+    });
 
-      // Unpad the editable.
-      $editable
-      .css({
-        'position': 'relative',
-        'top':  posProp['top']  + 5 + 'px',
-        'left': posProp['left'] + 5 + 'px',
-        'padding-top'   : posProp['padding-top']    - 5 + 'px',
-        'padding-left'  : posProp['padding-left']   - 5 + 'px',
-        'padding-right' : posProp['padding-right']  - 5 + 'px',
-        'padding-bottom': posProp['padding-bottom'] - 5 + 'px',
-        'margin-bottom': posProp['margin-bottom'] + 10 + 'px'
+    // Entities and fields on the page have been detected, try to set up the
+    // contextual links for those entities that already have the necessary meta-
+    // data in the client-side cache.
+    contextualLinksQueue = _.filter(contextualLinksQueue, function (contextualLink) {
+      return !initializeEntityContextualLink(contextualLink);
+    });
+
+    // Fetch metadata for any fields that are queued to retrieve it.
+    fetchMissingMetadata(function (fieldElementsWithFreshMetadata) {
+      // Metadata has been fetched, reprocess fields whose metadata was missing.
+      _.each(fieldElementsWithFreshMetadata, processField);
+
+      // Metadata has been fetched, try to set up more contextual links now.
+      contextualLinksQueue = _.filter(contextualLinksQueue, function (contextualLink) {
+        return !initializeEntityContextualLink(contextualLink);
       });
-    }, 0);
+    });
   },
-
-  // Creates a form container; when the $editable is inline, it will inherit CSS
-  // properties from the toolbar container, so the toolbar must already exist.
-  _updateFormEditable: function($editable) {
-    if (Drupal.edit.form.create($editable)) {
-      $editable
-      .addClass('edit-belowoverlay')
-      .removeClass('edit-highlighted edit-editable');
-
-      Drupal.edit.form.get($editable)
-      .find('.edit-form')
-      .addClass('edit-editable edit-highlighted edit-editing')
-      .css('background-color', $editable.data('edit-background-color'));
+  detach: function (context, settings, trigger) {
+    if (trigger === 'unload') {
+      deleteContainedModelsAndQueues($(context));
     }
-  },
-
-  _restoreFormEditable: function($editable) {
-    // No need to do anything here; all of the field HTML will be overwritten
-    // with the freshly rendered version from the server anyway!
-  },
-
-  _loadForm: function($editable, $field) {
-    var edit_id = Drupal.edit.getID($field);
-    var element_settings = {
-      url      : Drupal.edit.util.calcFormURLForField(edit_id),
-      event    : 'edit-internal.edit',
-      $field   : $field,
-      $editable: $editable,
-      submit   : { nocssjs : ($field.hasClass('edit-type-direct')) },
-      progress : { type : null }, // No progress indicator.
-    };
-    if (Drupal.ajax.hasOwnProperty(edit_id)) {
-      delete Drupal.ajax[edit_id];
-      $editable.unbind('edit-internal.edit');
-    }
-    Drupal.ajax[edit_id] = new Drupal.ajax(edit_id, $editable, element_settings);
-    $editable.trigger('edit-internal.edit');
-  },
-
-  _buttonFieldSaveToBlue: function(e, $editable, $field) {
-    Drupal.edit.toolbar.get($editable)
-    .find('a.save').addClass('blue-button').removeClass('gray-button');
-  },
-
-  _buttonFieldSaveClicked: function(e, $editable, $field) {
-    // type = form
-    if ($field.hasClass('edit-type-form')) {
-      Drupal.edit.form.get($field).find('form')
-      .find('.edit-form-submit').trigger('click.edit').end();
-    }
-    // type = direct
-    else if ($field.hasClass('edit-type-direct')) {
-
-      // When using WYSIWYG editing, first detach the WYSIWYG editor to ensure
-      // the content has been cleaned up before saving it. (Otherwise,
-      // annotations and infrastructure created by the WYSIWYG editor could also
-      // get saved).
-      if ($field.hasClass('edit-type-direct-with-wysiwyg')
-          && $editable.hasClass('edit-wysiwyg-attached'))
-      {
-        $editable.removeClass('edit-wysiwyg-attached');
-        Drupal.edit.wysiwyg[Drupal.settings.edit.wysiwyg].detach($editable);
-      }
-
-      // (This is currently used only for the node title.)
-      // We trim the title because otherwise whitespace in the raw HTML ends
-      // up in the title as well.
-      // TRICKY: Drupal core does not trim the title, so in theory this is
-      // out of line with Drupal core's behavior.
-      var value = $.trim($editable.html());
-      console.log(value);
-      $('#edit_backstage form')
-      .find(':input[type!="hidden"][type!="submit"]').val(value).end()
-      .find('.edit-form-submit').trigger('click.edit');
-    }
-    return false;
-  },
-
-  _buttonFieldCloseClicked: function(e, $editable, $field) {
-    // Content not changed: stop editing field.
-    if (!$editable.data('edit-content-changed')) {
-      // Restore to original content. When dealing with processed text, it's
-      // possible that one or more transformation filters are used. Then, the
-      // "real" original content (i.e. the transformed one) is stored separately
-      // from the "original content" that we use to detect changes.
-      if (typeof $editable.data('edit-content-original-transformed') !== 'undefined') {
-        $editable.html($editable.data('edit-content-original-transformed'));
-      }
-
-      Drupal.edit.editables.stopEdit($editable);
-    }
-    // Content changed: show modal.
-    else {
-      Drupal.edit.modal.create(
-        Drupal.t('You have unsaved changes'),
-        Drupal.theme('editButtons', { 'buttons' : [
-          { url: '#', classes: 'gray-button discard', label: Drupal.t('Discard changes') },
-          { url: '#', classes: 'blue-button save', label: Drupal.t('Save') }
-        ]}),
-        $editable
-      );
-      setTimeout(Drupal.edit.modal.show, 0);
-    };
-    return false;
   }
 };
 
-})(jQuery);
+Drupal.edit = {
+  // A Drupal.edit.AppView instance.
+  app: null,
+
+  collections: {
+    // All in-place editable entities (Drupal.edit.EntityModel) on the page.
+    entities: null,
+    // All in-place editable fields (Drupal.edit.FieldModel) on the page.
+    fields: null
+  },
+
+  // In-place editors will register themselves in this object.
+  editors: {},
+
+  // Per-field metadata that indicates whether in-place editing is allowed,
+  // which in-place editor should be used, etc.
+  metadata: {
+    has: function (fieldID) {
+      return storage.getItem(this._prefixFieldID(fieldID)) !== null;
+    },
+    add: function (fieldID, metadata) {
+      storage.setItem(this._prefixFieldID(fieldID), JSON.stringify(metadata));
+    },
+    get: function (fieldID, key) {
+      var metadata = JSON.parse(storage.getItem(this._prefixFieldID(fieldID)));
+      return (key === undefined) ? metadata : metadata[key];
+    },
+    _prefixFieldID: function (fieldID) {
+      return 'Drupal.edit.metadata.' + fieldID;
+    },
+    _unprefixFieldID: function (fieldID) {
+      // Strip "Drupal.edit.metadata.", which is 21 characters long.
+      return fieldID.substring(21);
+    },
+    intersection: function (fieldIDs) {
+      var prefixedFieldIDs = _.map(fieldIDs, this._prefixFieldID);
+      var intersection = _.intersection(prefixedFieldIDs, _.keys(sessionStorage));
+      return _.map(intersection, this._unprefixFieldID);
+    }
+  }
+};
+
+// Clear the Edit metadata cache whenever the current user's set of permissions
+// changes.
+var permissionsHashKey = Drupal.edit.metadata._prefixFieldID('permissionsHash');
+var permissionsHashValue = storage.getItem(permissionsHashKey);
+var permissionsHash = drupalSettings.edit.user.permissionsHash;
+if (permissionsHashValue !== permissionsHash) {
+  if (typeof permissionsHash === 'string') {
+    _.chain(storage).keys().each(function (key) {
+      if (key.substring(0, 21) === 'Drupal.edit.metadata.') {
+        storage.removeItem(key);
+      }
+    });
+  }
+  storage.setItem(permissionsHashKey, permissionsHash);
+}
+
+/**
+ * Extracts the entity ID from a field ID.
+ *
+ * @param String fieldID
+ *   A field ID: a string of the format
+ *   `<entity type>/<id>/<field name>/<language>/<view mode>`.
+ * @return String
+ *   An entity ID: a string of the format `<entity type>/<id>`.
+ */
+function extractEntityID (fieldID) {
+  return fieldID.split('/').slice(0, 2).join('/');
+}
+
+/**
+ * Initialize the Edit app.
+ *
+ * @param DOM bodyElement
+ *   This document's body element.
+ */
+function initEdit (bodyElement) {
+  Drupal.edit.collections.entities = new Drupal.edit.EntityCollection();
+  Drupal.edit.collections.fields = new Drupal.edit.FieldCollection();
+
+  // Instantiate AppModel (application state) and AppView, which is the
+  // controller of the whole in-place editing experience.
+  Drupal.edit.app = new Drupal.edit.AppView({
+    el: bodyElement,
+    model: new Drupal.edit.AppModel(),
+    entitiesCollection: Drupal.edit.collections.entities,
+    fieldsCollection: Drupal.edit.collections.fields
+  });
+}
+
+/**
+ * Fetch the field's metadata; queue or initialize it (if EntityModel exists).
+ *
+ * @param DOM fieldElement
+ *   A Drupal Field API field's DOM element with a data-edit-field-id attribute.
+ */
+function processField (fieldElement) {
+  var metadata = Drupal.edit.metadata;
+  var fieldID = fieldElement.getAttribute('data-edit-field-id');
+  var entityID = extractEntityID(fieldID);
+  // Figure out the instance ID by looking at the ancestor [data-edit-entity-id]
+  // element's data-edit-entity-instance-id attribute.
+  var entityElementSelector = '[data-edit-entity-id="' + entityID + '"]';
+  var entityElement = $(fieldElement).closest(entityElementSelector);
+  // In the case of a full entity view page, the entity title is rendered
+  // outside of "the entity DOM node": it's rendered as the page title. So in
+  // this case, we must find the entity in the mandatory "content" region.
+  if (entityElement.length === 0) {
+    entityElement = $('[data-edit-content-region-start]')
+      .nextUntil('[data-edit-content-region-end]')
+      .find(entityElementSelector)
+      .addBack(entityElementSelector);
+  }
+  var entityInstanceID = entityElement
+    .get(0)
+    .getAttribute('data-edit-entity-instance-id');
+
+  // Early-return if metadata for this field is missing.
+  if (!metadata.has(fieldID)) {
+    fieldsMetadataQueue.push({
+      el: fieldElement,
+      fieldID: fieldID,
+      entityID: entityID,
+      entityInstanceID: entityInstanceID
+    });
+    return;
+  }
+  // Early-return if the user is not allowed to in-place edit this field.
+  if (metadata.get(fieldID, 'access') !== true) {
+    return;
+  }
+
+  // If an EntityModel for this field already exists (and hence also a "Quick
+  // edit" contextual link), then initialize it immediately.
+  if (Drupal.edit.collections.entities.findWhere({ entityID: entityID, entityInstanceID: entityInstanceID })) {
+    initializeField(fieldElement, fieldID, entityID, entityInstanceID);
+  }
+  // Otherwise: queue the field. It is now available to be set up when its
+  // corresponding entity becomes in-place editable.
+  else {
+    fieldsAvailableQueue.push({ el: fieldElement, fieldID: fieldID, entityID: entityID, entityInstanceID: entityInstanceID });
+  }
+}
+
+/**
+ * Initialize a field; create FieldModel.
+ *
+ * @param DOM fieldElement
+ *   The field's DOM element.
+ * @param String fieldID
+ *   The field's ID.
+ * @param String entityID
+ *   The field's entity's ID.
+ * @param String entityInstanceID
+ *   The field's entity's instance ID.
+ */
+function initializeField (fieldElement, fieldID, entityID, entityInstanceID) {
+  var entity = Drupal.edit.collections.entities.findWhere({
+    entityID: entityID,
+    entityInstanceID: entityInstanceID
+  });
+
+  $(fieldElement).addClass('edit-field');
+
+  // The FieldModel stores the state of an in-place editable entity field.
+  var field = new Drupal.edit.FieldModel({
+    el: fieldElement,
+    fieldID: fieldID,
+    id: fieldID + '[' + entity.get('entityInstanceID') + ']',
+    entity: entity,
+    metadata: Drupal.edit.metadata.get(fieldID),
+    acceptStateChange: _.bind(Drupal.edit.app.acceptEditorStateChange, Drupal.edit.app)
+  });
+
+  // Track all fields on the page.
+  Drupal.edit.collections.fields.add(field);
+}
+
+/**
+ * Fetches metadata for fields whose metadata is missing.
+ *
+ * Fields whose metadata is missing are tracked at fieldsMetadataQueue.
+ *
+ * @param Function callback
+ *   A callback function that receives field elements whose metadata will just
+ *   have been fetched.
+ */
+function fetchMissingMetadata (callback) {
+  if (fieldsMetadataQueue.length) {
+    var fieldIDs = _.pluck(fieldsMetadataQueue, 'fieldID');
+    var fieldElementsWithoutMetadata = _.pluck(fieldsMetadataQueue, 'el');
+    var entityIDs = _.uniq(_.pluck(fieldsMetadataQueue, 'entityID'), true);
+    // Ensure we only request entityIDs for which we don't have metadata yet.
+    entityIDs = _.difference(entityIDs, Drupal.edit.metadata.intersection(entityIDs));
+    fieldsMetadataQueue = [];
+
+    $.ajax({
+      url: drupalSettings.edit.metadataURL,
+      type: 'POST',
+      data: {
+        'fields[]': fieldIDs,
+        'entities[]': entityIDs
+      },
+      dataType: 'json',
+      success: function(results) {
+        // Store the metadata.
+        _.each(results, function (fieldMetadata, fieldID) {
+          Drupal.edit.metadata.add(fieldID, fieldMetadata);
+        });
+
+        callback(fieldElementsWithoutMetadata);
+      }
+    });
+  }
+}
+
+/**
+ * Loads missing in-place editor's attachments (JavaScript and CSS files).
+ *
+ * Missing in-place editors are those whose fields are actively being used on
+ * the page but don't have
+ *
+ * @param Function callback
+ *   Callback function to be called when the missing in-place editors (if any)
+ *   have been inserted into the DOM. i.e. they may still be loading.
+ */
+function loadMissingEditors (callback) {
+  var loadedEditors = _.keys(Drupal.edit.editors);
+  var missingEditors = [];
+  Drupal.edit.collections.fields.each(function (fieldModel) {
+    var metadata = Drupal.edit.metadata.get(fieldModel.get('fieldID'));
+    if (metadata.access && _.indexOf(loadedEditors, metadata.editor) === -1) {
+      missingEditors.push(metadata.editor);
+    }
+  });
+  missingEditors = _.uniq(missingEditors);
+  if (missingEditors.length === 0) {
+    callback();
+  }
+
+  // @todo Simplify this once https://drupal.org/node/1533366 lands.
+  // @see https://drupal.org/node/2029999.
+  var id = 'edit-load-editors';
+  // Create a temporary element to be able to use Drupal.ajax.
+  var $el = $('<div id="' + id + '" class="element-hidden"></div>').appendTo('body');
+  // Create a Drupal.ajax instance to load the form.
+  var loadEditorsAjax = new Drupal.ajax(id, $el, {
+    url: drupalSettings.edit.attachmentsURL,
+    event: 'edit-internal.edit',
+    submit: { 'editors[]': missingEditors },
+    // No progress indicator.
+    progress: { type: null }
+  });
+  // Work-around for https://drupal.org/node/2019481 in Drupal 7.
+  loadEditorsAjax.commands = {};
+  // The above work-around prevents the prototype implementations from being
+  // called, so we must alias any and all of the commands that might be called.
+  loadEditorsAjax.commands.settings = Drupal.ajax.prototype.commands.settings;
+  // Implement a scoped insert AJAX command: calls the callback after all AJAX
+  // command functions have been executed (hence the deferred calling).
+  var realInsert = Drupal.ajax.prototype.commands.insert;
+  loadEditorsAjax.commands.insert = function (ajax, response, status) {
+    _.defer(callback);
+    realInsert(ajax, response, status);
+    $el.off('edit-internal.edit');
+    $el.remove();
+  };
+  // Trigger the AJAX request, which will should return AJAX commands to insert
+  // any missing attachments.
+  $el.trigger('edit-internal.edit');
+}
+
+/**
+ * Attempts to set up a "Quick edit" link and corresponding EntityModel.
+ *
+ * @param Object contextualLink
+ *   An object with the following properties:
+ *     - String entityID: an Edit entity identifier, e.g. "node/1" or
+ *       "custom_block/5".
+ *     - String entityInstanceID: an Edit entity instance identifier, e.g. 0, 1
+ *       or n (depending on whether it's the first, second, or n+1st instance of
+ *       this entity).
+ *     - DOM el: element pointing to the contextual links placeholder for this
+ *       entity.
+ *     - DOM region: element pointing to the contextual region for this entity.
+ * @return Boolean
+ *   Returns true when a contextual the given contextual link metadata can be
+ *   removed from the queue (either because the contextual link has been set up
+ *   or because it is certain that in-place editing is not allowed for any of
+ *   its fields).
+ *   Returns false otherwise.
+ */
+function initializeEntityContextualLink (contextualLink) {
+  var metadata = Drupal.edit.metadata;
+  // Check if the user has permission to edit at least one of them.
+  function hasFieldWithPermission (fieldIDs) {
+    for (var i = 0; i < fieldIDs.length; i++) {
+      var fieldID = fieldIDs[i];
+      if (metadata.get(fieldID, 'access') === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Checks if the metadata for all given field IDs exists.
+  function allMetadataExists (fieldIDs) {
+    return fieldIDs.length === metadata.intersection(fieldIDs).length;
+  }
+
+  // Find all fields for this entity instance and collect their field IDs.
+  var fields = _.where(fieldsAvailableQueue, {
+    entityID: contextualLink.entityID,
+    entityInstanceID: contextualLink.entityInstanceID
+  });
+  var fieldIDs = _.pluck(fields, 'fieldID');
+
+  // No fields found yet.
+  if (fieldIDs.length === 0) {
+    return false;
+  }
+  // The entity for the given contextual link contains at least one field that
+  // the current user may edit in-place; instantiate EntityModel,
+  // EntityDecorationView and ContextualLinkView.
+  else if (hasFieldWithPermission(fieldIDs)) {
+    var entityModel = new Drupal.edit.EntityModel({
+      el: contextualLink.region,
+      entityID: contextualLink.entityID,
+      entityInstanceID: contextualLink.entityInstanceID,
+      id: contextualLink.entityID + '[' + contextualLink.entityInstanceID + ']',
+      label: Drupal.edit.metadata.get(contextualLink.entityID, 'label')
+    });
+    Drupal.edit.collections.entities.add(entityModel);
+    // Create an EntityDecorationView associated with the root DOM node of the
+    // entity.
+    var entityDecorationView = new Drupal.edit.EntityDecorationView({
+      el: contextualLink.region,
+      model: entityModel
+    });
+    entityModel.set('entityDecorationView', entityDecorationView);
+
+    // Initialize all queued fields within this entity (creates FieldModels).
+    _.each(fields, function (field) {
+      initializeField(field.el, field.fieldID, contextualLink.entityID, contextualLink.entityInstanceID);
+    });
+    fieldsAvailableQueue = _.difference(fieldsAvailableQueue, fields);
+
+    // Initialization should only be called once. Use Underscore's once method
+    // to get a one-time use version of the function.
+    var initContextualLink = _.once(function () {
+      var $links = $(contextualLink.el);
+      var contextualLinkView = new Drupal.edit.ContextualLinkView($.extend({
+        el: $('<li class="quick-edit"><a href="" role="button" aria-pressed="false"></a></li>').prependTo($links),
+        model: entityModel,
+        appModel: Drupal.edit.app.model
+      }, options));
+      entityModel.set('contextualLinkView', contextualLinkView);
+    });
+
+    // Set up ContextualLinkView after loading any missing in-place editors.
+    loadMissingEditors(initContextualLink);
+
+    return true;
+  }
+  // There was not at least one field that the current user may edit in-place,
+  // even though the metadata for all fields within this entity is available.
+  else if (allMetadataExists(fieldIDs)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Delete models and queue items that are contained within a given context.
+ *
+ * Deletes any contained EntityModels (plus their associated FieldModels and
+ * ContextualLinkView) and FieldModels, as well as the corresponding queues.
+ *
+ * After EntityModels, FieldModels must also be deleted, because it is possible
+ * in Drupal for a field DOM element to exist outside of the entity DOM element,
+ * e.g. when viewing the full node, the title of the node is not rendered within
+ * the node (the entity) but as the page title.
+ *
+ * Note: this will not delete an entity that is actively being in-place edited.
+ *
+ * @param jQuery $context
+ *   The context within which to delete.
+ */
+function deleteContainedModelsAndQueues($context) {
+  $context.find('[data-edit-entity-id]').addBack('[data-edit-entity-id]').each(function (index, entityElement) {
+    // Delete entity model.
+    var entityModel = Drupal.edit.collections.entities.findWhere({el: entityElement});
+    if (entityModel) {
+      var contextualLinkView = entityModel.get('contextualLinkView');
+      contextualLinkView.remove();
+      // Remove the EntityDecorationView.
+      entityModel.get('entityDecorationView').remove();
+      // Destroy the EntityModel; this will also destroy its FieldModels.
+      entityModel.destroy();
+    }
+
+    // Filter queue.
+    function hasOtherRegion (contextualLink) {
+      return contextualLink.region !== entityElement;
+    }
+    contextualLinksQueue = _.filter(contextualLinksQueue, hasOtherRegion);
+  });
+
+  $context.find('[data-edit-field-id]').addBack('[data-edit-field-id]').each(function (index, fieldElement) {
+    // Delete field models.
+    Drupal.edit.collections.fields.chain()
+      .filter(function (fieldModel) { return fieldModel.get('el') === fieldElement; })
+      .invoke('destroy');
+
+    // Filter queues.
+    function hasOtherFieldElement (field) {
+      return field.el !== fieldElement;
+    }
+    fieldsMetadataQueue = _.filter(fieldsMetadataQueue, hasOtherFieldElement);
+    fieldsAvailableQueue = _.filter(fieldsAvailableQueue, hasOtherFieldElement);
+  });
+}
+
+})(jQuery, _, Backbone, Drupal, Drupal.settings, window.JSON, window.sessionStorage);
